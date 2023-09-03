@@ -88,7 +88,7 @@ const Tabs = tabHelpers.defineMultiStyleConfig({
 			width: "fit-content",
 		},
 		tablist: {
-			gap: 5,
+			// gap: 5,
 		},
 		tab: {
 			margin: "0",

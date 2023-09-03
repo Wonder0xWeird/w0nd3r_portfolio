@@ -67,7 +67,6 @@ export default function Home() {
 					src="/images/art/Cast spells.png"
 					h="90vh"
 					bottom="0"
-					left="25%"
 					opacity={0.1}
 					position="absolute"
 				/>
@@ -80,25 +79,33 @@ export default function Home() {
 					ml="1%"
 					justifyContent="space-between"
 				>
-					<TabList border="none">
+					<TabList gap={breakpoint ? 5 : 2} border="none">
 						<Tab>
-							<Image src="/icons/user.svg" mr={2} /> About
+							<Image
+								src="/icons/user.svg"
+								w="15px"
+								mr={breakpoint ? 2 : 0}
+							/>{" "}
+							{breakpoint ? " About" : null}
 						</Tab>
 						<Tab>
-							<Image src="/icons/grad-cap.svg" mr={2} />{" "}
-							Education
+							<Image
+								src="/icons/grad-cap.svg"
+								mr={breakpoint ? 2 : 0}
+							/>
+							{breakpoint ? " Education" : null}
 						</Tab>
 						<Tab>
 							{" "}
 							<Image
 								src="/icons/projects.svg"
-								mr={2}
+								mr={breakpoint ? 2 : 0}
 							/>{" "}
-							Projects
+							{breakpoint ? " Projects" : null}
 						</Tab>
 					</TabList>
-					<HStack spacing={5}>
-						<Tablet
+					<HStack spacing={breakpoint ? 5 : 2}>
+						{/* <Tablet
 							button
 							p={3}
 							onClick={() =>
@@ -107,10 +114,10 @@ export default function Home() {
 							}
 						>
 							<Image src="/icons/google.svg" />
-						</Tablet>
+						</Tablet> */}
 						<Tablet
 							button
-							p={3}
+							p={breakpoint ? 3 : 1}
 							onClick={() =>
 								router.push(
 									"https://twitter.com/wonder0xweird"
@@ -121,7 +128,7 @@ export default function Home() {
 						</Tablet>
 						<Tablet
 							button
-							p={3}
+							p={breakpoint ? 3 : 1}
 							onClick={() =>
 								router.push(
 									"https://github.com/Wonder0xWeird"
@@ -132,7 +139,7 @@ export default function Home() {
 						</Tablet>
 						<Tablet
 							button
-							p={3}
+							p={breakpoint ? 3 : 1}
 							onClick={() =>
 								router.push(
 									"https://www.linkedin.com/in/larscrawford/"
@@ -141,9 +148,13 @@ export default function Home() {
 						>
 							<Image src="/icons/linkedin.svg" />
 						</Tablet>
-						<Image w="50px" src="/images/art/ww_logo.png" />
+						<Image
+							w={breakpoint ? "50px" : "30px"}
+							src="/images/art/ww_logo.png"
+						/>
 					</HStack>
 				</Tablet>
+
 				<Box
 					bg={BG_COLOR}
 					h={16}
@@ -174,18 +185,25 @@ export default function Home() {
 					}}
 				>
 					<TabPanel as={VStack} spacing={0}>
-						<Flex align="start">
+						<Flex
+							align={breakpoint ? "start" : "center"}
+							direction={breakpoint ? "row" : "column"}
+						>
 							<Image
 								borderRadius="100%"
 								border={`2px solid ${gold(400)}`}
 								boxShadow={`0 3px 10px 5px ${SHADOW}`}
 								src="/images/w0nd3r_headshot.png"
 								alt="w0nd3r headshot"
-								boxSize="450px"
+								boxSize={breakpoint ? "450px" : "300px"}
 								transition="all ease 0.25s"
 							/>
 
-							<VStack ml={5} align="start" spacing={4}>
+							<VStack
+								ml={5}
+								align={breakpoint ? "start" : "center"}
+								spacing={4}
+							>
 								<Heading
 									fontSize="80px"
 									transition="all ease 0.25s"
@@ -253,7 +271,7 @@ export default function Home() {
 						/>
 
 						<Flex
-							align="start"
+							align={breakpoint ? "start" : "center"}
 							direction={breakpoint ? "row" : "column"}
 						>
 							<VStack
@@ -265,6 +283,7 @@ export default function Home() {
 								bgPosition="center"
 								boxSize="300px"
 								position="relative"
+								mb={breakpoint ? 0 : 5}
 							>
 								<Heading
 									pos="absolute"
@@ -401,6 +420,7 @@ export default function Home() {
 								bgPosition="center"
 								boxSize="300px"
 								transform="scaleX(-1)"
+								mt={breakpoint ? 0 : 5}
 							>
 								<Heading
 									pos="absolute"
@@ -598,7 +618,10 @@ export default function Home() {
 					}}
 				>
 					<TabPanel as={VStack} spacing={5}>
-						<Flex align="start">
+						<Flex
+							align={breakpoint ? "start" : "center"}
+							direction={breakpoint ? "row" : "column"}
+						>
 							<Image
 								borderRadius="100%"
 								border={`2px solid ${gold(400)}`}
@@ -609,10 +632,17 @@ export default function Home() {
 								transition="all ease 0.25s"
 							/>
 
-							<VStack ml={5} align="start" spacing={4}>
+							<VStack
+								ml={5}
+								align={breakpoint ? "start" : "center"}
+								spacing={4}
+							>
 								<Heading
 									fontSize="60px"
 									transition="all ease 0.25s"
+									textAlign={
+										breakpoint ? "start" : "center"
+									}
 								>
 									<span
 										style={{
@@ -623,7 +653,7 @@ export default function Home() {
 									</span>
 									, PhD
 								</Heading>
-								<VStack align="start" spacing={0}>
+								<VStack align="start" spacing={2}>
 									<Text fontSize="30px">
 										Doctor of Philosophy - University of
 										Washington, 2021
@@ -662,7 +692,11 @@ export default function Home() {
 									</Text>
 								</VStack>
 
-								<VStack align="start" spacing={0}>
+								<VStack
+									alignSelf="start"
+									align="start"
+									spacing={0}
+								>
 									<Text fontSize="30px">
 										Bachelor of Science - University of
 										Washington, 2014
@@ -689,8 +723,7 @@ export default function Home() {
 						/>
 
 						<VStack
-							align="start"
-							borderRadius="30px"
+							align={breakpoint ? "start" : "center"}
 							spacing={4}
 						>
 							<Flex w="100%" justifyContent="space-between">
@@ -701,7 +734,9 @@ export default function Home() {
 									bgImage="/images/science/6s.jpg"
 									bgSize="cover"
 									bgPosition="center"
-									boxSize="200px"
+									boxSize={
+										breakpoint ? "200px" : "max(60px, 15vw)"
+									}
 								/>
 								<Box
 									borderRadius="30px"
@@ -710,7 +745,9 @@ export default function Home() {
 									bgImage="/images/science/seeded scaffold.jpg"
 									bgSize="cover"
 									bgPosition="center"
-									boxSize="200px"
+									boxSize={
+										breakpoint ? "200px" : "max(60px, 15vw)"
+									}
 								/>
 								<Box
 									borderRadius="30px"
@@ -719,7 +756,9 @@ export default function Home() {
 									bgImage="/images/science/gelectrode.png"
 									bgSize="cover"
 									bgPosition="center"
-									boxSize="200px"
+									boxSize={
+										breakpoint ? "200px" : "max(60px, 15vw)"
+									}
 								/>
 								<Box
 									borderRadius="30px"
@@ -728,7 +767,9 @@ export default function Home() {
 									bgImage="/images/science/Rapid Photochemical CH Synthesis.png"
 									bgSize="contain"
 									bgPosition="center"
-									boxSize="200px"
+									boxSize={
+										breakpoint ? "200px" : "max(60px, 15vw)"
+									}
 								/>
 								<Box
 									borderRadius="30px"
@@ -737,16 +778,19 @@ export default function Home() {
 									bgImage="/images/science/Immunohistochemistry.tif"
 									bgSize="cover"
 									bgPosition="center"
-									boxSize="200px"
+									boxSize={
+										breakpoint ? "200px" : "max(60px, 15vw)"
+									}
 								/>
 							</Flex>
 
-							<VStack ml={5} spacing="0!important">
+							<VStack spacing="0!important">
 								<Heading
 									fontSize="24px"
 									transition="all ease 0.25s"
 									textDecor="underline"
 									pb={4}
+									textAlign="center"
 								>
 									Toward a Wholly Organic Immunomodulatoy
 									Neuroelectronic Interface
@@ -892,6 +936,7 @@ export default function Home() {
 									Interface." Doctoral Dissertation,
 									University of Washington, 2021.{" "}
 									<Link
+										wordBreak="break-word"
 										color={gold()}
 										href="https://proquest.com/docview/2596065608"
 									>
@@ -906,6 +951,7 @@ export default function Home() {
 									Regeneration." Advanced Healthcare
 									Materials 10.11 (2021): 2002153.{" "}
 									<Link
+										wordBreak="break-word"
 										color={gold()}
 										href="https://doi.org/10.1002/adhm.202002153"
 									>
@@ -920,6 +966,7 @@ export default function Home() {
 									fabrication." U.S. Patent Application No.
 									17/357,887. (Patent Pending){" "}
 									<Link
+										wordBreak="break-word"
 										color={gold()}
 										href="https://patents.google.com/patent/US20210403613A1/en"
 									>
@@ -951,7 +998,7 @@ export default function Home() {
 								>
 									Honors & Awards
 								</Heading>
-								<UnorderedList spacing={1}>
+								<UnorderedList spacing={2}>
 									<ListItem fontSize="18px">
 										1 st Place Tissue Engineering Special
 										Interest Group Poster Award – Society
