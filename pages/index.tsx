@@ -245,7 +245,7 @@ export default function Home() {
 										style={{ textDecoration: "underline" }}
 									>
 										{" "}
-										Full Stack Web Development
+										Full Stack Web3 Development
 									</span>{" "}
 									in order to contribute to the ongoing Web3
 									renessaince.
