@@ -10,13 +10,13 @@ function w0nd3r({ Component, pageProps }: AppProps) {
 		<ChakraProvider theme={theme}>
 			<Head>
 				{/* Primary Meta Tags */}
-				<title>w0nd3r</title>
+				<title>Wonder Weird</title>
 				<link
 					rel="icon"
 					type="image/x-icon"
 					href="/images/art/ww_logo.png"
 				/>
-				<meta name="title" content="w0nd3r" />
+				<meta name="title" content="Wonder Weird" />
 				<meta
 					name="description"
 					content="A portfolio site for w0nd3r (aka Lars Crawford)."
@@ -27,10 +27,7 @@ function w0nd3r({ Component, pageProps }: AppProps) {
 					property="og:url"
 					content="https://w0nd3r.rune.love"
 				/>
-				<meta
-					property="og:title"
-					content="A portfolio site for w0nd3r (aka Lars Crawford)."
-				/>
+				<meta property="og:title" content="Wonder Weird" />
 				<meta
 					property="og:description"
 					content="A portfolio site for w0nd3r (aka Lars Crawford)."
@@ -48,7 +45,7 @@ function w0nd3r({ Component, pageProps }: AppProps) {
 				/>
 				<meta
 					property="twitter:title"
-					content="A portfolio site for w0nd3r (aka Lars Crawford)."
+					content="Wonder Weird"
 				/>
 				<meta
 					property="twitter:description"
