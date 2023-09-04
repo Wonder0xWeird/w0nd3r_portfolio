@@ -29,7 +29,7 @@ function w0nd3r({ Component, pageProps }: AppProps) {
 				/>
 				<meta
 					property="og:title"
-					content="w0nd3r's portfolio website"
+					content="A portfolio site for w0nd3r (aka Lars Crawford)."
 				/>
 				<meta
 					property="og:description"
@@ -48,7 +48,7 @@ function w0nd3r({ Component, pageProps }: AppProps) {
 				/>
 				<meta
 					property="twitter:title"
-					content="w0nd3r's portfolio website"
+					content="A portfolio site for w0nd3r (aka Lars Crawford)."
 				/>
 				<meta
 					property="twitter:description"
