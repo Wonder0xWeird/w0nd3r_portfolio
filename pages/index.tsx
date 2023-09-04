@@ -329,7 +329,7 @@ export default function Home() {
 										>
 											Play
 										</span>{" "}
-										means you are secure.
+										means you are alive.
 									</ListItem>
 									<ListItem fontSize="18px">
 										<span
@@ -340,7 +340,7 @@ export default function Home() {
 										>
 											Play
 										</span>{" "}
-										means you are healthy.
+										means you are secure.
 									</ListItem>
 									<ListItem fontSize="18px">
 										<span
@@ -396,7 +396,7 @@ export default function Home() {
 										>
 											Play
 										</span>{" "}
-										means you are moving.
+										means you are thinking.
 									</ListItem>
 									<ListItem fontSize="18px">
 										<span
