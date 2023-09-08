@@ -15,6 +15,7 @@
     "@types/node": "20.5.7",
     "@types/react": "18.2.21",
     "@types/react-dom": "18.2.7",
+    "axios": "^1.5.0",
     "framer-motion": "^10.16.2",
     "imagemin-gifsicle": "^7.0.0",
     "imagemin-mozjpeg": "9.0.0",
@@ -25,6 +26,8 @@
     "next-optimized-images": "^2.6.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "remark": "^14.0.3",
+    "remark-html": "^15.0.2",
     "typescript": "5.2.2"
   }
 }

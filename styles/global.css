@@ -19,3 +19,22 @@
 	background: #029eff71;
 	border: 1px solid #0098a0b2;
 }
+
+.writing {
+	width: 100%;
+	max-width: 1000px;
+	text-align: justify;
+	text-justify: inter-word;
+}
+
+.writing h1 {
+	text-align: center;
+	font-size: 2.5rem;
+	padding-bottom: 20px;
+}
+
+.writing p {
+	width: 100%;
+	padding-bottom: 10px;
+	font-size: 18px;
+}
