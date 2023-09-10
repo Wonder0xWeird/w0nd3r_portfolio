@@ -266,7 +266,7 @@ export default function About({ tabIndex }) {
 						}
 					>
 						<VStack
-							bgImage="/images/DoLL_banner.jpg"
+							bgImage="/images/DoLL_banner-min.jpg"
 							bgSize="cover"
 							bgPosition="center"
 							h="300px"

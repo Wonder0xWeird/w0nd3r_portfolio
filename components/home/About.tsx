@@ -49,7 +49,7 @@ export default function About({ tabIndex }) {
 						borderRadius="100%"
 						border={`2px solid ${gold(400)}`}
 						boxShadow={`0 3px 10px 5px ${SHADOW}`}
-						src="/images/w0nd3r_headshot.png"
+						src="/images/w0nd3r_headshot-min.png"
 						alt="w0nd3r headshot"
 						boxSize={breakpoint ? "450px" : "300px"}
 						transition="all ease 0.25s"
