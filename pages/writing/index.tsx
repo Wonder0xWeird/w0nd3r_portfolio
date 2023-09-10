@@ -132,10 +132,11 @@ export default function Writing() {
 							<TabPanel
 								as={VStack}
 								key={`${key1}`}
-								w={CONTENT_MAX_WIDTH}
+								w="100%"
+								maxW={CONTENT_MAX_WIDTH}
 								m="auto"
 							>
-								<Heading size="2xl">
+								<Heading size="3xl">
 									{section.title}
 								</Heading>
 								<Divider

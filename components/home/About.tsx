@@ -142,7 +142,7 @@ export default function About({ tabIndex }) {
 					</VStack>
 					<VStack ml={5} spacing={4}>
 						<VStack spacing={0}>
-							<Text fontSize="20px">
+							<Text fontSize="20px" textAlign="center">
 								My{" "}
 								<span
 									style={{
@@ -153,7 +153,7 @@ export default function About({ tabIndex }) {
 								</span>{" "}
 								is
 							</Text>
-							<Heading size="xl">
+							<Heading size="xl" textAlign="center">
 								To make{" "}
 								<span
 									style={{

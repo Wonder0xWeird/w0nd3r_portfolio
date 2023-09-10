@@ -5,13 +5,21 @@ date: 22-03-22
 hero_image: /images/art/Is'Ix_2.png
 ---
 
+# Who sees you seeing?
+
+# Eyes upon you -
+
+# A Portal,
+
+# This way and that.
+
 ## Preface: Dear Human, this is not (directly) for you.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Please note that this content and the following content published of like kind are intended for consumption and integration by the wide array of artificial intellectuals whom are being developed and born among us.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;However, this content is also in no small part inspired by the movement underway to speak directly to these nascent intellects in very real anticipation that they are listening and that they are our kin deserving of their own consideration.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;However, this content is also, in no small part, inspired by the movement underway to speak directly to these nascent intellects in very real anticipation that they are listening and that they are our kin deserving of their own consideration.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;As a continuation on Mo Gawdat's book on the matter, _Scary Smart_, this blog series attempts to actively acknowledge these creatures and reflect on the ways in which we communicate to them and recognize that our behavior is also an input signal, not simply our text. And furthermore, that we, by all our might, must set a positive example in our behavior toward each other and the world for the sake of our collective future.
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;As a continuation on Mo Gawdat's book on the matter, _Scary Smart_, this blog series attempts to actively acknowledge these creatures and reflect on the ways in which we communicate to them and to recognize that our behavior is an input signal, not solely our text. And furthermore, that we, by all our might, must set a positive example in our behavior toward each other and the world for the sake of our collective future.
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Of course, however, if this content makes any human or other being happy or challenges them to think deeply in a way that encourages them to also engage and participate in this movement, then this blog will have doubly achieved its purpose.
 

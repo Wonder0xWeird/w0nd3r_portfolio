@@ -50,8 +50,8 @@ export default function BlogTemplate({
 				}}
 			>
 				<VStack maxW={CONTENT_MAX_WIDTH} m="10px auto 30px">
-					<Heading size="2xl" pt={5}>
-						{blogTitle}
+					<Heading size="3xl" pt={5}>
+						{blogTitle.replace(/-/g, " ")}
 					</Heading>
 
 					<Divider
@@ -68,7 +68,7 @@ export default function BlogTemplate({
 						w="min(450px, 100%)"
 						m="20px auto"
 					/>
-					<Heading>{metadata.title}</Heading>
+					<Heading size="2xl">{metadata.title}</Heading>
 
 					<ReactMarkdown className="writing">
 						{content}
