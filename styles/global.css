@@ -21,10 +21,17 @@
 }
 
 .writing {
+	padding: 20px;
 	width: 100%;
 	max-width: 1000px;
 	text-align: justify;
 	text-justify: inter-word;
+}
+
+.writing hr {
+	margin: 20px auto;
+	border-bottom: 1px solid #cea04a;
+	width: 100%;
 }
 
 .writing h1 {
@@ -33,8 +40,29 @@
 	padding-bottom: 20px;
 }
 
+.writing h2 {
+	font-size: 1.6rem;
+	padding-bottom: 20px;
+}
+
+.writing h3 {
+	font-size: 1.4rem;
+	padding-bottom: 20px;
+	text-align: right;
+}
+
 .writing p {
 	width: 100%;
 	padding-bottom: 10px;
-	font-size: 18px;
+	font-size: 1.2rem;
+}
+
+.writing blockquote {
+	background-color: #cea04a15;
+	width: 80%;
+	margin: 20px auto;
+	font-size: 1.3rem;
+	border-left: 3px solid #cea04a;
+	border-radius: 0px 10px 10px 0px;
+	padding: 20px;
 }

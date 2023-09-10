@@ -1,39 +1,40 @@
-import { BG_COLOR } from "@/styles/theme"
+import {
+	BG_COLOR,
+	DESIGN_MAX_WIDTH,
+	gold,
+} from "@/styles/theme"
 import {
 	Box,
+	Button,
 	Flex,
 	HStack,
 	Image,
-	Tab,
-	TabList,
 } from "@chakra-ui/react"
 import { useRouter } from "next/router"
 import Tablet from "../Tablet"
+import useWindowWidth from "@/lib/hooks/window"
+import { useTabContext } from "@/pages/_app"
 
-export default function Nav({
-	breakpoint,
-	setTabIndex,
-	setReadMore,
-}) {
+export default function Nav() {
+	const { tabIndex, setTabIndex } = useTabContext()
 	const router = useRouter()
-	const currentPage = router.pathname.split("/")[1]
-	console.log("currentPage", currentPage)
+	const breakpoint = useWindowWidth(DESIGN_MAX_WIDTH)
 
 	return (
-		<Box zIndex={100} position="sticky" top="0" pt={5}>
+		<Box zIndex={999} position="sticky" top="0" pt={5}>
 			<Tablet
 				as={Flex}
 				w="98%"
 				ml="1%"
 				justifyContent="space-between"
 			>
-				<TabList gap={!breakpoint ? 2 : 5} border="none">
-					<Tab
+				<HStack gap={!breakpoint ? 2 : 5} border="none">
+					<Button
+						bg={tabIndex === 0 && `${gold()}25`}
+						variant="brand"
 						onClick={() => {
-							if (currentPage === "writing")
-								router.push("/?tabIndex=0")
+							router.push("/")
 							setTabIndex(0)
-							setReadMore(false)
 							window.scrollTo(0, 0)
 						}}
 					>
@@ -42,13 +43,13 @@ export default function Nav({
 							mr={!breakpoint ? 0 : 2}
 						/>{" "}
 						{!breakpoint ? null : " About"}
-					</Tab>
-					<Tab
+					</Button>
+					<Button
+						bg={tabIndex === 1 && `${gold()}25`}
+						variant="brand"
 						onClick={() => {
-							if (currentPage === "writing")
-								router.push("/?tabIndex=1")
+							router.push("/")
 							setTabIndex(1)
-							setReadMore(false)
 							window.scrollTo(0, 0)
 						}}
 					>
@@ -57,14 +58,14 @@ export default function Nav({
 							mr={!breakpoint ? 0 : 2}
 						/>
 						{!breakpoint ? null : " Education"}
-					</Tab>
-					<Tab
+					</Button>
+					<Button
+						bg={tabIndex === 2 && `${gold()}25`}
+						variant="brand"
 						onClick={() => {
-							if (currentPage === "writing")
-								router.push("/?tabIndex=2")
-
+							router.push("/")
+							console.log("setting tab index to 2")
 							setTabIndex(2)
-							setReadMore(false)
 							window.scrollTo(0, 0)
 						}}
 					>
@@ -73,15 +74,22 @@ export default function Nav({
 							mr={!breakpoint ? 0 : 2}
 						/>{" "}
 						{!breakpoint ? null : " Projects"}
-					</Tab>
-					<Tab onClick={() => router.push("/writing")}>
+					</Button>
+					<Button
+						bg={tabIndex === 3 && `${gold()}25`}
+						variant="brand"
+						onClick={() => {
+							router.push("/writing")
+							setTabIndex(3)
+						}}
+					>
 						<Image
 							src="/icons/writing.svg"
 							mr={!breakpoint ? 0 : 2}
 						/>{" "}
 						{!breakpoint ? null : " Writing"}
-					</Tab>
-				</TabList>
+					</Button>
+				</HStack>
 				<HStack spacing={2}>
 					{/* <Tablet
       button

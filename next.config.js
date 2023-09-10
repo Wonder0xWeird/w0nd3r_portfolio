@@ -9,6 +9,15 @@ module.exports = withPlugins([
 			/* config for next-optimized-images */
 		},
 	],
+	{
+		webpack: function (config) {
+			config.module.rules.push({
+				test: /\.md$/,
+				use: "raw-loader",
+			})
+			return config
+		},
+	},
 
 	// your other plugins here
 ])

@@ -17,6 +17,7 @@
     "@types/react-dom": "18.2.7",
     "axios": "^1.5.0",
     "framer-motion": "^10.16.2",
+    "gray-matter": "^4.0.3",
     "imagemin-gifsicle": "^7.0.0",
     "imagemin-mozjpeg": "9.0.0",
     "imagemin-optipng": "^8.0.0",
@@ -24,8 +25,10 @@
     "next": "13.4.19",
     "next-compose-plugins": "^2.2.1",
     "next-optimized-images": "^2.6.2",
+    "raw-loader": "^4.0.2",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-markdown": "^8.0.7",
     "remark": "^14.0.3",
     "remark-html": "^15.0.2",
     "typescript": "5.2.2"

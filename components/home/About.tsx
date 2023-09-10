@@ -1,4 +1,9 @@
-import { SHADOW, gold } from "@/styles/theme"
+import useWindowWidth from "@/lib/hooks/window"
+import {
+	DESIGN_MAX_WIDTH,
+	SHADOW,
+	gold,
+} from "@/styles/theme"
 import {
 	Heading,
 	Text,
@@ -12,13 +17,11 @@ import {
 	List,
 	ListItem,
 } from "@chakra-ui/react"
+import { useState } from "react"
 
-export default function About({
-	tabIndex,
-	breakpoint,
-	readMore,
-	setReadMore,
-}) {
+export default function About({ tabIndex }) {
+	const [readMore, setReadMore] = useState(false)
+	const breakpoint = useWindowWidth(DESIGN_MAX_WIDTH)
 	return (
 		<SlideFade
 			in={tabIndex === 0}

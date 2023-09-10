@@ -5,6 +5,7 @@ import {
 } from "@chakra-ui/react"
 
 export const DESIGN_MAX_WIDTH = 1200
+export const CONTENT_MAX_WIDTH = 1000
 export const GLOBAL_PADDING_X = 15
 export const GLOBAL_PADDING_Y = 10
 
@@ -124,13 +125,42 @@ const theme = extendTheme({
 	styles: {
 		global: {
 			body: {
-				color: "#eee",
+				color: "#e0e0e0",
 				textShadow: `0 4px 4px ${SHADOW}`,
 				bgColor: BG_COLOR,
 			},
 		},
 	},
 	components: {
+		Button: {
+			baseStyle: {},
+			variants: {
+				brand: {
+					fontWeight: "normal",
+					margin: "0",
+					borderRadius: "9999px",
+					border: `1px solid ${gold()}!important`,
+					fontSize: "18px",
+					...webkitNoTap,
+					boxShadow: `0 3px 10px 5px ${SHADOW}`,
+					_hover: {
+						bg: `${gold()}10!important`,
+					},
+					_active: {
+						bg: `${gold()}25!important`,
+						color: "#eee!important",
+					},
+					_focus: {
+						bg: `${gold()}25!important`,
+						color: "#eee!important",
+					},
+					_selected: {
+						bg: `${gold()}15!important`,
+						color: `#eee!important`,
+					},
+				},
+			},
+		},
 		Tab: {
 			baseStyle: {
 				color: "#eee",
