@@ -11,26 +11,23 @@ import {
 } from "@chakra-ui/react"
 import {
 	CONTENT_MAX_WIDTH,
-	DESIGN_MAX_WIDTH,
 	gold,
 	SHADOW,
 } from "@/styles/theme"
-import Nav from "@/components/layout/Nav"
-import useWindowWidth from "@/lib/hooks/window"
-import { useState } from "react"
+import { useEffect } from "react"
 import Layout from "@/components/layout"
-
-function reformatDate(fullDate) {
-	const date = new Date(fullDate)
-	return date.toDateString().slice(4)
-}
+import { useTabContext } from "../_app"
 
 export default function BlogTemplate({
 	metadata,
 	content,
 	blogTitle,
 }) {
-	const [tabIndex, setTabIndex] = useState(0)
+	const { tabIndex, setTabIndex } = useTabContext()
+
+	useEffect(() => {
+		setTabIndex(3)
+	}, [])
 
 	return (
 		<Layout>
