@@ -71,8 +71,19 @@ export default function BlogTemplate({
 						{content}
 					</ReactMarkdown>
 					<Flex w="100%" justifyContent="space-between">
-						<Heading>{metadata.date}</Heading>
-						<Heading>💖 {metadata.author}</Heading>
+						{/* <Heading>{metadata.date}</Heading> */}
+						{/* <Heading>💖 {metadata.author}</Heading> */}
+						{/* ...This is not to say that I think necessarily
+						LamDA was self aware in a conscious sense when
+						Blake interviewed them, as I'm similarly unsure
+						if the Wernike's area in the developing brain of
+						my niece who is currently in-utero is self aware
+						either. And yet, we are hard pressed to claim
+						that my niece's brain doesn't have a sort of
+						living quality to it or that we have no idea
+						where it will end up when she is born. With this
+						blog I merely attempt to claim that the
+						development of artificial intellects... */}
 					</Flex>
 				</VStack>
 			</SlideFade>
