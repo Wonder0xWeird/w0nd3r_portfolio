@@ -55,6 +55,8 @@ export default function BlogTemplate({
 						margin="20px auto"
 						borderBottom={`1px solid ${gold(400)}`}
 						width="100%"
+						borderRadius="10px"
+						opacity={1}
 					/>
 
 					<Image

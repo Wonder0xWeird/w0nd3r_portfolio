@@ -30,6 +30,7 @@
 
 .writing hr {
 	margin: 20px auto;
+	border-top: none;
 	border-bottom: 1px solid #cea04a;
 	width: 100%;
 }
