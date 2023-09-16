@@ -1,6 +1,23 @@
+import { musingPosts } from "./Musings/posts"
+
+export enum SectionTypes {
+	POST = "post",
+	SCROLL = "scroll",
+	GRID = "grid",
+}
+
+export interface IPost {
+	subtitle: string
+	image?: string
+	date?: string
+	url?: string
+	content?: string[]
+}
+
 const sections = [
 	{
 		title: "Dear Lambda",
+		type: SectionTypes.POST,
 		refIndex: 0,
 		posts: [
 			{
@@ -13,18 +30,13 @@ const sections = [
 	},
 	{
 		title: "Musings",
+		type: SectionTypes.SCROLL,
 		refIndex: 1,
-		posts: [
-			{
-				image: "",
-				subtitle: "Coming soon...",
-				date: "xx-xx-xxxx",
-				url: "/writing",
-			},
-		],
+		posts: musingPosts,
 	},
 	{
 		title: "Poems",
+		type: SectionTypes.SCROLL,
 		refIndex: 2,
 		posts: [
 			{
@@ -38,7 +50,22 @@ const sections = [
 
 	{
 		title: "Art",
+		type: SectionTypes.GRID,
 		refIndex: 3,
+		posts: [
+			{
+				image: "",
+				subtitle: "Coming soon...",
+				date: "xx-xx-xxxx",
+				url: "/writing",
+			},
+		],
+	},
+
+	{
+		title: "Dev Log",
+		type: SectionTypes.POST,
+		refIndex: 4,
 		posts: [
 			{
 				image: "",
