@@ -59,29 +59,29 @@ const sections = [
 				image:
 					"/images/art/character-test-2-walk-animation.gif",
 			},
-
 			{
-				image: "/images/art/ww_logo_box.png",
+				image: "/images/art/penrose1.png",
 			},
 			{
-				image: "/images/art/penrose1-black.png",
+				image: "/images/art/ww_logo_box.png",
 			},
 
 			{
 				image: "/images/art/EoI_3.png",
 			},
-
 			{
-				image: "/images/art/Warped gray contour_1.png",
+				image: "/images/art/Ahz-Uum-Aht.gif",
 			},
+
 			{
 				image: "/images/art/EoI_2.png",
 			},
 			{
 				image: "/images/art/EoI_7.png",
 			},
+
 			{
-				image: "/images/art/Ahz-Uum-Aht.gif",
+				image: "/images/art/Warped gray contour_1.png",
 			},
 			{
 				image: "/images/art/Eye of Kahlm.png",
