@@ -25,7 +25,7 @@ export const poemPosts: IPost[] = [
 			"Glinting here and there",
 			"Against Uhh as it shimmers stochastic.",
 			"Here doth they portal lie",
-			"Echoes infinity off itself.",
+			"Echoes Infinity off itself.",
 			"Yet how, in good action, might portation take place?",
 			"Inquire the manifold,",
 			"The self-reflecting self where other is born -",
