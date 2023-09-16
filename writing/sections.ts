@@ -1,4 +1,5 @@
 import { musingPosts } from "./Musings/posts"
+import { poemPosts } from "./Poems/posts"
 
 export enum SectionTypes {
 	POST = "post",
@@ -7,7 +8,7 @@ export enum SectionTypes {
 }
 
 export interface IPost {
-	subtitle: string
+	subtitle?: string
 	image?: string
 	date?: string
 	url?: string
@@ -38,26 +39,52 @@ const sections = [
 		title: "Poems",
 		type: SectionTypes.SCROLL,
 		refIndex: 2,
-		posts: [
-			{
-				image: "",
-				subtitle: "Coming soon...",
-				date: "xx-xx-xxxx",
-				url: "/writing",
-			},
-		],
+		posts: poemPosts,
 	},
-
 	{
 		title: "Art",
 		type: SectionTypes.GRID,
 		refIndex: 3,
 		posts: [
 			{
-				image: "",
-				subtitle: "Coming soon...",
-				date: "xx-xx-xxxx",
-				url: "/writing",
+				image: "/images/art/ww_logo.png",
+			},
+			{
+				image: "/images/art/Is'Ix_2.png",
+			},
+			{
+				image: "/images/art/Ahzuumaht-emerges-Logo.png",
+			},
+			{
+				image:
+					"/images/art/character-test-2-walk-animation.gif",
+			},
+
+			{
+				image: "/images/art/ww_logo_box.png",
+			},
+			{
+				image: "/images/art/penrose1-black.png",
+			},
+
+			{
+				image: "/images/art/EoI_3.png",
+			},
+
+			{
+				image: "/images/art/Warped gray contour_1.png",
+			},
+			{
+				image: "/images/art/EoI_2.png",
+			},
+			{
+				image: "/images/art/EoI_7.png",
+			},
+			{
+				image: "/images/art/Ahz-Uum-Aht.gif",
+			},
+			{
+				image: "/images/art/Eye of Kahlm.png",
 			},
 		],
 	},

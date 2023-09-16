@@ -21,6 +21,8 @@ import {
 	List,
 	ListItem,
 	Divider,
+	Grid,
+	GridItem,
 } from "@chakra-ui/react"
 import Tablet from "components/Tablet"
 import useWindowWidth from "@/lib/hooks/window"
@@ -245,6 +247,25 @@ export default function Writing() {
 								)}
 
 								{/* GRID SET */}
+								{section.type === SectionTypes.GRID && (
+									<Grid
+										templateColumns="repeat(auto-fit, minmax(300px, 1fr))"
+										gap={4} // Adjust the gap between grid items as needed
+										w="100%" // Make sure the grid fills its parent container
+									>
+										{section.posts.map(
+											(post: IPost, key2) => (
+												<GridItem>
+													<Image
+														src={post.image}
+														boxSize="100%" // Make the image a square with a dynamic size
+														objectFit="contain" // Ensure the image covers the square container
+													/>
+												</GridItem>
+											)
+										)}
+									</Grid>
+								)}
 							</TabPanel>
 						</SlideFade>
 					))}

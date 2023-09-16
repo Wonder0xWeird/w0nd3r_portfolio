@@ -28,6 +28,11 @@
 	text-justify: inter-word;
 }
 
+.writing a {
+	color: #cea04a;
+	/* text-decoration: none; */
+}
+
 .writing hr {
 	margin: 20px auto;
 	border-top: none;
