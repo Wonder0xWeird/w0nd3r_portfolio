@@ -51,7 +51,7 @@ export default function BlogTemplate({ metadata, content, blogTitle }) {
 						opacity={1}
 					/>
 
-					{getHeroAsset(metadata.hero_image)}
+					{!!metadata?.hero_image && getHeroAsset(metadata.hero_image)}
 					<Heading size="2xl">{metadata.title}</Heading>
 
 					<ReactMarkdown className="writing">{content}</ReactMarkdown>
