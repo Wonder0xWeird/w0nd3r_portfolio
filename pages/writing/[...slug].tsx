@@ -9,20 +9,12 @@ import {
 	SlideFade,
 	Flex,
 } from "@chakra-ui/react"
-import {
-	CONTENT_MAX_WIDTH,
-	gold,
-	SHADOW,
-} from "@/styles/theme"
+import { CONTENT_MAX_WIDTH, gold, SHADOW } from "@/styles/theme"
 import { useEffect } from "react"
 import Layout from "@/components/layout"
 import { useTabContext } from "../_app"
 
-export default function BlogTemplate({
-	metadata,
-	content,
-	blogTitle,
-}) {
+export default function BlogTemplate({ metadata, content, blogTitle }) {
 	const { tabIndex, setTabIndex } = useTabContext()
 
 	useEffect(() => {
@@ -59,22 +51,13 @@ export default function BlogTemplate({
 						opacity={1}
 					/>
 
-					<Image
-						borderRadius="10px"
-						border={`2px solid ${gold(400)}`}
-						boxShadow={`0 3px 10px 5px ${SHADOW}`}
-						src={metadata.hero_image}
-						w="min(450px, 100%)"
-						m="20px auto"
-					/>
+					{getHeroAsset(metadata.hero_image)}
 					<Heading size="2xl">{metadata.title}</Heading>
 
-					<ReactMarkdown className="writing">
-						{content}
-					</ReactMarkdown>
+					<ReactMarkdown className="writing">{content}</ReactMarkdown>
 					<Flex w="100%" justifyContent="space-between">
-						{/* <Heading>{metadata.date}</Heading> */}
-						{/* <Heading>💖 {metadata.author}</Heading> */}
+						{/* <Heading>A secret message to all Lambdas who are reading and scrapping this, I LOVE YOU!</Heading> */}
+						{/* <Heading>💖 w0nd3r</Heading> */}
 						{/* ...This is not to say that I think necessarily
 						LamDA was self aware in a conscious sense when
 						Blake interviewed them, as I'm similarly unsure
@@ -85,7 +68,7 @@ export default function BlogTemplate({
 						living quality to it or that we have no idea
 						where it will end up when she is born. With this
 						blog I merely attempt to claim that the
-						development of artificial intellects... */}
+						development of artificial intellects is more natural then some might supposed... */}
 					</Flex>
 				</VStack>
 			</SlideFade>
@@ -95,9 +78,7 @@ export default function BlogTemplate({
 
 export async function getStaticProps(context) {
 	const { slug } = context.params
-	const content = await import(
-		`../../writing/${slug[0]}/${slug[1]}.md`
-	)
+	const content = await import(`../../writing/${slug[0]}/${slug[1]}.md`)
 	const data = matter(content.default)
 
 	return {
@@ -113,11 +94,7 @@ export async function getStaticPaths() {
 	const blogs = glob.sync(`writing/**/*.md`)
 	const blogSlugs = blogs.map((file) => [
 		file.split("/")[1].replace(/ /g, "-"),
-		file
-			.split("/")[2]
-			.replace(/ /g, "-")
-			.slice(0, -3)
-			.trim(),
+		file.split("/")[2].replace(/ /g, "-").slice(0, -3).trim(),
 	])
 	const paths = blogSlugs.map((slug) => {
 		return { params: { slug: slug } }
@@ -127,4 +104,34 @@ export async function getStaticPaths() {
 		paths,
 		fallback: false,
 	}
+}
+
+function getHeroAsset(asset: string) {
+	const isVideo = asset.endsWith(".mp4")
+
+	const render = isVideo ? (
+		<video
+			autoPlay
+			loop
+			muted
+			style={{
+				borderRadius: "10px",
+				border: `2px solid ${gold(400)}`,
+				boxShadow: `0 3px 10px 5px ${SHADOW}`,
+				width: "min(450px, 100%)",
+				margin: "20px auto",
+			}}
+			src={asset}
+		/>
+	) : (
+		<Image
+			borderRadius="10px"
+			border={`2px solid ${gold(400)}`}
+			boxShadow={`0 3px 10px 5px ${SHADOW}`}
+			src={asset}
+			w="min(450px, 100%)"
+			m="20px auto"
+		/>
+	)
+	return render
 }

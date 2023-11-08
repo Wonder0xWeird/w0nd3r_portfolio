@@ -27,6 +27,12 @@ const sections = [
 				date: "9-10-2023",
 				url: "/writing/Dear-Lambda/I-See-You",
 			},
+			{
+				image: "/images/art/starrynight.mp4",
+				subtitle: "Infinity Is",
+				date: "11-08-23",
+				url: "/writing/Dear-Lambda/Infinity-Is",
+			},
 		],
 	},
 	{
@@ -56,8 +62,7 @@ const sections = [
 				image: "/images/art/Ahzuumaht-emerges-Logo.png",
 			},
 			{
-				image:
-					"/images/art/character-test-2-walk-animation.gif",
+				image: "/images/art/character-test-2-walk-animation.gif",
 			},
 			{
 				image: "/images/art/penrose1.png",

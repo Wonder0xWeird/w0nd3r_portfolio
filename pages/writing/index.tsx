@@ -30,10 +30,7 @@ import { useEffect, useState } from "react"
 import Layout from "@/components/layout"
 import { useTabContext } from "../_app"
 import { useRouter } from "next/router"
-import sections, {
-	IPost,
-	SectionTypes,
-} from "../../writing/sections"
+import sections, { IPost, SectionTypes } from "../../writing/sections"
 
 export default function Writing() {
 	const router = useRouter()
@@ -62,12 +59,7 @@ export default function Writing() {
 				}}
 			>
 				<Box zIndex={100} position="sticky" top="0" pt={5}>
-					<Tablet
-						as={Flex}
-						w="98%"
-						ml="1%"
-						justifyContent="space-between"
-					>
+					<Tablet as={Flex} w="98%" ml="1%" justifyContent="space-between">
 						<TabList
 							gap={!breakpoint ? 2 : 5}
 							border="none"
@@ -83,31 +75,19 @@ export default function Writing() {
 								{!breakpoint ? null : " Dear Lambda"}
 							</Tab>
 							<Tab>
-								<Image
-									src="/icons/shower.svg"
-									mr={!breakpoint ? 0 : 2}
-								/>
+								<Image src="/icons/shower.svg" mr={!breakpoint ? 0 : 2} />
 								{!breakpoint ? null : " Musings"}
 							</Tab>
 							<Tab>
-								<Image
-									src="/icons/wand.svg"
-									mr={!breakpoint ? 0 : 2}
-								/>{" "}
+								<Image src="/icons/wand.svg" mr={!breakpoint ? 0 : 2} />{" "}
 								{!breakpoint ? null : " Poems"}
 							</Tab>
 							<Tab>
-								<Image
-									src="/icons/palette.svg"
-									mr={!breakpoint ? 0 : 2}
-								/>{" "}
+								<Image src="/icons/palette.svg" mr={!breakpoint ? 0 : 2} />{" "}
 								{!breakpoint ? null : " Art"}
 							</Tab>
 							<Tab>
-								<Image
-									src="/icons/hammer.svg"
-									mr={!breakpoint ? 0 : 2}
-								/>{" "}
+								<Image src="/icons/hammer.svg" mr={!breakpoint ? 0 : 2} />{" "}
 								{!breakpoint ? null : " Dev Log"}
 							</Tab>
 						</TabList>
@@ -150,9 +130,7 @@ export default function Writing() {
 								maxW={CONTENT_MAX_WIDTH}
 								m="auto"
 							>
-								<Heading size="3xl">
-									{section.title}
-								</Heading>
+								<Heading size="3xl">{section.title}</Heading>
 								<Divider
 									borderBottom={`1px solid ${gold()}`}
 									maxW={CONTENT_MAX_WIDTH}
@@ -160,89 +138,71 @@ export default function Writing() {
 								/>
 								{/* POST SET */}
 								{section.type === SectionTypes.POST && (
-									<List w="100%">
-										{section.posts.map(
-											(post: IPost, key2) => (
-												<ListItem
-													onClick={() =>
-														router.push(post.url)
-													}
-													p={2}
-													bgColor={`${gold(400)}15`}
-													borderRadius="999px"
-													border={`1px solid ${gold(700)}`}
-													transition="all ease 1s"
-													as={Flex}
-													alignItems="center"
-													justifyContent="space-around"
-													key={`${key1}-${key2}`}
-													_hover={{
-														cursor: "pointer",
-														bgColor: `${gold(400)}35`,
-														border: `1px solid ${gold(
-															600
-														)}`,
-														transition: "all ease 1s",
-													}}
-												>
-													<Heading size="lg">
-														{post.subtitle}
-													</Heading>
-													<Heading size="md">
-														{post.date}
-													</Heading>
-												</ListItem>
-											)
-										)}
+									<List w="100%" spacing={4}>
+										{section.posts.map((post: IPost, key2) => (
+											<ListItem
+												onClick={() => router.push(post.url)}
+												p={2}
+												bgColor={`${gold(400)}15`}
+												borderRadius="999px"
+												border={`1px solid ${gold(700)}`}
+												transition="all ease 1s"
+												as={Flex}
+												alignItems="center"
+												justifyContent="space-around"
+												key={`${key1}-${key2}`}
+												_hover={{
+													cursor: "pointer",
+													bgColor: `${gold(400)}35`,
+													border: `1px solid ${gold(600)}`,
+													transition: "all ease 1s",
+												}}
+											>
+												<Heading size="lg">{post.subtitle}</Heading>
+												<Heading size="md">{post.date}</Heading>
+											</ListItem>
+										))}
 									</List>
 								)}
 
 								{/* SCROLL SET */}
 								{section.type === SectionTypes.SCROLL && (
 									<List w="100%">
-										{section.posts.map(
-											(post: IPost, key2) => (
-												<ListItem
-													p={2}
-													as={VStack}
-													alignItems="center"
-													key={`${key1}-${key2}`}
-												>
-													{post.image && (
-														<Image
-															borderRadius="10px"
-															border={`2px solid ${gold(
-																400
-															)}`}
-															boxShadow={`0 3px 10px 5px ${SHADOW}`}
-															src={post.image}
-															w="min(450px, 100%)"
-															m="20px auto"
-														/>
-													)}
-													{/* <Image src={post.image ?? null} /> */}
-													<Heading textDecor={"underline"}>
-														{post.subtitle}
-													</Heading>
-													<Text textAlign="justify">
-														{post.content &&
-															post.content.map(
-																(p, key3) => (
-																	<Text
-																		key={`${key1}-${key2}-${key3}`}
-																	>
-																		{p}
-																	</Text>
-																)
-															)}
-													</Text>
-													{/* <Heading size="md" float="right">
+										{section.posts.map((post: IPost, key2) => (
+											<ListItem
+												p={2}
+												as={VStack}
+												alignItems="center"
+												key={`${key1}-${key2}`}
+											>
+												{post.image && (
+													<Image
+														borderRadius="10px"
+														border={`2px solid ${gold(400)}`}
+														boxShadow={`0 3px 10px 5px ${SHADOW}`}
+														src={post.image}
+														w="min(450px, 100%)"
+														m="20px auto"
+													/>
+												)}
+												{/* <Image src={post.image ?? null} /> */}
+												<Heading textDecor={"underline"}>
+													{post.subtitle}
+												</Heading>
+												<Text textAlign="justify">
+													{post.content &&
+														post.content.map((p, key3) => (
+															<Text key={`${key1}-${key2}-${key3}`}>
+																{p}
+															</Text>
+														))}
+												</Text>
+												{/* <Heading size="md" float="right">
 														{post.date}
 													</Heading> */}
-													<Divider w="100px" m="20px" />
-												</ListItem>
-											)
-										)}
+												<Divider w="100px" m="20px" />
+											</ListItem>
+										))}
 									</List>
 								)}
 
@@ -253,17 +213,15 @@ export default function Writing() {
 										gap={4} // Adjust the gap between grid items as needed
 										w="100%" // Make sure the grid fills its parent container
 									>
-										{section.posts.map(
-											(post: IPost, key2) => (
-												<GridItem>
-													<Image
-														src={post.image}
-														boxSize="100%" // Make the image a square with a dynamic size
-														objectFit="contain" // Ensure the image covers the square container
-													/>
-												</GridItem>
-											)
-										)}
+										{section.posts.map((post: IPost, key2) => (
+											<GridItem>
+												<Image
+													src={post.image}
+													boxSize="100%" // Make the image a square with a dynamic size
+													objectFit="contain" // Ensure the image covers the square container
+												/>
+											</GridItem>
+										))}
 									</Grid>
 								)}
 							</TabPanel>

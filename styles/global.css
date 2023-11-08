@@ -64,6 +64,17 @@
 	font-size: 1.2rem;
 }
 
+.writing ul,
+ol {
+	width: 90%;
+	margin: auto;
+	padding-bottom: 10px;
+	font-size: 1.2rem;
+}
+.writing li {
+	padding: 5px 0px;
+}
+
 .writing blockquote {
 	background-color: #cea04a15;
 	width: 85%;
