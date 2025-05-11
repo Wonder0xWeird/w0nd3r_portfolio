@@ -73,8 +73,7 @@ export default function About({ tabIndex }) {
 						<VStack p={4} spacing={4}>
 							<Heading>Tribally Games</Heading>
 							<Text fontSize="18px">
-								A social gaming platform with game dev tooling and onchain
-								perks.
+								A social gaming platform with game development tooling and onchain perks.
 							</Text>
 							<Wrap fontSize="18px">
 							<Text
