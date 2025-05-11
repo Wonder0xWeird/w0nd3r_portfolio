@@ -71,9 +71,10 @@ export default function About({ tabIndex }) {
 							</Heading> */}
 						</VStack>
 						<VStack p={4} spacing={4}>
-							<Heading>Tribally</Heading>
+							<Heading>Tribally Games</Heading>
 							<Text fontSize="18px">
-								Social gaming platform with onchain perks.
+								A social gaming platform with game dev tooling and onchain
+								perks.
 							</Text>
 							<Wrap fontSize="18px">
 							<Text
@@ -336,7 +337,24 @@ export default function About({ tabIndex }) {
 							w="100%"
 							position="relative"
 							borderBottom={`1px solid ${gold()} `}
-						/>
+						>
+							<Heading
+								pos="absolute"
+								size="md"
+								top="15%"
+								left="15%"
+							>
+								Lord_Wud
+							</Heading>
+							<Heading
+								pos="absolute"
+								size="md"
+								top="15%"
+								right="15%"
+							>
+								#321
+							</Heading>
+						</VStack>
 						<VStack p={4} spacing={4}>
 							<Heading>Sidekicks</Heading>
 							<Text fontSize="18px">
