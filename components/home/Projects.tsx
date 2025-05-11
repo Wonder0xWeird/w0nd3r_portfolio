@@ -341,7 +341,7 @@ export default function About({ tabIndex }) {
 							<Heading
 								pos="absolute"
 								size="md"
-								top="15%"
+								top="10%"
 								left="5%"
 							>
 								Lord_Wud
@@ -349,7 +349,7 @@ export default function About({ tabIndex }) {
 							<Heading
 								pos="absolute"
 								size="md"
-								top="15%"
+								top="10%"
 								right="10%"
 							>
 								#321
