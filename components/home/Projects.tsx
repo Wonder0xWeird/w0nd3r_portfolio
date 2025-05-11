@@ -49,7 +49,7 @@ export default function About({ tabIndex }) {
 						)}, ${grey(800)})`}
 						cursor="pointer"
 						onClick={() =>
-							router.push("https://briefing.beezle.buzz")
+							router.push("https://blunder.beezle.buzz")
 						}
 					>
 						<VStack
