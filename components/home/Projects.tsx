@@ -342,7 +342,7 @@ export default function About({ tabIndex }) {
 								pos="absolute"
 								size="md"
 								top="15%"
-								left="15%"
+								left="5%"
 							>
 								Lord_Wud
 							</Heading>
