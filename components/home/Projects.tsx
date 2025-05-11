@@ -350,7 +350,7 @@ export default function About({ tabIndex }) {
 								pos="absolute"
 								size="md"
 								top="15%"
-								right="15%"
+								right="10%"
 							>
 								#321
 							</Heading>
