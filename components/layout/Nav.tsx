@@ -117,7 +117,7 @@ export default function Nav() {
 						p={!breakpoint ? 1 : 3}
 						onClick={() =>
 							router.push(
-								"https://github.com/Wonder0xWeird"
+								"https://github.com/w0nd3r-tribally"
 							)
 						}
 					>
