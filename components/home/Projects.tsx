@@ -38,6 +38,148 @@ export default function About({ tabIndex }) {
 					templateColumns="repeat(auto-fill, minmax(300px, 1fr))"
 					gap={4}
 				>
+					{/* Tribally */}
+					<GridItem
+						as={VStack}
+						borderRadius="24px"
+						border={`1px solid ${gold(400)}`}
+						boxShadow={`0 3px 10px 5px ${SHADOW}`}
+						overflow="hidden"
+						backgroundImage={`linear-gradient(185deg, ${grey(
+							700
+						)}, ${grey(800)})`}
+						cursor="pointer"
+						onClick={() =>
+							router.push("https://tribally.games")
+						}
+					>
+						<VStack
+							bgImage="/images/tribally.png"
+							bgSize="cover"
+							bgPosition="center"
+							h="300px"
+							w="100%"
+							position="relative"
+							borderBottom={`1px solid ${gold()} `}
+						>
+							{/* <Heading
+								pos="absolute"
+								size="md"
+								bottom="15%"
+							>
+								Beezlebop
+							</Heading> */}
+						</VStack>
+						<VStack p={4} spacing={4}>
+							<Heading>Tribally</Heading>
+							<Text fontSize="18px">
+								Social gaming platform with onchain perks.
+							</Text>
+							<Wrap fontSize="18px">
+							<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									TypeScript
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Node.js
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Next.js
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Ethers.js
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Wagmi.js
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									OAuth2.0
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									MongoDB
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Redis
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									PostgreSQL
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Kubernetes
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Docker
+								</Text>
+							</Wrap>
+						</VStack>
+					</GridItem>
+
+					{/* Beezlebop's Blunder */}
 					<GridItem
 						as={VStack}
 						borderRadius="24px"
@@ -72,7 +214,7 @@ export default function About({ tabIndex }) {
 						<VStack p={4} spacing={4}>
 							<Heading>Beezlbop's Blunder</Heading>
 							<Text fontSize="18px">
-								A multiplayer rogue-lite dungeon crawler set
+								A multiplayer rogue-like dungeon crawler set
 								in the Axie Infinity universe.
 							</Text>
 							<Wrap fontSize="18px">
