@@ -209,7 +209,7 @@ export default function About({ tabIndex }) {
 								size="md"
 								bottom="15%"
 							>
-								Beezlebop
+								Beezlebop - #667
 							</Heading>
 						</VStack>
 						<VStack p={4} spacing={4}>
