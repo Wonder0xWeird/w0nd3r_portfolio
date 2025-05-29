@@ -288,6 +288,15 @@ export default function About({ tabIndex }) {
 									p="2px 10px"
 									fontSize="14px"
 								>
+									Redis
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
 									Ethers.js
 								</Text>
 								<Text
@@ -307,6 +316,203 @@ export default function About({ tabIndex }) {
 									fontSize="14px"
 								>
 									Node.js
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Docker
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Cursor
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Claude 4.0
+								</Text>
+							</Wrap>
+						</VStack>
+					</GridItem>
+
+					{/* BTC Pay App */}
+					<GridItem
+						as={VStack}
+						borderRadius="24px"
+						border={`1px solid ${gold(400)}`}
+						boxShadow={`0 3px 10px 5px ${SHADOW}`}
+						overflow="hidden"
+						backgroundImage={`linear-gradient(185deg, ${grey(
+							700
+						)}, ${grey(800)})`}
+						cursor="pointer"
+						onClick={() =>
+							router.push("https://btc-pay-w0nd3rs-projects.vercel.app/")
+						}
+					>
+						<VStack
+							bgImage="/images/btc-pay-app.png"
+							bgSize="cover"
+							bgPosition="center"
+							h="300px"
+							w="100%"
+							position="relative"
+							borderBottom={`1px solid ${gold()} `}
+						>
+						</VStack>
+						<VStack p={4} spacing={4}>
+							<Heading>BTC Pay App</Heading>
+							<Text fontSize="18px">
+							A Bitcoin payment system with real-time monitoring on Bitcoin Testnet4.
+							</Text>
+							<Wrap fontSize="18px">
+							<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									TypeScript
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Next.js
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									React
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Tailwind CSS
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Bitcoin Testnet4
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Bitcoinjs-lib
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									BIP21
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									BIP32
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									BIP39
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									BIP44
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									SegWit
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Vercel
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Serverless
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Cursor
+								</Text>
+								<Text
+									border={`1px solid ${gold()}`}
+									borderRadius="100px"
+									w="fit-content"
+									p="2px 10px"
+									fontSize="14px"
+								>
+									Claude 4.0
 								</Text>
 							</Wrap>
 						</VStack>
