@@ -11,7 +11,19 @@ const u = RUNE_UNIT
  * turned to the bedding angle and laid over the face in overlay. One pass of bands (the beds) and one of
  * hairline lamination, rendered once by the browser: no image request. Frequencies are per stage unit.
  */
-const BEDDING = { angle: 8, bands: "0.006 0.05", lamina: "0.028 0.8", beds: 0.3, opacity: 0.27 }
+const BEDDING = { angle: 8, bands: "0.006 0.05", lamina: "0.028 0.8", beds: 0.3, opacity: 0.24 }
+
+/**
+ * The bedding layer's box: the stone's bounding box (ANCHORS.bbox) grown by 30 units, enough to cover
+ * it once turned by BEDDING.angle about the runes. The noise is only computed here (a quarter of a
+ * 1.5x stage box), which keeps the first paint cheap.
+ */
+const SLATE_BOX = (() => {
+	const m = 30
+	const x = (ANCHORS.bbox.x / 100) * STAGE.w - m
+	const y = (ANCHORS.bbox.y / 100) * STAGE.h - m
+	return { x, y, w: (ANCHORS.bbox.w / 100) * STAGE.w + 2 * m, h: (ANCHORS.bbox.h / 100) * STAGE.h + 2 * m }
+})()
 
 /** The foot sinks into its ground shadow: the face darkens from FOOT.from to the base (stage fractions), as the 3D stone's vertex colours do. */
 const FOOT = { from: 0.6, to: 0.9, alpha: 0.28 }
@@ -77,7 +89,7 @@ export function StoneFallback({ className, label = true }: { className?: string;
 					<stop offset="0.28" stopColor="#7f95b8" stopOpacity="0" />
 				</linearGradient>
 				{/* bedding: grey noise (from the red channel), beds and hairline lamination mixed */}
-				<filter id="sf-slate" filterUnits="userSpaceOnUse" x={-STAGE.w * 0.25} y={-STAGE.h * 0.25} width={STAGE.w * 1.5} height={STAGE.h * 1.5} colorInterpolationFilters="sRGB">
+				<filter id="sf-slate" filterUnits="userSpaceOnUse" x={SLATE_BOX.x} y={SLATE_BOX.y} width={SLATE_BOX.w} height={SLATE_BOX.h} colorInterpolationFilters="sRGB">
 					<feTurbulence type="fractalNoise" baseFrequency={BEDDING.bands} numOctaves={2} seed={7} result="beds" />
 					<feTurbulence type="fractalNoise" baseFrequency={BEDDING.lamina} numOctaves={1} seed={3} result="lamina" />
 					<feComposite in="beds" in2="lamina" operator="arithmetic" k2={BEDDING.beds} k3={1 - BEDDING.beds} />
@@ -103,10 +115,11 @@ export function StoneFallback({ className, label = true }: { className?: string;
 				{/* the face is inside the clipped (isolated) group, so the overlay layers blend with it */}
 				<path d={SILHOUETTE} fill="url(#sf-face)" />
 				<rect
-					x={-STAGE.w * 0.25}
-					y={-STAGE.h * 0.25}
-					width={STAGE.w * 1.5}
-					height={STAGE.h * 1.5}
+					className="stone-bedding"
+					x={SLATE_BOX.x}
+					y={SLATE_BOX.y}
+					width={SLATE_BOX.w}
+					height={SLATE_BOX.h}
 					filter="url(#sf-slate)"
 					transform={`rotate(${BEDDING.angle} ${rx} ${ry})`}
 					opacity={BEDDING.opacity}

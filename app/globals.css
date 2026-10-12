@@ -664,6 +664,14 @@ strong {
 	width: 100%;
 	height: 100%;
 }
+/* The SVG twin's bedding is feTurbulence, rasterised before the first paint (~100 ms in headless
+   Edge, software raster). Below 861 px the stone is a half-lit 250-330 px backdrop where the texture
+   cannot be seen, so phones skip it (v2.3). */
+@media (max-width: 860px) {
+	.stone-bedding {
+		display: none;
+	}
+}
 /* Handoff: the canvas (same pose and value as the SVG) fades in over the still-opaque SVG,
    so the stone never dims mid-fade; then the SVG is retired and the 3D stone may move. */
 .stone__canvas {
