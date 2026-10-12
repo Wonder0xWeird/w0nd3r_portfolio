@@ -32,7 +32,6 @@
 	font-family: var(--face-text);
 	font-size: clamp(0.9375rem, 0.75rem + 0.5vw, 1.25rem);
 	font-weight: 500;
-	font-stretch: 112%;
 	letter-spacing: 0.02em;
 	color: var(--text-3);
 	vertical-align: baseline;
@@ -52,7 +51,6 @@
 	margin: 0 0 4px;
 	font-size: var(--step-1);
 	font-weight: 550;
-	font-stretch: 112%;
 	line-height: 1.35;
 	color: var(--text);
 }
@@ -166,7 +164,6 @@
 .stack {
 	margin: var(--space-3) 0 0;
 	font-size: var(--step--1);
-	font-stretch: 92%;
 	line-height: 1.45;
 	color: var(--text-3);
 }
@@ -481,13 +478,11 @@
 }
 .pubYear {
 	font-size: var(--step--1);
-	font-stretch: 92%;
 	font-variant-numeric: tabular-nums;
 	color: var(--text-3);
 }
 .pubKind {
 	font-size: var(--step--1);
-	font-stretch: 92%;
 	color: var(--text-3);
 	white-space: nowrap;
 }
@@ -745,9 +740,9 @@
 }
 @media (max-width: 760px) {
 	.playMeans {
-		grid-template-columns: repeat(2, auto);
-		gap: var(--space-1) var(--space-5);
-		font-size: 1.2rem;
+		grid-template-columns: auto;
+		gap: var(--space-1);
+		font-size: 1.25rem;
 	}
 }
 .playCoda {
@@ -830,6 +825,8 @@
 @media (max-width: 860px) {
 	.door {
 		justify-self: start;
+		width: min(100%, 280px);
+		min-height: 240px;
 	}
 }
 .doorRune {

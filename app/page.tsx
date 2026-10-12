@@ -408,9 +408,9 @@ export default function Home() {
 							</p>
 						</div>
 					</div>
-					<Link href="/cottage" className={`slab ${s.door}`} aria-labelledby="cottage-title">
+					<Link href="/cottage" className={`slab ${s.door}`}>
 						<Rune name="othala" size={28} strokeWidth={0.9} className={`rune-incised ${s.doorRune}`} />
-						<span id="cottage-title" className={s.doorTitle}>
+						<span className={s.doorTitle}>
 							Enter the cottage
 						</span>
 						<span className={s.doorSub}>An explorable 3D home for all of the above. Under construction.</span>
