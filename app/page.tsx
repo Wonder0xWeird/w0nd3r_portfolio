@@ -4,6 +4,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { HeroStone } from "@/components/hero/HeroStone"
 import { StoneFallback } from "@/components/hero/StoneFallback"
+import { CopyEmail } from "@/components/CopyEmail"
 import { External } from "@/components/External"
 import { Rune } from "@/components/Rune"
 import { CarvedRune } from "@/components/CarvedRune"
@@ -60,26 +61,18 @@ export default function Home() {
 
 	return (
 		<>
-			{/* ---------- hero ---------- */}
+			{/* ---------- hero: the name, one line of who/what-now, the next action; the stone ---------- */}
 			<section className={s.hero} aria-labelledby="hero-title">
 				<div className={`container ${s.heroGrid}`}>
 					<h1 id="hero-title" className={s.name}>
-						<span className={s.nameLine}>Lars</span>{" "}
-						<span className={s.nameLine}>
-							Crawford<span className={s.honorific}>{profile.honorific.replace(/\./g, "")}</span>
-						</span>
+						<span className={s.nameLine}>Lars</span> <span className={s.nameLine}>Crawford</span>
 					</h1>
 					<div className={s.heroArt}>
 						<HeroStone fallback={<StoneFallback className="stone__svg" />} />
 					</div>
 					<div className={s.heroCopy}>
-						<p className={s.roles}>{profile.tagline}</p>
-						<p className={`meta ${s.place}`}>{profile.location}</p>
-						<div className={s.intro}>
-							{profile.intro.map((p) => (
-								<p key={p}>{p}</p>
-							))}
-						</div>
+						<p className={s.lede}>{profile.lede}</p>
+						<Meta lines={[...profile.place]} className={s.place} />
 						<div className={s.ctaRow}>
 							{hasResume ? (
 								<a className="btn--primary" href={links.resume.href}>
@@ -91,13 +84,6 @@ export default function Home() {
 								</a>
 							)}
 							<ul className={s.ctaLinks}>
-								{hasResume ? (
-									<li>
-										<a className="textlink" href={links.email.href}>
-											Email
-										</a>
-									</li>
-								) : null}
 								<li>
 									<External className="textlink" href={links.linkedin.href}>
 										LinkedIn
@@ -110,9 +96,7 @@ export default function Home() {
 								</li>
 							</ul>
 						</div>
-						<p className={s.heroAside}>
-							Prefer to wander? <Link href="/cottage">Enter the cottage</Link>
-						</p>
+						<CopyEmail email={profile.email} className={s.email} />
 					</div>
 				</div>
 			</section>
@@ -120,7 +104,9 @@ export default function Home() {
 			{/* ---------- proof ---------- */}
 			<section id="work" className={`${s.section} ${s.sectionProof}`} aria-labelledby="work-title">
 				<div className="container">
-					<SectionHead id="work" rune="sowilo" title="What I do now, and what I did before" />
+					<SectionHead id="work" rune="sowilo" title="What I do now, and what I did before">
+						<p className={s.sectionLede}>{profile.aim}</p>
+					</SectionHead>
 					<div className={s.proofGrid}>
 						<article className={`slab ${s.proofFeature}`}>
 							<Meta lines={[feature.org, feature.context]} />

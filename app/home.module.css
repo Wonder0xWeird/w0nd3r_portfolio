@@ -1,23 +1,25 @@
 /* Front door. Tokens, type scale and light recipes live in globals.css (DESIGN.md). */
 
-/* ---------- hero ---------- */
+/* ---------- hero: the name, the lede, the next action; the stone bleeding off the grid ---------- */
 .hero {
-	padding: clamp(28px, 5vw, 72px) 0 0;
+	position: relative; /* containing block for the 390 backdrop; no z-index: the stone's torch must reach the root stacking context */
+	min-height: min(calc(100svh - var(--header-h)), 940px);
+	padding: clamp(28px, 6.2vw, 88px) 0 clamp(32px, 4vw, 56px);
 }
 .heroGrid {
 	display: grid;
-	grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+	grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+	grid-template-rows: auto 1fr;
 	grid-template-areas:
 		"name art"
 		"copy art";
-	column-gap: clamp(24px, 4vw, 72px);
-	align-items: start;
+	column-gap: clamp(24px, 4vw, 48px);
 }
 .name {
 	grid-area: name;
 	position: relative;
 	z-index: 1;
-	margin: 0 0 clamp(20px, 2.4vw, 36px);
+	margin: 0 0 clamp(18px, 2vw, 28px);
 	font-size: var(--step-display);
 	font-weight: 300;
 	line-height: 0.9;
@@ -27,51 +29,40 @@
 .nameLine {
 	display: block;
 }
-.honorific {
-	margin-left: 0.5em;
-	font-family: var(--face-text);
-	font-size: clamp(0.9375rem, 0.75rem + 0.5vw, 1.25rem);
-	font-weight: 500;
-	letter-spacing: 0.02em;
-	color: var(--text-3);
-	vertical-align: baseline;
-}
+/* The stone: ~640 px of menhir, bleeding past the grid on the right and up toward the header. */
 .heroArt {
 	grid-area: art;
-	align-self: center;
-	justify-self: center;
-	width: 100%;
-	max-width: 470px;
+	justify-self: end;
+	align-self: start;
+	width: min(46vw, 680px);
+	margin-right: calc(-1 * clamp(40px, 7vw, 140px));
+	margin-top: calc(-1 * (var(--header-h) + 34px));
 }
 .heroCopy {
 	grid-area: copy;
+	position: relative;
+	z-index: 1;
 	min-width: 0;
 }
-.roles {
-	margin: 0 0 4px;
-	font-size: var(--step-1);
-	font-weight: 550;
-	line-height: 1.35;
+/* The middle step of the ladder: 152 -> 24 -> 15 px at 1440 (DESIGN.md --step-2t). */
+.lede {
+	max-width: 23em;
+	margin: 0 0 clamp(14px, 1.4vw, 20px);
+	font-size: var(--step-2t);
+	font-weight: 500;
+	line-height: 1.32;
+	letter-spacing: -0.005em;
 	color: var(--text);
 }
 .place {
-	margin-bottom: clamp(20px, 2vw, 28px);
-}
-.intro {
-	max-width: 58ch;
-	color: var(--text-2);
-}
-.intro p:first-child {
-	font-size: var(--step-1);
-	line-height: 1.5;
-	color: var(--text);
+	margin: 0;
 }
 .ctaRow {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
 	gap: var(--space-3) var(--space-6);
-	margin: clamp(24px, 2.4vw, 32px) 0 var(--space-4);
+	margin: clamp(22px, 2.2vw, 32px) 0 var(--space-1);
 }
 .ctaLinks {
 	display: flex;
@@ -81,35 +72,86 @@
 	padding: 0;
 	list-style: none;
 }
-.heroAside {
+.email {
 	margin: 0;
-	font-size: var(--step--1);
-	color: var(--text-3);
+}
+
+/* The one orchestrated moment (globals.css has the rune ignition): the name rises 8 px,
+   transform only, so it is never invisible; the CTAs follow. Total <= 1.2 s. */
+@media (prefers-reduced-motion: no-preference) {
+	.name {
+		animation: name-rise 900ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+	}
+	.ctaRow > *,
+	.email {
+		animation: cta-in 380ms cubic-bezier(0.2, 0.7, 0.2, 1) 620ms both;
+	}
+	.ctaRow > :nth-child(2) {
+		animation-delay: 700ms;
+	}
+	.email {
+		animation-delay: 780ms;
+	}
+}
+@keyframes name-rise {
+	from {
+		transform: translateY(8px);
+	}
+	to {
+		transform: none;
+	}
+}
+@keyframes cta-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
 }
 
 @media (max-width: 860px) {
+	.hero {
+		min-height: 0;
+		padding: clamp(24px, 7vw, 48px) 0 0;
+	}
 	.heroGrid {
 		grid-template-columns: minmax(0, 1fr);
+		grid-template-rows: auto;
 		grid-template-areas:
 			"name"
 			"copy";
 	}
-	.intro p {
-		margin-bottom: 0.75em;
-	}
-	.place {
-		margin-bottom: 16px;
-	}
-	.ctaRow {
-		margin-top: 20px;
-	}
-	/* The stone stands beside the name, sharing its row (DESIGN.md: 390 hero). */
+	/* The stone becomes a half-lit backdrop beside the name, its crown tucked under the header
+	   and its foot masked away. All four runes sit beside the name; the lede starts below the
+	   last one (the name's bottom margin tracks the stone's size), so no text crosses LARS. */
 	.heroArt {
-		grid-area: name;
-		align-self: start;
-		justify-self: end;
-		width: clamp(96px, 30vw, 230px);
-		margin: -6px -6px 0 0;
+		grid-area: auto;
+		position: absolute;
+		top: -40px;
+		right: -10vw;
+		width: min(60vw, 330px);
+		margin: 0;
+	}
+	.name {
+		margin-bottom: clamp(18px, 33.9vw - 89.6px, 48px);
+	}
+	.heroArt :global(.stone__body) {
+		opacity: 0.55;
+		-webkit-mask-image: linear-gradient(#000 74%, transparent 96%);
+		mask-image: linear-gradient(#000 74%, transparent 96%);
+	}
+	.heroArt :global(.stone__ground) {
+		display: none;
+	}
+	/* (opacity on the halo would be overridden by the load animation, so dim its gradient) */
+	.heroArt :global(.stone__halo) {
+		background: radial-gradient(closest-side in oklch, rgb(228 182 90 / 0.1), rgb(228 182 90 / 0.03) 52%, rgb(228 182 90 / 0));
+	}
+	.heroArt :global(.stone__motes) {
+		display: none;
 	}
 }
 
