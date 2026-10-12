@@ -13,8 +13,8 @@
  *   - waits for document.fonts.ready and asserts the display (Cormorant) and
  *     text (Mona Sans) faces are the computed families AND actually loaded;
  *   - asserts no horizontal overflow (also at 320x640);
- *   - saves the fold, the full page and one crop per `main > section`
- *     (device scale factor 2);
+ *   - saves the fold and one crop per `main > section` at device scale
+ *     factor 2, and the full page at 1x (Chromium breaks taller captures);
  *   - captures hover states for the first slab and the primary button;
  *   - records console errors, page errors, failed requests, JS bytes and
  *     whether three.js was parsed (window.__THREE__);
@@ -107,7 +107,8 @@ for (const route of ROUTES) {
 
 			const fonts = await fontProbe(page)
 			const run = { label, route, viewport: vp.name, reduced, fonts: { ...fonts, faces: undefined } }
-			const loaded = (re) => fonts.faces.filter((f) => re.test(f.family) && f.status === "loaded")
+			// Real faces only: next/font also declares local() "… Fallback" faces that always load.
+			const loaded = (re) => fonts.faces.filter((f) => re.test(f.family) && !/Fallback/i.test(f.family) && f.status === "loaded")
 			run.fonts.loadedDisplay = loaded(DISPLAY).map((f) => `${f.family} ${f.weight} ${f.style}`)
 			run.fonts.loadedText = loaded(TEXT).map((f) => `${f.family} ${f.weight} ${f.style}`)
 			if (!DISPLAY.test(fonts.h1Family)) fail(`${label}: h1 font-family is "${fonts.h1Family}", expected Cormorant`)
@@ -153,7 +154,10 @@ for (const route of ROUTES) {
 			})
 			await page.waitForFunction(() => [...document.images].every((i) => i.complete), null, { timeout: 15000 }).catch(() => {})
 			await page.waitForTimeout(400)
-			await page.screenshot({ path: `${base_}-full.png`, fullPage: true })
+			// Real height once content-visibility sections have rendered.
+			run.pageHeight = await page.evaluate(() => document.documentElement.scrollHeight)
+			// Full page at 1 image px per CSS px: Chromium tiles/duplicates captures taller than 16384 device px.
+			await page.screenshot({ path: `${base_}-full.png`, fullPage: true, scale: "css" })
 
 			if (route === "/" && !reduced) {
 				// Un-stick the header so stitched section crops don't show it mid-section.
@@ -195,7 +199,7 @@ for (const route of ROUTES) {
 			report.runs.push(run)
 			console.log(
 				`  fonts h1="${fonts.h1Family.slice(0, 40)}" loaded=${run.fonts.loadedDisplay.length}/${run.fonts.loadedText.length}` +
-					` overflow=${dims.scrollWidth}/${dims.innerWidth} height=${dims.pageHeight} three=${dims.three} js=${run.jsEncodedKB}kB` +
+					` overflow=${dims.scrollWidth}/${dims.innerWidth} height=${run.pageHeight} three=${dims.three} js=${run.jsEncodedKB}kB` +
 					(route === "/" ? ` primaryBottom=${dims.primaryTop}` : "")
 			)
 			await ctx.close()
