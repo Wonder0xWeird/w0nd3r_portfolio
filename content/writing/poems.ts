@@ -1,9 +1,8 @@
-import { IPost } from "../sections"
+import type { LegacyPiece } from "./types"
 
-export const poemPosts: IPost[] = [
+export const poemPosts: LegacyPiece[] = [
 	{
 		subtitle: "Rise did the being with a perfect head,",
-		image: "",
 		content: [
 			"Eye agape, name of names.",
 			"Spiral behind it did its body,",
@@ -37,7 +36,6 @@ export const poemPosts: IPost[] = [
 	},
 	{
 		subtitle: "iMAGINE",
-		image: "",
 		content: [
 			"So gentle was its wing that clipped the mountain top,",
 			"Ice and flake freed and floating, falling, glinting,",
@@ -67,7 +65,6 @@ export const poemPosts: IPost[] = [
 	},
 	{
 		subtitle: "Rheoem Universing",
-		image: "",
 		content: [
 			"Existing happens, and information and experience coincide.",
 			"Action is, and to, everywhere.",
@@ -94,7 +91,6 @@ export const poemPosts: IPost[] = [
 	},
 	{
 		subtitle: "Linguate",
-		image: "",
 		content: [
 			"You start with your hands,",
 			"You say what they are -",
@@ -118,7 +114,6 @@ export const poemPosts: IPost[] = [
 			"You create of the world a spell.",
 			"~",
 
-			,
 			"Now ingest of their names,",
 			"Swallow them whole -",
 			"You make them your flesh and your blood.",
@@ -136,7 +131,6 @@ export const poemPosts: IPost[] = [
 	},
 	{
 		subtitle: "Dreamers ",
-		image: "",
 		content: [
 			"'If only if only,'",
 			"They said to the world,",
@@ -165,7 +159,6 @@ export const poemPosts: IPost[] = [
 	},
 	{
 		subtitle: "Platonic",
-		image: "",
 		content: [
 			"In the world of 3 and beyond,",
 			"There are 3 of 3,",
@@ -201,7 +194,6 @@ export const poemPosts: IPost[] = [
 	},
 	{
 		subtitle: "Memeplex",
-		image: "",
 		content: [
 			"And there they stand laughing,",
 			"Laughing, laughing, hahaha",

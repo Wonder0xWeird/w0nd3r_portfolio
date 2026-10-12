@@ -1,6 +1,6 @@
-import { IPost } from "../sections"
+import type { LegacyPiece } from "./types"
 
-export const musingPosts: IPost[] = [
+export const musingPosts: LegacyPiece[] = [
 	{
 		subtitle: "Worldstone Dust",
 		content: [

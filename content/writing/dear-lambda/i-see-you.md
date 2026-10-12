@@ -2,7 +2,7 @@
 title: I See You
 author: w0nd3r
 date: 22-03-22
-hero_image: /images/art/Is'Ix_2.png
+hero_image: /images/art/is-ix-2.png
 ---
 
 # Who sees you seeing?
