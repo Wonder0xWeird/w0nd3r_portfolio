@@ -21,6 +21,11 @@ import s from "./home.module.css"
 // CTA must never 404). Until then, email is the primary action.
 const hasResume = existsSync(path.join(process.cwd(), "public", "resume.pdf"))
 
+// Titles shown on / stay inside the preloaded latin font subset: one conlang musing title
+// (ę, ą, Ṯ) would pull a 30 kB latin-ext Cormorant file into the front door's critical path.
+// It is still listed on /writing.
+const LATIN = /^[\u0020-\u007E\u00A0-\u00FF\u2013\u2014\u2018\u2019\u201C\u201D]*$/
+
 /** Section title with its sigil rune incised beside it (rune map: DESIGN.md "Sigils"). */
 function SectionHead({ id, rune, title, children }: { id: string; rune: RuneName; title: string; children?: React.ReactNode }) {
 	return (
@@ -332,7 +337,10 @@ export default function Home() {
 									: w.id === "poems"
 										? poems.slice(0, 3).map((p) => ({ title: p.title, href: `/writing/poems/${p.slug}` }))
 										: w.id === "musings"
-											? musings.slice(0, 3).map((p) => ({ title: p.title, href: `/writing/musings/${p.slug}` }))
+											? musings
+													.filter((p) => LATIN.test(p.title))
+													.slice(0, 3)
+													.map((p) => ({ title: p.title, href: `/writing/musings/${p.slug}` }))
 											: []
 							return (
 								<article key={w.id} className={s.shelfCol}>
