@@ -191,7 +191,7 @@ export default function Home() {
 			</section>
 
 			{/* ---------- research ---------- */}
-			<section id="research" className={s.section} aria-labelledby="research-title">
+			<section id="research" className={s.sectionBand} aria-labelledby="research-title">
 				<div className="container">
 					<SectionHead id="research" rune="dagaz" title="Neural engineering, from electrodes to immune cells" />
 					<div className={s.researchGrid}>
@@ -321,7 +321,7 @@ export default function Home() {
 			</section>
 
 			{/* ---------- writing ---------- */}
-			<section id="writing" className={s.section} aria-labelledby="writing-title">
+			<section id="writing" className={s.sectionBand} aria-labelledby="writing-title">
 				<div className="container">
 					<SectionHead id="writing" rune="ansuz" title="Letters, poems and musings">
 						<p className={s.sectionLede}>

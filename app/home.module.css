@@ -167,7 +167,33 @@
 .sectionProof {
 	padding-top: clamp(64px, 8vw, 120px);
 }
+/* Night / band / night: Research and Writing sit on a sunken slate band, so the page below
+   the hero is not one value. The band is a stacking context so its sigil's light shows on it. */
+.sectionBand {
+	position: relative;
+	isolation: isolate;
+	overflow-x: clip;
+	margin-top: clamp(56px, 9vw, 136px);
+	padding-block: clamp(56px, 7.5vw, 112px);
+	background: var(--band);
+	border-block: 1px solid var(--line);
+	box-shadow:
+		inset 0 1px 0 rgb(169 189 214 / 0.06),
+		inset 0 24px 48px -32px rgb(0 0 0 / 0.7),
+		inset 0 -24px 48px -32px rgb(0 0 0 / 0.55);
+}
+.sectionBand::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -2;
+	background: var(--grain) 0 0 / 128px 128px repeat;
+	opacity: 0.09;
+	mix-blend-mode: overlay;
+	pointer-events: none;
+}
 .sectionHead {
+	position: relative;
 	display: grid;
 	grid-template-columns: auto minmax(0, 1fr);
 	column-gap: clamp(14px, 2vw, 28px);
@@ -184,12 +210,32 @@
 .sectionHead > :not(.sigil) {
 	grid-column: 2;
 }
-/* The sigil: one rune per section, incised, hanging left of the title. */
+/* The sigil: one rune per section, incised, hanging left of the title. Its inlay holds an
+   ember, and that ember is the section's light: a warm pool on the slate around the title
+   (static: the hero keeps the page's one orchestrated moment). */
 .sigil {
 	grid-row: 1 / span 2;
 	width: clamp(36px, 1.25rem + 2.8vw, 68px);
 	height: auto;
 	margin-top: 0.1em;
+	filter: drop-shadow(0 0 5px rgb(207 156 63 / 0.3));
+}
+.sectionHead::before {
+	content: "";
+	position: absolute;
+	z-index: -1;
+	left: calc(clamp(36px, 1.25rem + 2.8vw, 68px) / 2);
+	top: calc(clamp(36px, 1.25rem + 2.8vw, 68px) / 2 + 0.1em);
+	width: min(1100px, 150vw);
+	height: 600px;
+	translate: -40% -50%;
+	background: radial-gradient(
+		closest-side in oklch,
+		rgb(207 156 63 / 0.13),
+		rgb(207 156 63 / 0.045) 48%,
+		rgb(207 156 63 / 0)
+	);
+	pointer-events: none;
 }
 .sectionLede {
 	max-width: 60ch;
