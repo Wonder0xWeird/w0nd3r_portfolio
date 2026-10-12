@@ -21,7 +21,7 @@ export default function ArtPage() {
 			</header>
 			<div className={s.artGrid}>
 				{art.map((a) => (
-					<figure key={a.src} className={s.artItem}>
+					<figure key={a.src} className={`frame ${s.artItem}`}>
 						<Image
 							src={a.src}
 							alt={a.alt}

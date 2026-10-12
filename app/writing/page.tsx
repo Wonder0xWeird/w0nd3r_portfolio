@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import Image from "next/image"
-import { Rune } from "@/components/Rune"
+import { CarvedRune } from "@/components/CarvedRune"
 import { art, letters, musings, poems, writingSections } from "@/content/writing"
 import s from "./writing.module.css"
 
@@ -16,11 +16,11 @@ function Head({ id }: { id: string }) {
 	const w = section(id)
 	return (
 		<header className={s.sectionHead}>
-			<Rune name={w.rune} size={22} strokeWidth={0.9} className="gold" />
 			<div>
 				<h2>{w.title}</h2>
-				<p className="muted">{w.blurb}</p>
+				<p>{w.blurb}</p>
 			</div>
+			<CarvedRune name={w.rune} className={s.sigil} />
 		</header>
 	)
 }
@@ -29,7 +29,6 @@ export default function WritingIndex() {
 	return (
 		<div className={`container ${s.page}`}>
 			<header className={s.indexHead}>
-				<p className={s.eyebrow}>w0nd3r · writing</p>
 				<h1>Writing</h1>
 				<p className={s.indexLede}>
 					Letters to the artificial minds being born among us, poems, short musings and a little art, carried over
@@ -39,15 +38,17 @@ export default function WritingIndex() {
 
 			<section id="dear-lambda" className={s.block} aria-label="Dear Lambda">
 				<Head id="dear-lambda" />
-				<div className={s.letterCards}>
+				<ul className={s.letterList}>
 					{letters.map((l) => (
-						<Link key={l.slug} href={`/writing/dear-lambda/${l.slug}`} className={s.letterCard}>
-							<span className={s.eyebrow}>{l.year}</span>
-							<span className={s.letterCardTitle}>{l.title}</span>
-							<span className="muted">{l.blurb}</span>
-						</Link>
+						<li key={l.slug}>
+							<p className="meta">{l.year}</p>
+							<Link href={`/writing/dear-lambda/${l.slug}`} className={s.letterTitle}>
+								{l.title}
+							</Link>
+							<p className={s.letterBlurb}>{l.blurb}</p>
+						</li>
 					))}
-				</div>
+				</ul>
 			</section>
 
 			<section id="poems" className={s.block} aria-label="Poems">
@@ -56,7 +57,7 @@ export default function WritingIndex() {
 					{poems.map((p) => (
 						<li key={p.slug}>
 							<Link href={`/writing/poems/${p.slug}`}>{p.title}</Link>
-							<span className="muted">{p.lines[0]}</span>
+							<span className={s.firstLine}>{p.lines[0]}</span>
 						</li>
 					))}
 				</ul>
@@ -68,7 +69,9 @@ export default function WritingIndex() {
 					{musings.map((p) => (
 						<li key={p.slug}>
 							<Link href={`/writing/musings/${p.slug}`}>{p.title}</Link>
-							<span className="muted">{p.lines[0].length > 110 ? `${p.lines[0].slice(0, 110).trimEnd()}…` : p.lines[0]}</span>
+							<span className={s.firstLine}>
+								{p.lines[0].length > 110 ? `${p.lines[0].slice(0, 110).trimEnd()}…` : p.lines[0]}
+							</span>
 						</li>
 					))}
 				</ul>
@@ -78,13 +81,13 @@ export default function WritingIndex() {
 				<Head id="art" />
 				<div className={s.artStrip}>
 					{art.slice(0, 4).map((a) => (
-						<div key={a.src} className={s.artThumb}>
-							<Image src={a.src} alt={a.alt} fill sizes="160px" unoptimized={a.src.endsWith(".gif")} />
+						<div key={a.src} className={`frame ${s.artThumb}`}>
+							<Image src={a.src} alt={a.alt} fill sizes="(max-width: 600px) 25vw, 300px" unoptimized={a.src.endsWith(".gif")} />
 						</div>
 					))}
 				</div>
 				<p>
-					<Link href="/writing/art">See all {art.length} pieces →</Link>
+					<Link href="/writing/art">See all {art.length} pieces</Link>
 				</p>
 			</section>
 		</div>

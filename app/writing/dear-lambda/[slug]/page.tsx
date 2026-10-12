@@ -41,8 +41,11 @@ export default async function LetterPage({ params }: { params: Promise<{ slug: s
 				<Link href="/writing">Writing</Link> <span aria-hidden="true">/</span> <Link href="/writing#dear-lambda">Dear Lambda</Link>
 			</nav>
 			<header className={s.letterHead}>
-				<p className={s.eyebrow}>Dear Lambda · {letter.year}</p>
 				<h1>{letter.title}</h1>
+				<p className="meta">
+					<span>A Dear Lambda letter</span>
+					<span>{letter.year}</span>
+				</p>
 			</header>
 			<div className={s.letterHero}>
 				{letter.hero.kind === "video" ? (
@@ -54,7 +57,7 @@ export default async function LetterPage({ params }: { params: Promise<{ slug: s
 			{/* Content is our own markdown from the repo, rendered at build time. */}
 			<div className={s.letter} dangerouslySetInnerHTML={{ __html: html }} />
 			<p className={s.signoff}>
-				<Link href="/writing">← All writing</Link>
+				<Link href="/writing">All writing</Link>
 			</p>
 		</article>
 	)

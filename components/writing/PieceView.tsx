@@ -1,5 +1,4 @@
 import Link from "next/link"
-import { Rune } from "@/components/Rune"
 import type { Piece } from "@/content/writing"
 import s from "@/app/writing/writing.module.css"
 
@@ -35,7 +34,6 @@ export function PieceView({ piece, all }: { piece: Piece; all: Piece[] }) {
 				<Link href={`/writing#${piece.section}`}>{LABEL[piece.section]}</Link>
 			</nav>
 			<header className={s.pieceHead}>
-				<Rune name={isPoem ? "kenaz" : "algiz"} size={22} strokeWidth={0.9} className="gold" />
 				<h1>{piece.title}</h1>
 			</header>
 			{isPoem ? (
@@ -68,14 +66,16 @@ export function PieceView({ piece, all }: { piece: Piece; all: Piece[] }) {
 			<nav className={s.pager} aria-label={`More ${LABEL[piece.section].toLowerCase()}`}>
 				{prev ? (
 					<Link href={`/writing/${piece.section}/${prev.slug}`} rel="prev">
-						← {prev.title}
+						<span className={s.pagerLabel}>Previous</span>
+						<span className={s.pagerTitle}>{prev.title}</span>
 					</Link>
 				) : (
 					<span />
 				)}
 				{next ? (
 					<Link href={`/writing/${piece.section}/${next.slug}`} rel="next">
-						{next.title} →
+						<span className={s.pagerLabel}>Next</span>
+						<span className={s.pagerTitle}>{next.title}</span>
 					</Link>
 				) : (
 					<span />
