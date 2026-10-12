@@ -101,11 +101,12 @@ function slateTexture(): THREE.CanvasTexture {
 		seed = (seed * 16807) % 2147483647
 		return seed / 2147483647
 	}
-	for (let i = 0; i < 2600; i++) {
-		const v = Math.round(90 + rnd() * 60)
-		ctx.fillStyle = `rgba(${v},${v + 6},${v + 14},${(0.04 + rnd() * 0.06).toFixed(3)})`
-		const r = 1 + rnd() * 5
-		ctx.fillRect(rnd() * s, rnd() * s, r * (1 + rnd() * 4), r)
+	// fine, low-contrast grain: reads as stone up close without blotching the face
+	for (let i = 0; i < 5200; i++) {
+		const v = Math.round(100 + rnd() * 50)
+		ctx.fillStyle = `rgba(${v},${v + 6},${v + 14},${(0.03 + rnd() * 0.05).toFixed(3)})`
+		const r = 0.6 + rnd() * 1.8
+		ctx.fillRect(rnd() * s, rnd() * s, r * (1 + rnd() * 2.5), r)
 	}
 	const t = new THREE.CanvasTexture(c)
 	t.colorSpace = THREE.SRGBColorSpace
@@ -128,7 +129,7 @@ function stoneGeometry(): THREE.BufferGeometry {
 // ---------- scene ----------
 
 /** Tuned so the median face luminance matches the SVG twin within ±12 % (scripts/shoot.mjs checks it). */
-const ALBEDO = "#ffffff"
+const ALBEDO = "#eef2fa"
 const EXPOSURE = 1.32
 
 function Stone({ live, onReady }: { live: boolean; onReady: () => void }) {

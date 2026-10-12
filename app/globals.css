@@ -592,8 +592,9 @@ strong {
 	background: radial-gradient(
 		closest-side in oklch,
 		rgb(228 182 90 / 0.2),
-		rgb(228 182 90 / 0.1) 36%,
-		rgb(228 182 90 / 0.035) 70%,
+		rgb(228 182 90 / 0.11) 32%,
+		rgb(228 182 90 / 0.055) 62%,
+		rgb(228 182 90 / 0.018) 84%,
 		rgb(228 182 90 / 0)
 	);
 }

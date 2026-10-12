@@ -2,7 +2,11 @@
 
 /* ---------- hero: the name, the lede, the next action; the stone bleeding off the grid ---------- */
 .hero {
-	position: relative; /* containing block for the 390 backdrop; no z-index: the stone's torch must reach the root stacking context */
+	/* containing block for the 390 backdrop. No z-index: the stone's torch must reach the root
+	   stacking context. clip (not hidden) trims the torch and the bleed horizontally without
+	   creating a scroll container, and lets the light spill down into the next section. */
+	position: relative;
+	overflow-x: clip;
 	min-height: min(calc(100svh - var(--header-h)), 940px);
 	padding: clamp(28px, 6.2vw, 88px) 0 clamp(32px, 4vw, 56px);
 }
@@ -29,13 +33,14 @@
 .nameLine {
 	display: block;
 }
-/* The stone: ~640 px of menhir, bleeding past the grid on the right and up toward the header. */
+/* The stone: ~670 px of menhir at 1440; its stage, halo and torch bleed past the grid on the right
+   and the stone rises toward the header. */
 .heroArt {
 	grid-area: art;
 	justify-self: end;
 	align-self: start;
-	width: min(46vw, 680px);
-	margin-right: calc(-1 * clamp(40px, 7vw, 140px));
+	width: min(50vw, 740px);
+	margin-right: calc(-1 * clamp(40px, 8vw, 160px));
 	margin-top: calc(-1 * (var(--header-h) + 34px));
 }
 .heroCopy {
