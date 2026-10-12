@@ -33,8 +33,10 @@ projects shelf + writing + play + threshold. v2.4 motion polish + perf/a11y hard
   - Use 300–400 at ≥ 3 rem and 500 at ≤ 2 rem. **Never 700 at display sizes**; Cormorant's bold is clumsy.
   - Tracking: −0.02 em at ≥ 6 rem, −0.01 em at 3–6 rem.
   - Its high contrast reads as carved inscription. Old-style figures for the *one* big figure.
-- **Text/UI: Mona Sans** (variable wght 200–900, **wdth 75–125**), `--font-text`.
-  - Use the width axis through `font-stretch`: meta at 92 %, rare UI emphasis at 112 %.
+- **Text/UI: Mona Sans** (variable wght 200–900), `--font-text`.
+  - **The wdth axis is deliberately not loaded (v2.0):** it grows the latin woff2 from 40 kB to 98 kB and cost
+    ~0.3 s of Lighthouse-mobile LCP. Meta is set apart by size, weight and `--text-3` instead. Revisit only
+    if the perf budget has room.
   - `font-variant-numeric: tabular-nums` for dates and figures in meta.
 - **No monospace labels.** If code ever appears, JetBrains Mono inside the code only.
 - **Loading:** `next/font/google`, `display: swap`, adjusted fallbacks (default). Preload only Cormorant roman
@@ -52,10 +54,10 @@ projects shelf + writing + play + threshold. v2.4 motion polish + perf/a11y hard
 | `--step-2` | `1.375rem` | Cormorant 500 | 1.2 | List titles (writing, archive shelf). *Added in v2.0.* |
 | `--step-1` | `1.125rem` | Mona Sans 600 (500 for the lede) | 1.35 | Role titles, lede |
 | `--step-0` | `1.0625rem` (17 px) | Mona Sans 400 | 1.6, ≤ 66ch | Body |
-| `--step--1` | `0.9375rem` (15 px) | Mona Sans 450, `font-stretch: 92%`, tabular | 1.45 | Meta (dates, places): two short lines, no "·" |
+| `--step--1` | `0.9375rem` (15 px) | Mona Sans 450, tabular | 1.45 | Meta (dates, places): two short lines, no "·" |
 
-Display-to-body ratio ≈ 9× at 1440 and ≈ 3.5× at 390. `--step--1` is 15 px at 92 % width, not the
-playbook's 14 px at 87.5 %: the 10-12 specimen found 14 px at 87.5 too faint.
+Display-to-body ratio ≈ 9× at 1440 and ≈ 3.5× at 390. `--step--1` is 15 px, not the playbook's 14 px: the
+10-12 specimen found 14 px too faint.
 
 ---
 
@@ -234,11 +236,11 @@ budgeted). UI motion < 300 ms; long durations only for the one hero moment.
 |---|---|
 | First-load JS on `/` (gz) | **≤ 180 kB** |
 | Lazy 3D chunk (gz) | ≤ 260 kB. Loaded only after LCP + idle **and** hero visible **and** not `saveData` **and** not reduced motion **and** WebGL. On coarse pointers / mobile UAs: only on first interaction (pointerdown/touch/key/wheel/scroll). The SVG stone (`StoneFallback`) is the designed first impression and the permanent fallback |
-| Fonts | ≤ 3 preloaded woff2, ≤ 150 kB |
+| Fonts | ≤ 3 preloaded woff2, ≤ 150 kB (v2.0: Cormorant roman 35 kB + Mona Sans 40 kB preloaded; Cormorant latin-ext 30 kB loads only because one musing title on / uses ę/ą). Note: `next build` on Windows emits no font preloads (Next 15.5 matches `/next-font-loader/` with forward slashes only), so local Lighthouse runs are slightly pessimistic; Vercel (Linux) builds preload correctly |
 | Images | AVIF/WebP via `next/image`; no `unoptimized` GIFs (→ MP4/WebM, v2.3); below-fold lazy |
 | LCP / TBT / CLS (Lighthouse mobile) | ≤ 2.0 s / ≤ 150 ms / ≤ 0.05 |
 | Lighthouse mobile | Perf ≥ 90, A11y ≥ 95, BP ≥ 95 |
-| Runtime | Animate only transform/opacity/filter on small layers; one rAF-coalesced pointer listener; canvas DPR ≤ 1.5, paused offscreen |
+| Runtime | Animate only transform/opacity/filter on small layers; one rAF-coalesced pointer listener; canvas DPR ≤ 1.5, paused offscreen; never write custom properties on `<html>` at runtime (it restyles the whole document: the torch vars live on `.atmos`); never create a WebGL context before the 3D gate opens (the probe alone cost ~300 ms TBT). `content-visibility: auto` on sections was tried in v2.0 (+1 perf) and dropped: Lighthouse/axe hit-testing then saw the 1400 px placeholders overlap real content (false `target-size` failure, a11y 96) |
 
 ---
 

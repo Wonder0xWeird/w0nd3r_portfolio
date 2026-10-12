@@ -27,9 +27,10 @@ const displayItalic = Cormorant({
 	preload: false,
 })
 
+// wght axis only: adding wdth grows the latin file from 40 kB to 98 kB, which
+// cost ~0.3 s of mobile LCP. Meta uses size and colour instead of width.
 const text = Mona_Sans({
 	subsets: ["latin"],
-	axes: ["wdth"],
 	variable: "--font-text",
 	display: "swap",
 })

@@ -73,7 +73,7 @@
 	--header-h: 60px;
 
 	/* light: torch origin. With no stone on the page the light spills in from
-	   off-canvas; on / HeroStone writes the stone's box over these defaults. */
+	   off-canvas; on / it sits on the stone (see .atmos below). */
 	--torch-x: 96%;
 	--torch-y: -14vh;
 
@@ -85,12 +85,13 @@
 	color-scheme: dark;
 }
 
-:root:has(.hero-stone) {
+/* First-paint approximation of the stone's position on / (HeroStone refines it on .atmos). */
+body:has(.hero-stone) .atmos {
 	--torch-x: 72%;
 	--torch-y: 44vh;
 }
 @media (max-width: 860px) {
-	:root:has(.hero-stone) {
+	body:has(.hero-stone) .atmos {
 		--torch-x: 80%;
 		--torch-y: 170px;
 	}
@@ -257,7 +258,6 @@ strong {
 .meta {
 	font-size: var(--step--1);
 	font-weight: 450;
-	font-stretch: 92%;
 	font-variant-numeric: tabular-nums;
 	line-height: 1.45;
 	color: var(--text-3);

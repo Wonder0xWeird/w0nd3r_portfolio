@@ -89,25 +89,29 @@ export function HeroStone() {
 	const [ready, setReady] = useState(false)
 	const [onscreen, setOnscreen] = useState(false)
 
-	// Torchlight origin follows the stone.
+	// Torchlight origin follows the stone. Written on the light layer only (not
+	// <html>), so moving it never restyles the whole document.
 	useEffect(() => {
 		const el = stageRef.current
-		if (!el) return
-		const root = document.documentElement
+		const light = document.querySelector<HTMLElement>(".atmos")
+		if (!el || !light) return
+		let x = ""
+		let y = ""
 		const place = () => {
 			const r = el.getBoundingClientRect()
-			root.style.setProperty("--torch-x", `${Math.round(r.left + r.width / 2)}px`)
-			root.style.setProperty("--torch-y", `${Math.round(r.top + window.scrollY + r.height * 0.45)}px`)
+			const nx = `${Math.round(r.left + r.width / 2)}px`
+			const ny = `${Math.round(r.top + window.scrollY + r.height * 0.45)}px`
+			if (nx !== x) light.style.setProperty("--torch-x", (x = nx))
+			if (ny !== y) light.style.setProperty("--torch-y", (y = ny))
 		}
-		place()
-		const ro = new ResizeObserver(place)
+		const ro = new ResizeObserver(place) // fires once on observe, then on size changes
 		ro.observe(el)
-		window.addEventListener("resize", place)
+		window.addEventListener("resize", place, { passive: true })
 		return () => {
 			ro.disconnect()
 			window.removeEventListener("resize", place)
-			root.style.removeProperty("--torch-x")
-			root.style.removeProperty("--torch-y")
+			light.style.removeProperty("--torch-x")
+			light.style.removeProperty("--torch-y")
 		}
 	}, [])
 
@@ -124,14 +128,15 @@ export function HeroStone() {
 		mq.addEventListener("change", onChange)
 		const ac = new AbortController()
 		const saveData = !!(navigator as NetNavigator).connection?.saveData
-		if (!mq.matches && !saveData && webglAvailable()) {
+		if (!mq.matches && !saveData) {
 			const gate = isCoarse()
 				? firstInteraction(ac.signal)
 				: afterLoad()
 						.then(() => afterLcp())
 						.then(() => idle())
+			// The WebGL probe creates a GL context, which is itself costly: only after the gate.
 			gate.then(() => {
-				if (!ac.signal.aborted && !mq.matches) setArmed(true)
+				if (!ac.signal.aborted && !mq.matches && webglAvailable()) setArmed(true)
 			})
 		}
 		return () => {
