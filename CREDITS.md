@@ -1,0 +1,21 @@
+# Credits & licenses
+
+## Code libraries (npm)
+| Package | License |
+| --- | --- |
+| next | MIT |
+| react, react-dom | MIT |
+| three | MIT |
+| @react-three/fiber | MIT |
+| @react-three/drei | MIT |
+| marked | MIT |
+
+## Fonts
+Loaded via `next/font/google` and self-hosted at build time:
+- **Cormorant Garamond** by Christian Thalmann (Catharsis Fonts): SIL Open Font License 1.1
+- **Inter** by Rasmus Andersson: SIL Open Font License 1.1
+
+## Art & images
+- The rune stone (hero), its slate texture, the rune glyphs and the favicon are procedural or hand-written code in this repo (`lib/runes.ts`, `components/hero/*`, `app/icon.svg`). They use no third-party assets.
+- Everything under `public/images/` is Lars Crawford's own work, carried over from the original site: artwork, project screenshots, research micrographs and photos.
+- No third-party art assets are used. Any CC0 asset added later must be listed here with its source URL.
