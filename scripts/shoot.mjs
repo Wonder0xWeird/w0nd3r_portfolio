@@ -20,8 +20,9 @@
  *     whether three.js was parsed (window.__THREE__);
  *   - runs axe (serious/critical count);
  *   - on /: asserts the primary CTA's bottom edge (<= 600 px at 390, <= 700 at
- *     1440), the hero's visible word count (<= 40) and the page height (<= 9000 px
- *     at 390, <= 8500 at 1440), records the LCP element,
+ *     1440x900 and 7/9 of the height on other desktops), the hero's visible word
+ *     count (<= 40) and the page height (<= 9000 px on phones, <= 8500 on
+ *     desktops), records the LCP element,
  *     and saves real viewport frames, one per screen (section crops repaint the
  *     fixed light layer in tiles and show a fake seam).
  * Handoff (/, every viewport): the median luminance of the stone's face as SVG
@@ -61,7 +62,8 @@ const VIEWPORTS = (process.env.VIEWPORTS || "1440x900,390x844").split(",").map((
 	const name = s === "1440x900" ? "1440" : s === "390x844" ? "390" : s
 	return { name, width, height, touch: width < 861 }
 })
-const CTA_MAX = { desktop: 700, phone: 600 }
+// Primary CTA bottom: <= 600 px on phones; <= 700 px at 1440x900, i.e. 7/9 of the height on other desktops.
+const ctaMax = (vp) => (vp.touch ? 600 : Math.round((vp.height * 700) / 900))
 const HERO_WORDS_MAX = 40
 const HEIGHT_MAX = { desktop: 8500, phone: 9000 } // critique change 3: disclose, never delete
 const kind = (vp) => (vp.touch ? "phone" : "desktop")
@@ -365,7 +367,7 @@ for (const route of ROUTES) {
 			// Compare with the emulated width: on mobile, wide content silently grows the layout viewport.
 			if (dims.scrollWidth > vp.width || dims.innerWidth > vp.width) fail(`${label}: horizontal overflow ${dims.scrollWidth} > ${vp.width}`)
 			if (route === "/") {
-				if (dims.primaryBottom == null || dims.primaryBottom > CTA_MAX[kind(vp)]) fail(`${label}: primary CTA bottom ${dims.primaryBottom} > ${CTA_MAX[kind(vp)]}`)
+				if (dims.primaryBottom == null || dims.primaryBottom > ctaMax(vp)) fail(`${label}: primary CTA bottom ${dims.primaryBottom} > ${ctaMax(vp)}`)
 				if (dims.heroWords == null || dims.heroWords > HERO_WORDS_MAX) fail(`${label}: hero has ${dims.heroWords} visible words > ${HERO_WORDS_MAX}`)
 			}
 
