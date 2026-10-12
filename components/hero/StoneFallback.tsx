@@ -11,7 +11,7 @@ const u = RUNE_UNIT
  * turned to the bedding angle and laid over the face in overlay. One pass of bands (the beds) and one of
  * hairline lamination, rendered once by the browser: no image request. Frequencies are per stage unit.
  */
-const BEDDING = { angle: 8, bands: "0.006 0.05", lamina: "0.028 0.8", beds: 0.15, opacity: 0.235 }
+const BEDDING = { angle: 8, bands: "0.006 0.05", lamina: "0.06 0.8", beds: 0.15, opacity: 0.25 }
 
 /**
  * The bedding layer's box: the stone's bounding box (ANCHORS.bbox) grown by 30 units, enough to cover
