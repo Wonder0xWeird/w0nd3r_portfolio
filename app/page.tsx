@@ -8,6 +8,7 @@ import { CopyEmail } from "@/components/CopyEmail"
 import { External } from "@/components/External"
 import { Rune } from "@/components/Rune"
 import { CarvedRune } from "@/components/CarvedRune"
+import { HarnessDiagram } from "@/components/HarnessDiagram"
 import { profile, play } from "@/content/profile"
 import { experience } from "@/content/experience"
 import { research, thesis, education } from "@/content/research"
@@ -95,7 +96,6 @@ export default function Home() {
 	const featured = projects.filter((p) => p.featured)
 	const legacy = projects.filter((p) => !p.featured)
 	const feature = proofCards.find((c) => c.feature)!
-	const slims = proofCards.filter((c) => !c.feature)
 	const [phd, ...earlier] = research
 	const pubs = [...publications].sort((x, y) => Number(y.year) - Number(x.year))
 
@@ -147,48 +147,34 @@ export default function Home() {
 					<SectionHead id="work" rune="ehwaz" title="What I do now, and what I did before">
 						<p className={s.sectionLede}>{profile.aim}</p>
 					</SectionHead>
-					<div className={s.proofGrid}>
-						<article className={`slab ${s.proofFeature}`}>
-							<Meta lines={[feature.org, feature.context]} />
-							<h3 className={s.featureTitle}>{feature.title}</h3>
-							<p className={s.proofBody}>{feature.body}</p>
-							{feature.figure ? (
-								<p className={s.figure}>
-									<span className={s.figureValue}>{feature.figure.value}</span>
-									<span className={s.figureLabel}>{feature.figure.label}</span>
-								</p>
-							) : null}
-							<ul className={s.proofPoints}>
-								{feature.points.map((pt) => (
-									<li key={pt}>{pt}</li>
-								))}
-							</ul>
-							{feature.external ? (
-								<External className={s.proofLink} href={feature.href}>
-									{feature.linkLabel}
-								</External>
-							) : (
-								<a className={s.proofLink} href={feature.href}>
-									{feature.linkLabel}
-								</a>
-							)}
-						</article>
-						{slims.map((c) => (
-							<article key={c.title} className={`slab ${s.proofSlim} ${s.wideOnly}`}>
-								<Meta lines={[c.org, c.context]} />
-								<h3 className={s.slimTitle}>{c.title}</h3>
-								<p className={s.proofBody}>{c.body}</p>
-								<ul className={s.proofPoints}>
-									{c.points.map((pt) => (
-										<li key={pt}>{pt}</li>
-									))}
-								</ul>
-								<a className={s.proofLink} href={c.href}>
-									{c.linkLabel}
-								</a>
-							</article>
-						))}
-					</div>
+					{/* One feature slab, standing alone (v2.4): the two slim slabs restated Experience and
+					    Research, which follow directly. Its diagram shows the harness the figure came from. */}
+					<article className={`slab ${s.proofFeature}`}>
+						<Meta lines={[feature.org, feature.context]} />
+						<h3 className={s.featureTitle}>{feature.title}</h3>
+						<p className={s.proofBody}>{feature.body}</p>
+						<HarnessDiagram className={s.diagram} />
+						{feature.figure ? (
+							<p className={s.figure}>
+								<span className={s.figureValue}>{feature.figure.value}</span>
+								<span className={s.figureLabel}>{feature.figure.label}</span>
+							</p>
+						) : null}
+						<ul className={s.proofPoints}>
+							{feature.points.map((pt) => (
+								<li key={pt}>{pt}</li>
+							))}
+						</ul>
+						{feature.external ? (
+							<External className={s.proofLink} href={feature.href}>
+								{feature.linkLabel}
+							</External>
+						) : (
+							<a className={s.proofLink} href={feature.href}>
+								{feature.linkLabel}
+							</a>
+						)}
+					</article>
 				</div>
 			</section>
 

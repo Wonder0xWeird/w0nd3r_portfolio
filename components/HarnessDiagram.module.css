@@ -1,0 +1,139 @@
+/* The Proof harness diagram (v2.4). Drawn at 1:1 (480 px), so its labels are Mona Sans 13 px; it only
+   shrinks where its box is narrower. Nodes are carved into the slab (a darker recess, a gold-700 rim);
+   the verify gate is the one lit node (gold-200, a soft halo), because it is where work earns its way out. */
+.harness {
+	margin: 0;
+}
+.harness svg {
+	display: block;
+	width: 100%;
+	max-width: 480px;
+	height: auto;
+	overflow: visible;
+}
+.node {
+	fill: rgb(11 14 18 / 0.42);
+	stroke: var(--gold-700);
+	stroke-width: 1.5;
+}
+.edge {
+	fill: none;
+	stroke: var(--gold-700);
+	stroke-width: 1.5;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+.name,
+.note {
+	font-family: var(--face-text);
+	font-size: 13px;
+	text-anchor: middle;
+}
+.name {
+	font-weight: 500;
+	fill: var(--text-2);
+}
+.note {
+	font-weight: 450;
+	fill: var(--text-3);
+}
+.ship {
+	text-anchor: start;
+}
+/* lit (the final state) */
+.gate {
+	stroke: var(--gold-200);
+}
+.gateName {
+	fill: var(--gold-200);
+}
+.halo {
+	fill: none;
+	stroke: rgb(228 182 90 / 0.16);
+	stroke-width: 7;
+}
+
+/* Draw once (components/DrawOnView.tsx sets data-draw): the briefs branch out from the lead, the diffs
+   merge into the gate, the gate lights, the work ships. 820 ms in all; linear per stage so the line
+   reads as one signal travelling. Unarmed (server render, no JS, reduced motion) = fully drawn and lit. */
+@media (prefers-reduced-motion: no-preference) {
+	.harness[data-draw] .edge {
+		stroke-dasharray: 1 2;
+	}
+	.harness[data-draw="armed"] .edge {
+		stroke-dashoffset: 1.01;
+	}
+	.harness[data-draw="armed"] .gate {
+		stroke: var(--gold-700);
+	}
+	.harness[data-draw="armed"] .gateName {
+		fill: var(--text-2);
+	}
+	.harness[data-draw="armed"] .halo {
+		opacity: 0;
+	}
+	.harness[data-draw="go"] .edge {
+		animation: edge-draw var(--dur) linear var(--at) both;
+	}
+	.harness[data-draw="go"] .gate {
+		animation: gate-light 260ms ease-out 560ms both;
+	}
+	.harness[data-draw="go"] .gateName {
+		animation: gate-name 260ms ease-out 560ms both;
+	}
+	.harness[data-draw="go"] .halo {
+		animation: halo-rise 260ms ease-out 560ms both;
+	}
+}
+.stage1 {
+	--at: 0ms;
+	--dur: 140ms;
+}
+.stage2 {
+	--at: 140ms;
+	--dur: 200ms;
+}
+.stage3 {
+	--at: 340ms;
+	--dur: 160ms;
+}
+.stage4 {
+	--at: 500ms;
+	--dur: 100ms;
+}
+.stage5 {
+	--at: 640ms;
+	--dur: 180ms;
+}
+@keyframes edge-draw {
+	from {
+		stroke-dashoffset: 1.01;
+	}
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+@keyframes gate-light {
+	from {
+		stroke: #8f6a2a;
+	}
+	to {
+		stroke: #f7d98c;
+	}
+}
+@keyframes gate-name {
+	from {
+		fill: #c9c4b8;
+	}
+	to {
+		fill: #f7d98c;
+	}
+}
+@keyframes halo-rise {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}

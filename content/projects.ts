@@ -106,6 +106,8 @@ export interface ProofCard {
 	feature?: boolean
 }
 
+// Since v2.4 only the feature card renders on / (with the harness diagram); the other two restated
+// Experience and Research, which follow it, and are kept here as copy.
 export const proofCards: ProofCard[] = [
 	{
 		org: "Blockchain.com",

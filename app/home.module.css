@@ -451,32 +451,15 @@
 	margin-top: 6px;
 }
 
-/* ---------- proof: one feature slab across the top, two slim slabs below ---------- */
-.proofGrid {
-	display: grid;
-	grid-template-columns: repeat(2, minmax(0, 1fr));
-	gap: var(--space-5);
-}
-@media (max-width: 760px) {
-	.proofGrid {
-		grid-template-columns: 1fr;
-	}
-}
-.proofFeature,
-.proofSlim {
+/* ---------- proof: one feature slab, standing alone (v2.4: the slims restated Experience and Research) ---------- */
+.proofFeature {
 	display: flex;
 	flex-direction: column;
 	align-items: flex-start;
-}
-.proofFeature {
-	grid-column: 1 / -1;
 	padding: clamp(24px, 3.4vw, 52px);
 	background:
 		linear-gradient(180deg, rgb(255 255 255 / 0.045), transparent 34%),
 		var(--slab-raised);
-}
-.proofSlim {
-	padding: clamp(22px, 2.4vw, 32px);
 }
 .featureTitle {
 	margin: var(--space-5) 0 var(--space-3);
@@ -484,13 +467,21 @@
 	font-weight: 500;
 	line-height: 1.05;
 }
-.slimTitle {
-	margin: var(--space-4) 0 var(--space-2);
-	font-size: var(--step-3);
-}
 .proofBody {
 	max-width: 56ch;
 	color: var(--text-2);
+}
+/* The harness diagram (components/HarnessDiagram.tsx). Drawn at 1:1 so its labels stay 13 px: phones
+   (< 600 px, where it would shrink below ~11 px) read the same facts in the sentence above it. */
+.diagram {
+	display: none;
+	align-self: stretch;
+	margin: var(--space-2) 0 var(--space-6);
+}
+@media (min-width: 600px) {
+	.diagram {
+		display: block;
+	}
 }
 .figure {
 	display: grid;
@@ -530,7 +521,8 @@
 	font-weight: 500;
 	line-height: 1.5;
 }
-/* Desktop: text on the left, the big figure standing on the right. */
+/* Desktop: the text on the left, the big figure standing at the foot of the right column. 961-1199 px:
+   the diagram follows the body in the left column (the right one is too narrow for it at 1:1). */
 @media (min-width: 961px) {
 	.proofFeature {
 		display: grid;
@@ -539,9 +531,10 @@
 			"meta  fig"
 			"title fig"
 			"body  fig"
+			"diag  fig"
 			"pts   fig"
 			"link  fig";
-		grid-template-rows: auto auto auto auto 1fr;
+		grid-template-rows: auto auto auto auto auto 1fr;
 		column-gap: clamp(32px, 5vw, 80px);
 		justify-items: start;
 	}
@@ -554,6 +547,9 @@
 	.proofFeature > .proofBody {
 		grid-area: body;
 	}
+	.proofFeature > .diagram {
+		grid-area: diag;
+	}
 	.proofFeature > .figure {
 		grid-area: fig;
 		align-self: end;
@@ -565,6 +561,26 @@
 	.proofFeature > .proofLink {
 		grid-area: link;
 		align-self: end;
+	}
+}
+/* >= 1200 px: the diagram fills the slab's top right (empty since v2.1) and the figure stands under
+   it; the diagram carries the separation, so the figure's top rule goes. */
+@media (min-width: 1200px) {
+	.proofFeature {
+		grid-template-areas:
+			"meta  diag"
+			"title diag"
+			"body  fig"
+			"pts   fig"
+			"link  fig";
+		grid-template-rows: auto auto auto auto 1fr;
+	}
+	.proofFeature > .diagram {
+		margin: 0;
+	}
+	.proofFeature > .figure {
+		padding-top: 0;
+		border-top: 0;
 	}
 }
 
