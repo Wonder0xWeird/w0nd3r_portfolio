@@ -536,22 +536,9 @@
 }
 @media (max-width: 960px) {
 	.scienceGrid {
-		position: static;
-		display: flex;
-		gap: var(--space-3);
-		margin-inline: calc(-1 * var(--gutter));
-		padding: 4px var(--gutter) var(--space-2);
-		overflow-x: auto;
-		overscroll-behavior-x: contain;
-		scroll-snap-type: x mandatory;
-		scroll-padding-inline: var(--gutter);
-		scrollbar-width: thin;
-		scrollbar-color: var(--slate-700) transparent;
-	}
-	.scienceFig {
-		flex: 0 0 136px;
-		height: 136px;
-		scroll-snap-align: start;
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: var(--space-2);
+		max-width: 560px;
 	}
 }
 .scienceFig img {

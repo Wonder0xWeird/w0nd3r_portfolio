@@ -324,11 +324,11 @@ export default function Home() {
 							</div>
 						</div>
 						<div className={s.researchAside}>
-							{/* A grid beside the work on wide screens; a keyboard-scrollable strip on narrow ones. */}
-							<div className={s.scienceGrid} role="region" aria-label="Research images" tabIndex={0}>
+							{/* A 2 x 2 grid beside the work on wide screens; one row of four on narrow ones. */}
+							<div className={s.scienceGrid}>
 								{thesis.images.map((img) => (
 									<figure key={img.src} className={`frame ${s.scienceFig}`}>
-										<Image className="duotone" src={img.src} alt={img.alt} fill sizes="(max-width: 960px) 160px, 260px" />
+										<Image className="duotone" src={img.src} alt={img.alt} fill sizes="(max-width: 960px) 25vw, 260px" />
 									</figure>
 								))}
 							</div>
