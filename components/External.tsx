@@ -25,6 +25,8 @@ export function External({
 			{children}
 			{icon ? (
 				<>
+					{/* word joiner: the icon never wraps onto a line of its own */}
+					{"\u2060"}
 					<ExternalIcon />
 					<span className="visually-hidden"> (opens in a new tab)</span>
 				</>
