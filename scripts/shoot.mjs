@@ -18,7 +18,16 @@
  *   - captures hover states for the first slab and the primary button;
  *   - records console errors, page errors, failed requests, JS bytes and
  *     whether three.js was parsed (window.__THREE__);
- *   - runs axe (serious/critical count).
+ *   - runs axe (serious/critical count);
+ *   - on /: asserts the primary CTA's bottom edge (<= 600 px at 390, <= 700 at
+ *     1440) and the hero's visible word count (<= 40), records the LCP element,
+ *     and saves real viewport frames, one per screen (section crops repaint the
+ *     fixed light layer in tiles and show a fake seam).
+ * Handoff (/, 1440 and 390): the median luminance of the stone's face as SVG
+ * (reduced motion) vs WebGL (after the swap) must agree within ±12 %; saves the
+ * SVG / mid-fade / WebGL frames of the stone.
+ * Links: every internal href on / and /writing must answer 200 without a
+ * redirect; the legacy mixed-case letter URLs must 308 once to a 200.
  * Other routes get fold + full page + the same font/overflow checks.
  * Writes <outDir>/report.json and exits 1 if any gate fails.
  */
@@ -34,6 +43,13 @@ const VIEWPORTS = [
 	{ name: "1440", width: 1440, height: 900, touch: false },
 	{ name: "390", width: 390, height: 844, touch: true },
 ]
+const CTA_MAX = { 1440: 700, 390: 600 }
+const HERO_WORDS_MAX = 40
+const PARITY = 0.12
+const LEGACY = {
+	"/writing/Dear-Lambda/I-See-You": "/writing/dear-lambda/i-see-you",
+	"/writing/Dear-Lambda/Infinity-Is": "/writing/dear-lambda/infinity-is",
+}
 const DISPLAY = /Cormorant/i
 const TEXT = /Mona[ _]?Sans/i
 
@@ -99,6 +115,17 @@ for (const route of ROUTES) {
 			page.on("console", (m) => m.type() === "error" && consoleErrors.push(m.text()))
 			page.on("pageerror", (e) => consoleErrors.push(`pageerror: ${e.message}`))
 			page.on("response", (r) => r.status() >= 400 && failedRequests.push(`${r.status()} ${r.url()}`))
+			await page.addInitScript(() => {
+				window.__lcp = []
+				try {
+					new PerformanceObserver((list) => {
+						for (const e of list.getEntries()) {
+							const el = e.element
+							window.__lcp.push({ t: Math.round(e.startTime), tag: el ? el.tagName.toLowerCase() : null, id: el?.id || null, text: el?.textContent?.trim().slice(0, 40) || null })
+						}
+					}).observe({ type: "largest-contentful-paint", buffered: true })
+				} catch {}
+			})
 			await page.goto(base + route, { waitUntil: "load" })
 			// Hide the Next dev-mode indicator so dev shots match production.
 			await page.addStyleTag({ content: "nextjs-portal{display:none!important}" })
@@ -129,16 +156,36 @@ for (const route of ROUTES) {
 					const a = document.querySelector('a[href$="resume.pdf"]')
 					return a ? Math.round(a.getBoundingClientRect().top + window.scrollY) : null
 				})(),
-				primaryTop: (() => {
-					const a = document.querySelector(".btn--primary")
+				primaryBottom: (() => {
+					const a = document.querySelector("main .btn--primary")
 					return a ? Math.round(a.getBoundingClientRect().bottom + window.scrollY) : null
 				})(),
+				// Visible words in the hero (not visually-hidden, aria-hidden or SVG text).
+				heroWords: (() => {
+					const hero = document.querySelector("main > section")
+					if (!hero) return null
+					const walker = document.createTreeWalker(hero, NodeFilter.SHOW_TEXT)
+					let n = 0
+					for (let t = walker.nextNode(); t; t = walker.nextNode()) {
+						const el = t.parentElement
+						if (!el || el.closest(".visually-hidden,[aria-hidden='true'],svg")) continue
+						const cs = getComputedStyle(el)
+						if (cs.display === "none" || cs.visibility === "hidden") continue
+						n += t.textContent.split(/\s+/).filter(Boolean).length
+					}
+					return n
+				})(),
+				lcp: window.__lcp?.at(-1) ?? null,
 			}))
 			Object.assign(run, dims)
 			run.jsEncodedKB = Math.round(dims.js.reduce((n, r) => n + (r.encoded || 0), 0) / 1024)
 			delete run.js
 			// Compare with the emulated width: on mobile, wide content silently grows the layout viewport.
 			if (dims.scrollWidth > vp.width || dims.innerWidth > vp.width) fail(`${label}: horizontal overflow ${dims.scrollWidth} > ${vp.width}`)
+			if (route === "/") {
+				if (dims.primaryBottom == null || dims.primaryBottom > CTA_MAX[vp.name]) fail(`${label}: primary CTA bottom ${dims.primaryBottom} > ${CTA_MAX[vp.name]}`)
+				if (dims.heroWords == null || dims.heroWords > HERO_WORDS_MAX) fail(`${label}: hero has ${dims.heroWords} visible words > ${HERO_WORDS_MAX}`)
+			}
 
 			const base_ = path.join(outDir, label)
 			// The fold is the untouched first impression (no scroll, so touch devices still show the SVG stone).
@@ -160,6 +207,14 @@ for (const route of ROUTES) {
 			await page.screenshot({ path: `${base_}-full.png`, fullPage: true, scale: "css" })
 
 			if (route === "/" && !reduced) {
+				// Real viewport frames, one per screen: what a visitor sees (no fixed-layer tiling seam).
+				const total = await page.evaluate(() => document.documentElement.scrollHeight)
+				for (let i = 0, y = 0; y < total; i++, y += vp.height) {
+					await page.evaluate((top) => window.scrollTo({ top, behavior: "instant" }), y)
+					await page.waitForTimeout(160)
+					await page.screenshot({ path: `${base_}-scroll-${String(i).padStart(2, "0")}.png`, scale: "css" })
+				}
+				await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }))
 				// Un-stick the header so stitched section crops don't show it mid-section.
 				const unstick = await page.addStyleTag({ content: ".site-header{position:relative!important}" })
 				const sections = await page.$$("main > section")
@@ -200,7 +255,7 @@ for (const route of ROUTES) {
 			console.log(
 				`  fonts h1="${fonts.h1Family.slice(0, 40)}" loaded=${run.fonts.loadedDisplay.length}/${run.fonts.loadedText.length}` +
 					` overflow=${dims.scrollWidth}/${dims.innerWidth} height=${run.pageHeight} three=${dims.three} js=${run.jsEncodedKB}kB` +
-					(route === "/" ? ` primaryBottom=${dims.primaryTop}` : "")
+					(route === "/" ? ` primaryBottom=${dims.primaryBottom} heroWords=${dims.heroWords} lcp=${dims.lcp?.tag}#${dims.lcp?.id ?? ""}@${dims.lcp?.t}ms` : "")
 			)
 			await ctx.close()
 		}
@@ -224,6 +279,126 @@ for (const route of ROUTES) {
 	report.runs.push({ label: `${slug(route)}-320`, route, viewport: "320", scrollWidth: d.sw, innerWidth: d.iw, widest: d.wide })
 	if (d.sw > 320 || d.iw > 320) fail(`${slug(route)}-320: horizontal overflow ${d.sw} > 320 (${d.wide.join("; ")})`)
 	console.log(`> ${slug(route)}-320 overflow=${d.sw}/${d.iw}`)
+	await ctx.close()
+}
+
+// ---------- stone handoff: SVG (reduced motion) vs WebGL (after the swap) ----------
+async function analyze(svgPng, glPng) {
+	const ctx = await browser.newContext()
+	const page = await ctx.newPage()
+	const res = await page.evaluate(
+		async ([a, b]) => {
+			const load = async (b64) => {
+				const img = new Image()
+				img.src = "data:image/png;base64," + b64
+				await img.decode()
+				const c = document.createElement("canvas")
+				c.width = img.width
+				c.height = img.height
+				const g = c.getContext("2d")
+				g.drawImage(img, 0, 0)
+				return g.getImageData(0, 0, c.width, c.height)
+			}
+			const [A, B] = await Promise.all([load(a), load(b)])
+			const Y = (d, i) => 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]
+			const median = (img) => {
+				const v = []
+				for (let i = 0; i < img.data.length; i += 4) v.push(Y(img.data, i))
+				v.sort((x, y) => x - y)
+				return v[v.length >> 1]
+			}
+			let diff = 0
+			const n = Math.min(A.data.length, B.data.length)
+			for (let i = 0; i < n; i += 4) diff += Math.abs(Y(A.data, i) - Y(B.data, i))
+			return { svg: median(A), webgl: median(B), meanAbsDiff: diff / (n / 4) }
+		},
+		[svgPng.toString("base64"), glPng.toString("base64")]
+	)
+	await ctx.close()
+	return res
+}
+
+if (ROUTES.includes("/")) {
+	for (const vp of VIEWPORTS) {
+		const label = `home-${vp.name}-handoff`
+		console.log(`> ${label}`)
+		const shots = {}
+		let ok = true
+		for (const reduced of [true, false]) {
+			const ctx = await browser.newContext({
+				viewport: { width: vp.width, height: vp.height },
+				deviceScaleFactor: 2,
+				hasTouch: vp.touch,
+				isMobile: vp.touch,
+				reducedMotion: reduced ? "reduce" : "no-preference",
+			})
+			const page = await ctx.newPage()
+			await page.goto(base + "/", { waitUntil: "load" })
+			await page.addStyleTag({ content: "nextjs-portal{display:none!important}" })
+			await page.waitForTimeout(1300) // past the 1.2 s ignition
+			const box = await page.locator(".hero-stone").boundingBox()
+			const stone = { x: Math.max(0, box.x), y: Math.max(0, box.y), width: Math.min(box.width, vp.width - Math.max(0, box.x)), height: box.height }
+			// The face: a band of the front face around the rune column (stage %, see components/hero/stone-profile.ts).
+			const face = { x: box.x + box.width * 0.3, y: box.y + box.height * 0.22, width: box.width * 0.34, height: box.height * 0.62 }
+			if (!reduced) {
+				// The mobile gate is the first interaction.
+				if (vp.touch) await page.evaluate(() => window.dispatchEvent(new Event("pointerdown")))
+				try {
+					await page.waitForSelector(".hero-stone[data-ready]", { timeout: 15000 })
+					await page.waitForTimeout(175) // mid-fade
+					await page.screenshot({ path: path.join(outDir, `${label}-2-mid.png`), clip: stone })
+					await page.waitForSelector(".hero-stone[data-live]", { timeout: 5000 })
+					await page.waitForTimeout(30)
+				} catch {
+					ok = false
+				}
+			}
+			await page.screenshot({ path: path.join(outDir, `${label}-${reduced ? "1-svg" : "3-webgl"}.png`), clip: stone })
+			shots[reduced ? "svg" : "gl"] = await page.screenshot({ clip: face })
+			await ctx.close()
+		}
+		if (!ok) {
+			fail(`${label}: the WebGL stone never became ready`)
+			continue
+		}
+		const r = await analyze(shots.svg, shots.gl)
+		const delta = (r.webgl - r.svg) / r.svg
+		report.runs.push({
+			label,
+			faceMedianSvg: +r.svg.toFixed(1),
+			faceMedianWebgl: +r.webgl.toFixed(1),
+			deltaPct: +(delta * 100).toFixed(1),
+			meanAbsDiff: +r.meanAbsDiff.toFixed(1),
+		})
+		console.log(`  face median svg=${r.svg.toFixed(1)} webgl=${r.webgl.toFixed(1)} delta=${(delta * 100).toFixed(1)}% meanAbsDiff=${r.meanAbsDiff.toFixed(1)}`)
+		if (Math.abs(delta) > PARITY) fail(`${label}: face luminance differs by ${(delta * 100).toFixed(1)}% (> ±${PARITY * 100}%)`)
+	}
+}
+
+// ---------- links: internal hrefs answer 200 without a redirect; legacy URLs redirect once ----------
+if (ROUTES.includes("/")) {
+	const ctx = await browser.newContext()
+	const page = await ctx.newPage()
+	const hrefs = new Set()
+	for (const route of ["/", "/writing"]) {
+		await page.goto(base + route, { waitUntil: "domcontentloaded" })
+		for (const h of await page.$$eval("a[href^='/']", (as) => as.map((a) => a.getAttribute("href")))) hrefs.add(h.split("#")[0] || "/")
+	}
+	const bad = []
+	for (const h of hrefs) {
+		const r = await ctx.request.get(base + h, { maxRedirects: 0 })
+		if (r.status() !== 200) bad.push(`${h} -> ${r.status()}`)
+	}
+	for (const [from, to] of Object.entries(LEGACY)) {
+		const r = await ctx.request.get(base + from, { maxRedirects: 0 })
+		const loc = r.headers()["location"] || ""
+		if (r.status() !== 308 || !loc.endsWith(to)) bad.push(`${from} -> ${r.status()} ${loc}`)
+		const r2 = await ctx.request.get(base + to, { maxRedirects: 0 })
+		if (r2.status() !== 200) bad.push(`${to} -> ${r2.status()}`)
+	}
+	report.runs.push({ label: "links", internal: hrefs.size, legacy: Object.keys(LEGACY).length, bad })
+	console.log(`> links: ${hrefs.size} internal + ${Object.keys(LEGACY).length} legacy, bad=${bad.length}`)
+	if (bad.length) fail(`links: ${bad.join(" | ")}`)
 	await ctx.close()
 }
 
