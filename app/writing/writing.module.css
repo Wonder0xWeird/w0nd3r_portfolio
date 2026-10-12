@@ -1,0 +1,294 @@
+.page {
+	padding-top: clamp(28px, 5vw, 56px);
+}
+.crumbs {
+	font-size: 0.88rem;
+	color: var(--muted);
+	margin-bottom: 26px;
+}
+.crumbs a {
+	color: var(--text-soft);
+	text-decoration: none;
+}
+.crumbs a:hover {
+	color: var(--gold-bright);
+}
+.eyebrow {
+	display: block;
+	font-size: 0.76rem;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--gold);
+	margin: 0 0 8px;
+}
+
+/* ---------- index ---------- */
+.indexHead h1 {
+	font-size: clamp(2.6rem, 7vw, 4rem);
+	margin-bottom: 8px;
+}
+.indexLede {
+	color: var(--text-soft);
+	max-width: 60ch;
+	font-size: 1.05rem;
+}
+.block {
+	margin-top: clamp(36px, 6vw, 60px);
+}
+.sectionHead {
+	display: flex;
+	align-items: flex-start;
+	gap: 14px;
+	margin-bottom: 18px;
+	padding-bottom: 12px;
+	border-bottom: 1px solid var(--line-soft);
+}
+.sectionHead svg {
+	flex: 0 0 auto;
+	margin-top: 8px;
+}
+.sectionHead h2 {
+	font-size: 2rem;
+	margin: 0;
+}
+.sectionHead p {
+	margin: 0;
+	font-size: 0.95rem;
+}
+.letterCards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: 14px;
+}
+.letterCard {
+	display: grid;
+	gap: 4px;
+	padding: 20px;
+	border-radius: var(--radius);
+	background: var(--surface);
+	border: 1px solid var(--line);
+	text-decoration: none;
+	color: var(--text);
+	transition: border-color 0.25s;
+}
+.letterCard:hover {
+	border-color: var(--gold-deep);
+	color: var(--text);
+}
+.letterCardTitle {
+	font-family: var(--font-serif);
+	font-size: 1.7rem;
+	font-weight: 600;
+	color: var(--gold-bright);
+	line-height: 1.15;
+}
+.titleList {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	display: grid;
+	gap: 2px;
+}
+.titleList li {
+	display: grid;
+	gap: 0;
+	padding: 10px 0;
+	border-bottom: 1px dashed var(--line-soft);
+}
+.titleList a {
+	font-family: var(--font-serif);
+	font-size: 1.35rem;
+	font-weight: 600;
+	text-decoration: none;
+	color: var(--text);
+}
+.titleList a:hover {
+	color: var(--gold-bright);
+}
+.titleList span {
+	font-size: 0.9rem;
+	font-style: italic;
+	overflow-wrap: anywhere;
+}
+.artStrip {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 10px;
+	margin-bottom: 12px;
+}
+.artThumb,
+.artItem {
+	position: relative;
+	aspect-ratio: 1;
+	margin: 0;
+	border-radius: var(--radius);
+	overflow: hidden;
+	background: #0e1013;
+	border: 1px solid var(--line-soft);
+}
+.artThumb img,
+.artItem img {
+	object-fit: contain;
+}
+.artGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+	gap: 14px;
+	margin-top: 24px;
+}
+
+/* ---------- poem / musing ---------- */
+.pieceHead {
+	text-align: center;
+	margin-bottom: 30px;
+}
+.pieceHead h1 {
+	font-size: clamp(2.2rem, 6vw, 3.4rem);
+	margin-top: 10px;
+	font-style: italic;
+}
+.poem {
+	max-width: 36em;
+	margin: 0 auto;
+	font-family: var(--font-serif);
+	font-size: clamp(1.2rem, 2.6vw, 1.38rem);
+	line-height: 1.6;
+	color: var(--text);
+}
+.stanza {
+	margin: 0;
+}
+.stanzaBreak {
+	text-align: center;
+	color: var(--gold);
+	margin: 18px 0;
+}
+.musing {
+	max-width: var(--measure);
+	margin: 0 auto;
+	font-size: 1.08rem;
+	line-height: 1.8;
+	color: var(--text-soft);
+}
+.aphorism {
+	max-width: 32em;
+	margin: 0 auto;
+	text-align: center;
+	font-family: var(--font-serif);
+	font-size: clamp(1.4rem, 3.4vw, 1.8rem);
+	line-height: 1.45;
+	font-style: italic;
+	color: var(--text);
+}
+.pager {
+	display: flex;
+	justify-content: space-between;
+	gap: 16px;
+	max-width: var(--measure);
+	margin: 56px auto 0;
+	padding-top: 18px;
+	border-top: 1px solid var(--line-soft);
+	font-size: 0.95rem;
+}
+.pager a {
+	text-decoration: none;
+	max-width: 48%;
+}
+.pager a[rel="next"] {
+	text-align: right;
+	margin-left: auto;
+}
+
+/* ---------- letters (rendered markdown) ---------- */
+.letterHead {
+	text-align: center;
+}
+.letterHead h1 {
+	font-size: clamp(2.4rem, 7vw, 4rem);
+}
+.letterHero {
+	display: flex;
+	justify-content: center;
+	margin: 10px auto 34px;
+}
+.letterHero img,
+.letterHero video {
+	width: min(420px, 100%);
+	height: auto;
+	border-radius: var(--radius);
+	border: 1px solid var(--gold-deep);
+	box-shadow: 0 20px 60px -25px rgba(226, 179, 74, 0.35);
+}
+.letter {
+	max-width: var(--measure);
+	margin: 0 auto;
+	font-size: 1.06rem;
+	line-height: 1.8;
+	color: var(--text-soft);
+	overflow-wrap: break-word;
+}
+.letter h1 {
+	font-size: clamp(1.5rem, 4vw, 2rem);
+	font-style: italic;
+	text-align: center;
+	color: var(--text);
+	margin: 0 0 0.35em;
+}
+.letter h2 {
+	font-size: 1.8rem;
+	margin: 1.8em 0 0.6em;
+	color: var(--gold-bright);
+}
+.letter h3 {
+	font-size: 1.4rem;
+	margin: 1.4em 0 0.5em;
+}
+.letter hr {
+	border: 0;
+	height: 1px;
+	background: linear-gradient(90deg, transparent, var(--gold-deep), transparent);
+	margin: 2.4em 0;
+}
+.letter blockquote {
+	margin: 1.2em 0;
+	padding: 0.2em 1.2em;
+	border-left: 2px solid var(--gold-deep);
+	color: var(--text);
+}
+.letter ol,
+.letter ul {
+	padding-left: 1.4em;
+}
+.letter li + li {
+	margin-top: 0.4em;
+}
+.letter strong {
+	color: var(--text);
+}
+.signoff {
+	max-width: var(--measure);
+	margin: 48px auto 0;
+}
+
+/* ---------- cottage placeholder ---------- */
+.cottage {
+	text-align: center;
+	max-width: 720px;
+}
+.cottage h1 {
+	font-size: clamp(2.8rem, 8vw, 4.4rem);
+}
+.cottage .indexLede {
+	margin: 0 auto;
+}
+.cottageStone {
+	width: min(220px, 60%);
+	margin: 0 auto 8px;
+}
+.cottageLinks {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 10px;
+	margin-top: 26px;
+}
