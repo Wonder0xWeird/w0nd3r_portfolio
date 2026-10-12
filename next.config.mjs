@@ -1,19 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  poweredByHeader: false,
-  // Legacy redirects below differ from their targets only by case.
-  experimental: { caseSensitiveRoutes: true },
-  images: {
-    formats: ["image/avif", "image/webp"],
-  },
-  async redirects() {
-    // Keep old w0nd3r.rune.love writing URLs working.
-    return [
-      { source: "/writing/Dear-Lambda/I-See-You", destination: "/writing/dear-lambda/i-see-you", permanent: true },
-      { source: "/writing/Dear-Lambda/Infinity-Is", destination: "/writing/dear-lambda/infinity-is", permanent: true },
-    ];
-  },
-};
+	reactStrictMode: true,
+	poweredByHeader: false,
+	images: {
+		formats: ["image/avif", "image/webp"],
+	},
+	// Legacy mixed-case writing URLs (/writing/Dear-Lambda/I-See-You) are
+	// redirected in middleware.ts, not here: Vercel matches redirects()
+	// case-insensitively, so a lowercase destination matched itself and looped.
+}
 
-export default nextConfig;
+export default nextConfig
