@@ -1,15 +1,15 @@
 "use client"
 
 import { Canvas, useFrame } from "@react-three/fiber"
-import { Sparkles } from "@react-three/drei"
 import { useEffect, useMemo, useRef } from "react"
 import * as THREE from "three"
 import { LARS, RUNES, type RuneName } from "@/lib/runes"
+import { CAMERA, RUNE_FACE, START_YAW, STONE, deform, runeSlot } from "@/lib/stone"
 
 const GOLD = "#f3c75a"
-const STONE_W = 1.2
-const STONE_H = 2.3
-const STONE_D = 0.46
+
+/** Sway after the handoff: LARS keeps facing the visitor (the back face never turns round). */
+const SWAY = { amp: 0.3, period: 15, easeIn: 2.5 }
 
 // ---------- procedural textures (no image assets) ----------
 
@@ -27,33 +27,60 @@ function drawRune(ctx: CanvasRenderingContext2D, name: RuneName, x: number, y: n
 	ctx.stroke()
 }
 
-/** White-on-black rune carving used as both emissive glow and (negative) bump. */
-function runeFaceTexture(runes: RuneName[]): THREE.CanvasTexture {
-	const w = 256
-	const h = 512
+/**
+ * LARS as rune-fire, drawn exactly like the SVG twin (StoneFallback): carved
+ * channel, gold-700 inlay, bloom, glow and white-hot core, at the slots
+ * lib/stone defines, so the projected strokes land where the SVG's do. It is
+ * laid over the front face (normal blending, untoned), so the runes match the
+ * first paint pixel for pixel in colour and glow.
+ */
+function runeLightTexture(): THREE.CanvasTexture {
+	const k = 2 // texture px per RUNE_FACE px
 	const c = document.createElement("canvas")
-	c.width = w
-	c.height = h
+	c.width = RUNE_FACE.w * k
+	c.height = RUNE_FACE.h * k
 	const ctx = c.getContext("2d")!
-	ctx.fillStyle = "#000"
-	ctx.fillRect(0, 0, w, h)
-	ctx.strokeStyle = "#fff"
+	ctx.scale(k, k)
 	ctx.lineCap = "round"
 	ctx.lineJoin = "round"
-	const size = 74
-	const gap = 22
-	const total = runes.length * size + (runes.length - 1) * gap
-	let y = (h - total) / 2 + 10
-	for (const r of runes) {
-		ctx.shadowColor = "#fff"
-		ctx.shadowBlur = 10
-		ctx.lineWidth = 7
-		drawRune(ctx, r, (w - size) / 2, y, size)
-		ctx.shadowBlur = 0
-		ctx.lineWidth = 4
-		drawRune(ctx, r, (w - size) / 2, y, size)
-		y += size + gap
-	}
+	const unit = RUNE_FACE.size / 10 // one rune-box unit in face px (the SVG's RUNE_UNIT)
+	const each = (fn: (name: RuneName, x: number, y: number, size: number) => void) =>
+		LARS.forEach((r, i) => {
+			const { x, y, size } = runeSlot(i, LARS.length)
+			fn(r, x, y, size)
+		})
+	// carved channel (slightly below: the cut's shadowed lower lip) and the incised inlay
+	ctx.strokeStyle = "rgba(11,14,18,0.72)"
+	ctx.lineWidth = 1.05 * unit
+	each((r, x, y, s) => drawRune(ctx, r, x, y + 0.14 * unit, s))
+	ctx.strokeStyle = "#8f6a2a"
+	ctx.lineWidth = 0.5 * unit
+	each((r, x, y, s) => drawRune(ctx, r, x, y, s))
+	// bloom: only the shadow of strokes drawn far off-canvas
+	const off = 4000
+	ctx.save()
+	ctx.globalAlpha = 0.8
+	ctx.shadowColor = "#e4b65a"
+	ctx.shadowBlur = 3.4 * unit * k
+	ctx.shadowOffsetX = off * k
+	ctx.strokeStyle = "#e4b65a"
+	ctx.lineWidth = 1.4 * unit
+	each((r, x, y, s) => drawRune(ctx, r, x - off, y, s))
+	ctx.restore()
+	// glow + fire
+	ctx.save()
+	ctx.shadowColor = "#f7d98c"
+	ctx.shadowBlur = 0.9 * unit * k
+	ctx.strokeStyle = "#f7d98c"
+	ctx.lineWidth = 0.56 * unit
+	each((r, x, y, s) => drawRune(ctx, r, x, y, s))
+	each((r, x, y, s) => drawRune(ctx, r, x, y, s))
+	ctx.restore()
+	// white-hot core
+	ctx.globalAlpha = 0.85
+	ctx.strokeStyle = "#fff4d6"
+	ctx.lineWidth = 0.2 * unit
+	each((r, x, y, s) => drawRune(ctx, r, x, y, s))
 	const t = new THREE.CanvasTexture(c)
 	t.colorSpace = THREE.SRGBColorSpace
 	t.anisotropy = 4
@@ -67,7 +94,7 @@ function slateTexture(): THREE.CanvasTexture {
 	c.width = s
 	c.height = s
 	const ctx = c.getContext("2d")!
-	ctx.fillStyle = "#59616e"
+	ctx.fillStyle = "#8d97a7"
 	ctx.fillRect(0, 0, s, s)
 	let seed = 7
 	const rnd = () => {
@@ -75,8 +102,8 @@ function slateTexture(): THREE.CanvasTexture {
 		return seed / 2147483647
 	}
 	for (let i = 0; i < 2600; i++) {
-		const v = Math.round(70 + rnd() * 50)
-		ctx.fillStyle = `rgba(${v},${v + 4},${v + 12},${(0.08 + rnd() * 0.12).toFixed(3)})`
+		const v = Math.round(90 + rnd() * 60)
+		ctx.fillStyle = `rgba(${v},${v + 6},${v + 14},${(0.04 + rnd() * 0.06).toFixed(3)})`
 		const r = 1 + rnd() * 5
 		ctx.fillRect(rnd() * s, rnd() * s, r * (1 + rnd() * 4), r)
 	}
@@ -86,194 +113,98 @@ function slateTexture(): THREE.CanvasTexture {
 	return t
 }
 
-function runeSpriteTexture(name: RuneName): THREE.CanvasTexture {
-	const s = 64
-	const c = document.createElement("canvas")
-	c.width = s
-	c.height = s
-	const ctx = c.getContext("2d")!
-	ctx.strokeStyle = "#fff"
-	ctx.lineCap = "round"
-	ctx.lineJoin = "round"
-	ctx.shadowColor = "#fff"
-	ctx.shadowBlur = 6
-	ctx.lineWidth = 3.5
-	drawRune(ctx, name, 12, 12, 40)
-	return new THREE.CanvasTexture(c)
-}
-
-// ---------- geometry ----------
-
-function noise(x: number, y: number, z: number): number {
-	return (
-		Math.sin(x * 2.1 + Math.sin(y * 1.7)) * Math.cos(z * 2.9 + y * 0.8) * 0.5 +
-		Math.sin(x * 5.3 + z * 3.1 + y * 4.7) * 0.22 +
-		Math.sin(y * 11.0 + x * 7.0) * 0.07
-	)
-}
-
-/** A tapered, round-shouldered standing stone with a position-seeded rough surface. */
+/** The menhir: lib/stone's deformation applied to a segmented box (the SVG twin is generated from the same function). */
 function stoneGeometry(): THREE.BufferGeometry {
-	const g = new THREE.BoxGeometry(STONE_W, STONE_H, STONE_D, 20, 36, 6)
+	const g = new THREE.BoxGeometry(STONE.w, STONE.h, STONE.d, ...STONE.segs)
 	const p = g.attributes.position
-	const v = new THREE.Vector3()
-	const dir = new THREE.Vector3()
 	for (let i = 0; i < p.count; i++) {
-		v.fromBufferAttribute(p, i)
-		const h = (v.y + STONE_H / 2) / STONE_H // 0 bottom -> 1 top
-		const nx = v.x / (STONE_W / 2) // -1 .. 1
-		const taper = 1 - 0.16 * h
-		const shoulder = THREE.MathUtils.smoothstep(h, 0.62, 1)
-		v.x *= taper * (1 - 0.1 * shoulder)
-		v.y -= 0.42 * nx * nx * shoulder + 0.06 * nx * shoulder
-		v.z *= (1 + 0.35 * (1 - nx * nx)) * (1 - 0.25 * shoulder)
-		dir.set(v.x, v.y * 0.25, v.z).normalize()
-		v.addScaledVector(dir, noise(v.x * 1.6, v.y * 1.6, v.z * 1.6) * 0.05)
-		p.setXYZ(i, v.x, v.y, v.z)
+		const [x, y, z] = deform(p.getX(i), p.getY(i), p.getZ(i))
+		p.setXYZ(i, x, y, z)
 	}
 	g.computeVertexNormals()
 	return g
 }
 
-// ---------- scene pieces ----------
+// ---------- scene ----------
 
-function Stone() {
+/** Tuned so the median face luminance matches the SVG twin within ±12 % (scripts/shoot.mjs checks it). */
+const ALBEDO = "#ffffff"
+const EXPOSURE = 1.32
+
+function Stone({ live, onReady }: { live: boolean; onReady: () => void }) {
 	const group = useRef<THREE.Group>(null)
-	const { geometry, materials, carvedMats, textures } = useMemo(() => {
+	const frames = useRef(0)
+	const sway = useRef(0)
+	const liveRef = useRef(live)
+	liveRef.current = live
+
+	const { geometry, materials, overlay, textures } = useMemo(() => {
 		const geometry = stoneGeometry()
 		const slate = slateTexture()
-		const front = runeFaceTexture(LARS)
-		const back = runeFaceTexture(["othala", "ingwaz", "algiz", "dagaz"])
-		const plain = new THREE.MeshStandardMaterial({ map: slate, color: "#9aa3b2", roughness: 0.92, metalness: 0.02 })
-		const carved = (tex: THREE.Texture) =>
-			new THREE.MeshStandardMaterial({
-				map: slate,
-				color: "#9aa3b2",
-				roughness: 0.88,
-				metalness: 0.02,
-				emissive: new THREE.Color(GOLD),
-				emissiveMap: tex,
-				emissiveIntensity: 1.6,
-				bumpMap: tex,
-				bumpScale: -2.5,
-			})
-		const carvedMats = [carved(front), carved(back)]
-		// BoxGeometry groups: +x, -x, +y, -y, +z (front), -z (back)
-		const materials = [plain, plain, plain, plain, carvedMats[0], carvedMats[1]]
-		return { geometry, materials, carvedMats, textures: [slate, front, back] }
+		const runes = runeLightTexture()
+		const stone = new THREE.MeshStandardMaterial({ map: slate, color: new THREE.Color(ALBEDO), roughness: 0.9, metalness: 0.02 })
+		const hidden = new THREE.MeshBasicMaterial({ visible: false })
+		const fire = new THREE.MeshBasicMaterial({ map: runes, transparent: true, depthWrite: false, toneMapped: false })
+		// BoxGeometry groups: +x, -x, +y, -y, +z (front: LARS), -z
+		const materials = { stone, overlay: [hidden, hidden, hidden, hidden, fire, hidden] }
+		return { geometry, materials, overlay: fire, textures: [slate, runes] }
 	}, [])
 
 	useEffect(
 		() => () => {
 			geometry.dispose()
-			new Set(materials).forEach((m) => m.dispose())
+			materials.stone.dispose()
+			new Set(materials.overlay).forEach((m) => m.dispose())
 			textures.forEach((t) => t.dispose())
 		},
 		[geometry, materials, textures]
 	)
 
-	useFrame((state, delta) => {
+	useFrame((_, delta) => {
+		// useFrame runs before each render: on the third call two frames have been drawn at the SVG's pose.
+		frames.current += 1
+		if (frames.current === 3) onReady()
 		const g = group.current
-		if (!g) return
-		const t = state.clock.elapsedTime
-		g.rotation.y += Math.min(delta, 0.1) * 0.22
-		g.position.y = Math.sin(t * 0.6) * 0.04
-		const glow = 1.35 + Math.sin(t * 1.4) * 0.35
-		carvedMats[0].emissiveIntensity = glow
-		carvedMats[1].emissiveIntensity = glow
+		if (!g || !liveRef.current) return
+		sway.current += Math.min(delta, 0.1)
+		const t = sway.current
+		const ease = Math.min(1, t / SWAY.easeIn)
+		const k = ease * ease * (3 - 2 * ease)
+		const phase = Math.sin((t / SWAY.period) * Math.PI * 2)
+		g.rotation.y = START_YAW + SWAY.amp * k * phase
+		overlay.opacity = 1 - 0.14 * k * (0.5 + 0.5 * Math.sin(t * 1.3))
 	})
 
 	return (
-		<group ref={group} rotation={[0, -0.35, 0]}>
-			<mesh geometry={geometry} material={materials} />
+		<group ref={group} rotation={[0, START_YAW, 0]}>
+			<mesh geometry={geometry} material={materials.stone} />
+			<mesh geometry={geometry} material={materials.overlay} renderOrder={1} />
 		</group>
 	)
 }
 
-const MOTE_RUNES: RuneName[] = ["algiz", "kenaz", "ingwaz", "tiwaz", "othala", "fehu", "sowilo", "gebo", "wunjo"]
-
-function RuneMotes() {
-	const refs = useRef<(THREE.Sprite | null)[]>([])
-	const motes = useMemo(
-		() =>
-			MOTE_RUNES.map((name, i) => {
-				const tex = runeSpriteTexture(name)
-				const mat = new THREE.SpriteMaterial({
-					map: tex,
-					color: GOLD,
-					transparent: true,
-					opacity: 0.75,
-					blending: THREE.AdditiveBlending,
-					depthWrite: false,
-				})
-				return {
-					mat,
-					tex,
-					radius: 1.25 + (i % 3) * 0.3,
-					height: -0.9 + ((i * 0.37) % 1) * 2.0,
-					phase: (i / MOTE_RUNES.length) * Math.PI * 2,
-					speed: 0.12 + (i % 4) * 0.035,
-					scale: 0.16 + (i % 3) * 0.04,
-				}
-			}),
-		[]
-	)
-
-	useEffect(
-		() => () =>
-			motes.forEach((m) => {
-				m.mat.dispose()
-				m.tex.dispose()
-			}),
-		[motes]
-	)
-
-	useFrame((state) => {
-		const t = state.clock.elapsedTime
-		motes.forEach((m, i) => {
-			const s = refs.current[i]
-			if (!s) return
-			const a = m.phase + t * m.speed
-			s.position.set(Math.cos(a) * m.radius, m.height + Math.sin(t * 0.7 + m.phase) * 0.12, Math.sin(a) * m.radius * 0.7)
-			m.mat.opacity = 0.45 + 0.35 * (0.5 + 0.5 * Math.sin(t * 1.1 + m.phase * 3))
-		})
-	})
-
-	return (
-		<>
-			{motes.map((m, i) => (
-				<sprite
-					key={i}
-					ref={(el) => {
-						refs.current[i] = el
-					}}
-					material={m.mat}
-					scale={[m.scale, m.scale, m.scale]}
-				/>
-			))}
-		</>
-	)
-}
-
-export default function RuneStoneScene({ active, onReady }: { active: boolean; onReady: () => void }) {
+export default function RuneStoneScene({ active, live, onReady }: { active: boolean; live: boolean; onReady: () => void }) {
 	return (
 		<Canvas
 			dpr={[1, 1.5]}
 			frameloop={active ? "always" : "never"}
-			camera={{ position: [0, 0.15, 5.4], fov: 34 }}
+			camera={{ position: [...CAMERA.position], fov: CAMERA.fov, near: CAMERA.near, far: CAMERA.far }}
 			gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
 			onCreated={({ gl }) => {
-				gl.toneMapping = THREE.ACESFilmicToneMapping
-				requestAnimationFrame(() => onReady())
+				// R3F defaults to ACES, which crushed the slate to near-black in v2.0.
+				// Neutral keeps mid-tone slate close to its sRGB value, so the 3D face can match the SVG.
+				gl.toneMapping = THREE.NeutralToneMapping
+				gl.toneMappingExposure = EXPOSURE
 			}}
 		>
-			<ambientLight intensity={0.5} color="#b8c2d4" />
-			<directionalLight position={[3, 4, 5]} intensity={1.6} color="#f1ece2" />
-			<directionalLight position={[-4, 1.5, -3]} intensity={1.1} color="#7f95b8" />
-			<pointLight position={[0, -0.2, 1.8]} intensity={2.2} distance={4} color={GOLD} />
-			<Stone />
-			<RuneMotes />
-			<Sparkles count={28} scale={[3.4, 3.2, 2]} size={1.6} speed={0.18} opacity={0.5} color={GOLD} />
+			<hemisphereLight args={["#c9ced6", "#30353d", 0.75]} />
+			{/* moonlight key from the upper left; a near point light, so the face falls off toward the bottom right like the SVG */}
+			<pointLight position={[-2.2, 2.8, 2.8]} intensity={24} decay={2} color="#dde6f3" />
+			{/* moon rim from behind on the right, so the shadowed flank still has an edge */}
+			<directionalLight position={[3.5, 2, -3]} intensity={0.6} color="#93a2b8" />
+			{/* rune-fire spilling from the carving */}
+			<pointLight position={[0.05, -0.05, 1.25]} intensity={0.9} distance={3} decay={1.4} color={GOLD} />
+			<Stone live={live} onReady={onReady} />
 		</Canvas>
 	)
 }

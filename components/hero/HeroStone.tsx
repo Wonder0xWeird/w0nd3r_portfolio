@@ -1,12 +1,15 @@
 "use client"
 
 import dynamic from "next/dynamic"
-import { useEffect, useRef, useState } from "react"
-import { StoneFallback } from "./StoneFallback"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { StoneLight, StoneMotes, stoneVars } from "./StoneLight"
 
 const RuneStoneScene = dynamic(() => import("./RuneStoneScene"), { ssr: false, loading: () => null })
 
 type NetNavigator = Navigator & { connection?: { saveData?: boolean } }
+
+/** Canvas crossfade (globals.css .stone__canvas); the SVG leaves and the sway starts after it. */
+const FADE_MS = 350
 
 function webglAvailable(): boolean {
 	try {
@@ -73,47 +76,28 @@ function firstInteraction(signal: AbortSignal): Promise<void> {
 }
 
 /**
- * The hero's one 3D element (DESIGN.md "Performance budget and loading policy").
- * First paint is always the designed SVG stone. The three.js chunk is imported
- * only when motion is welcome, WebGL exists, Save-Data is off and the stone is
- * on screen, and then:
+ * The hero's stone (DESIGN.md "Hero" and "Performance budget and loading policy").
+ *
+ * Layers, back to front: torch (lights the page around the hero), halo and
+ * ground shadow, the stone body (SVG first paint, WebGL on top once ready, both
+ * under one mask), motes. Only the body swaps; the light layers persist.
+ *
+ * First paint is always the SVG twin (StoneFallback, passed in from the server).
+ * The three.js chunk is imported only when motion is welcome, WebGL exists,
+ * Save-Data is off and the stone is on screen, and then:
  *   - fine pointers: after load + LCP has settled + an idle period;
  *   - coarse pointers / mobile UAs: only after the first user interaction.
- * It pauses rendering while scrolled offscreen. The stone's box also anchors
- * the page torchlight (--torch-x/--torch-y on <html>).
+ * Handoff: the scene reports ready after two rendered frames at the SVG's exact
+ * pose; the canvas fades in over the still-opaque SVG (350 ms); then the SVG is
+ * hidden and the stone starts to sway. It pauses rendering while offscreen.
  */
-export function HeroStone() {
+export function HeroStone({ fallback }: { fallback: React.ReactNode }) {
 	const stageRef = useRef<HTMLDivElement>(null)
 	const [armed, setArmed] = useState(false)
 	const [enabled, setEnabled] = useState(false)
 	const [ready, setReady] = useState(false)
+	const [live, setLive] = useState(false)
 	const [onscreen, setOnscreen] = useState(false)
-
-	// Torchlight origin follows the stone. Written on the light layer only (not
-	// <html>), so moving it never restyles the whole document.
-	useEffect(() => {
-		const el = stageRef.current
-		const light = document.querySelector<HTMLElement>(".atmos")
-		if (!el || !light) return
-		let x = ""
-		let y = ""
-		const place = () => {
-			const r = el.getBoundingClientRect()
-			const nx = `${Math.round(r.left + r.width / 2)}px`
-			const ny = `${Math.round(r.top + window.scrollY + r.height * 0.45)}px`
-			if (nx !== x) light.style.setProperty("--torch-x", (x = nx))
-			if (ny !== y) light.style.setProperty("--torch-y", (y = ny))
-		}
-		const ro = new ResizeObserver(place) // fires once on observe, then on size changes
-		ro.observe(el)
-		window.addEventListener("resize", place, { passive: true })
-		return () => {
-			ro.disconnect()
-			window.removeEventListener("resize", place)
-			light.style.removeProperty("--torch-x")
-			light.style.removeProperty("--torch-y")
-		}
-	}, [])
 
 	// Decide whether (and when) the 3D scene may load.
 	useEffect(() => {
@@ -123,6 +107,7 @@ export function HeroStone() {
 				setArmed(false)
 				setEnabled(false)
 				setReady(false)
+				setLive(false)
 			}
 		}
 		mq.addEventListener("change", onChange)
@@ -158,14 +143,33 @@ export function HeroStone() {
 		if (armed && onscreen) setEnabled(true)
 	}, [armed, onscreen])
 
+	// After the crossfade: retire the SVG and let the stone move.
+	useEffect(() => {
+		if (!ready) return
+		const t = window.setTimeout(() => setLive(true), FADE_MS + 40)
+		return () => window.clearTimeout(t)
+	}, [ready])
+
+	const onReady = useCallback(() => setReady(true), [])
+
 	return (
-		<div ref={stageRef} className="hero-stone" data-ready={ready ? "" : undefined}>
-			<StoneFallback className="hero-stone__fallback" />
-			{enabled ? (
-				<div className="hero-stone__canvas" aria-hidden="true">
-					<RuneStoneScene active={onscreen} onReady={() => setReady(true)} />
-				</div>
-			) : null}
+		<div
+			ref={stageRef}
+			className="stone hero-stone"
+			style={stoneVars}
+			data-ready={ready ? "" : undefined}
+			data-live={live ? "" : undefined}
+		>
+			<StoneLight torch />
+			<div className="stone__body">
+				{fallback}
+				{enabled ? (
+					<div className="stone__canvas" aria-hidden="true">
+						<RuneStoneScene active={onscreen} live={live} onReady={onReady} />
+					</div>
+				) : null}
+			</div>
+			<StoneMotes />
 		</div>
 	)
 }

@@ -3,6 +3,7 @@ import path from "node:path"
 import Image from "next/image"
 import Link from "next/link"
 import { HeroStone } from "@/components/hero/HeroStone"
+import { StoneFallback } from "@/components/hero/StoneFallback"
 import { External } from "@/components/External"
 import { Rune } from "@/components/Rune"
 import { CarvedRune } from "@/components/CarvedRune"
@@ -69,7 +70,7 @@ export default function Home() {
 						</span>
 					</h1>
 					<div className={s.heroArt}>
-						<HeroStone />
+						<HeroStone fallback={<StoneFallback className="stone__svg" />} />
 					</div>
 					<div className={s.heroCopy}>
 						<p className={s.roles}>{profile.tagline}</p>

@@ -72,8 +72,8 @@
 	--measure: 66ch;
 	--header-h: 60px;
 
-	/* light: torch origin. With no stone on the page the light spills in from
-	   off-canvas; on / it sits on the stone (see .atmos below). */
+	/* light: torch origin for pages without the stone: it spills in from
+	   off-canvas. On / the stone carries its own torch (.stone__torch). */
 	--torch-x: 96%;
 	--torch-y: -14vh;
 
@@ -85,16 +85,10 @@
 	color-scheme: dark;
 }
 
-/* First-paint approximation of the stone's position on / (HeroStone refines it on .atmos). */
-body:has(.hero-stone) .atmos {
-	--torch-x: 72%;
-	--torch-y: 44vh;
-}
-@media (max-width: 860px) {
-	body:has(.hero-stone) .atmos {
-		--torch-x: 80%;
-		--torch-y: 170px;
-	}
+/* On / the torch belongs to the stone (.stone__torch): it scrolls away with the hero
+   instead of following the viewport as light without a source. */
+body:has(.hero-stone) .atmos__torch {
+	display: none;
 }
 
 *,
@@ -528,36 +522,138 @@ strong {
 	}
 }
 
-/* ---------- hero stone ---------- */
-.hero-stone {
+/* ---------- the stone (DESIGN.md "Hero", "Surfaces and light") ----------
+   Layers, back to front: torch, halo, ground, body (SVG, then WebGL), motes.
+   Only the body swaps; the light persists. Anchors (--runes-*, --base-*) come
+   from the generated profile (components/hero/stone-profile.ts). */
+.stone {
 	position: relative;
 	width: 100%;
 	aspect-ratio: 5 / 6;
-	margin: 0 auto;
 }
-.hero-stone__fallback,
-.hero-stone__canvas {
+.stone > * {
+	position: absolute;
+	pointer-events: none;
+}
+/* Rune-fire lighting the page around the hero. z-index -1 puts it under the hero text in
+   the root stacking context, so no ancestor may create a stacking context. */
+.stone__torch {
+	z-index: -1;
+	left: var(--runes-x);
+	top: var(--runes-y);
+	width: 125vmax;
+	height: 92vmax;
+	translate: -50% -50%;
+	background: radial-gradient(
+		closest-side in oklch,
+		rgb(228 182 90 / 0.2),
+		rgb(228 182 90 / 0.1) 36%,
+		rgb(228 182 90 / 0.035) 70%,
+		rgb(228 182 90 / 0)
+	);
+}
+.stone__halo {
+	left: var(--runes-x);
+	top: var(--runes-y);
+	width: 118%;
+	height: 98%;
+	translate: -50% -50%;
+	background: radial-gradient(closest-side in oklch, rgb(228 182 90 / 0.17), rgb(228 182 90 / 0.055) 52%, rgb(228 182 90 / 0));
+}
+/* contact shadow, with a little moonlit mist around the foot */
+.stone__ground {
+	left: var(--base-x);
+	top: var(--base-y);
+	width: calc(var(--base-w) * 1.4);
+	height: 9%;
+	translate: -50% -56%;
+	background: radial-gradient(closest-side, rgb(11 14 18 / 0.92), rgb(11 14 18 / 0.5) 48%, rgb(11 14 18 / 0));
+}
+.stone__ground::after {
+	content: "";
+	position: absolute;
+	inset: -90% -55%;
+	background: radial-gradient(closest-side, rgb(127 149 184 / 0.07), rgb(127 149 184 / 0));
+}
+/* the base fades into the ground instead of ending on a hard edge */
+.stone__body {
+	inset: 0;
+	-webkit-mask-image: linear-gradient(#000 calc(var(--base-y) - 8%), transparent calc(var(--base-y) + 0.5%));
+	mask-image: linear-gradient(#000 calc(var(--base-y) - 8%), transparent calc(var(--base-y) + 0.5%));
+}
+.stone__body > * {
 	position: absolute;
 	inset: 0;
 	width: 100%;
 	height: 100%;
 }
-.hero-stone__fallback {
-	transition: opacity 0.9s ease;
+.stone__motes {
+	inset: 0;
+	width: 100%;
+	height: 100%;
 }
-.hero-stone__canvas {
+/* Handoff: the canvas (same pose and value as the SVG) fades in over the still-opaque SVG,
+   so the stone never dims mid-fade; then the SVG is retired and the 3D stone may move. */
+.stone__canvas {
 	opacity: 0;
-	transition: opacity 0.9s ease;
+	transition: opacity 350ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
-.hero-stone[data-ready] .hero-stone__canvas {
+.stone[data-ready] .stone__canvas {
 	opacity: 1;
 }
-.hero-stone[data-ready] .hero-stone__fallback {
-	opacity: 0;
+.stone[data-live] .stone__svg {
+	visibility: hidden;
 }
-.stone-motes path {
-	animation: mote-float 7s ease-in-out infinite;
-	transform-box: fill-box;
+
+/* ---------- the one orchestrated moment (DESIGN.md "Motion"), <= 1.2 s at first paint ----------
+   L-A-R-S draw in (4 x 110 ms stagger), then ignite; the torch and halo rise with them;
+   the name rises 8 px and the CTAs follow (home.module.css). The default state is the
+   final state, so reduced motion (and no CSS animation support) renders it static and
+   ignited. The h1 and lede never start at opacity 0. */
+@media (prefers-reduced-motion: no-preference) {
+	.hero-stone .stone-rune path {
+		stroke-dasharray: 1 2;
+		animation: rune-draw 380ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+		animation-delay: calc(120ms + var(--i) * 110ms);
+	}
+	.hero-stone .stone-bloom {
+		animation: rune-ignite 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 640ms both;
+	}
+	.hero-stone .stone__torch,
+	.hero-stone .stone__halo {
+		animation: torch-rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms both;
+	}
+	.stone__motes path {
+		animation: mote-float 7s ease-in-out infinite;
+		transform-box: fill-box;
+	}
+}
+@keyframes rune-draw {
+	from {
+		stroke-dashoffset: 1.01;
+	}
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+@keyframes rune-ignite {
+	0% {
+		opacity: 0;
+	}
+	55% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0.8;
+	}
+}
+@keyframes torch-rise {
+	from {
+		opacity: 0.35;
+	}
+	to {
+		opacity: 1;
+	}
 }
 @keyframes mote-float {
 	0%,

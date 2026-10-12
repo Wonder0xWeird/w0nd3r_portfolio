@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { StoneFallback } from "@/components/hero/StoneFallback"
+import { StoneLight, StoneMotes, stoneVars } from "@/components/hero/StoneLight"
 import s from "../writing/writing.module.css"
 
 export const metadata: Metadata = {
@@ -12,7 +13,13 @@ export default function Cottage() {
 	return (
 		<div className={`container ${s.page} ${s.cottage}`}>
 			<div className={s.cottageStone}>
-				<StoneFallback />
+				<div className="stone" style={stoneVars}>
+					<StoneLight />
+					<div className="stone__body">
+						<StoneFallback className="stone__svg" />
+					</div>
+					<StoneMotes />
+				</div>
 			</div>
 			<h1>The cottage</h1>
 			<p className="meta">Under construction</p>
