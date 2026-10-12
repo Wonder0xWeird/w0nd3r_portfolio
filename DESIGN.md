@@ -23,9 +23,12 @@ Phasing: v2.0 fonts + tokens + type + light + chrome cleanup + 3D gating (this s
 + load sequence + mobile hero order (shipped with the one-menhir handoff, light below the hero and the
 disclosure pass that brought mobile under 9,000 px). v2.2 (shipped on `feat/front-door-v2-2`, the v2.1 critique's top three
 fixes): a composed desktop fold, sections lit by their sigils (ignite on scroll, captioned; bands that read), and
-the stone as neutral slate with real texture and incised runes; plus a craft sweep. Still to come from the
-original v2.2 slot: the sticky sigil rail and the proof/experience recomposition. v2.3 research band +
-projects shelf + writing + play + threshold. v2.4 motion polish + perf/a11y hardening.
+the stone as neutral slate with real texture and incised runes; plus a craft sweep. v2.3 (shipped on
+`feat/front-door-v2-3`, the v2.2 critique's top three): no headline sliced by any desktop fold, the stone
+as night-lit riven slate with a quiet handoff, and craft sweep 2 (no h1 font flash, clean research plates,
+one-line sigil captions). Still to come: the sticky sigil rail, the proof slab diagram and the
+proof/experience recomposition; research band + projects shelf + writing + play + threshold; v2.4 motion
+polish + perf/a11y hardening.
 
 ---
 
@@ -45,12 +48,19 @@ projects shelf + writing + play + threshold. v2.4 motion polish + perf/a11y hard
 - **No monospace labels.** If code ever appears, JetBrains Mono inside the code only.
 - **Loading:** `next/font/google`, `display: swap`, adjusted fallbacks (default). Preload only Cormorant roman
   and Mona Sans. Budget ≤ 150 kB woff2 on first load.
+- **The name is the exception (v2.3):** `.name` uses `--font-display-name`, Cormorant with `display: block`,
+  so the first frames never paint "Lars Crawford" in the heavier fallback and swap it mid-rise. It is
+  `next/font/local` on `app/fonts/cormorant-latin-wght.woff2`, a byte-identical copy of the Google latin
+  file, so it resolves to the same `/_next/static/media` URL (one download) under its own family name
+  (`cormorantName`). Do **not** add a second `next/font/google` Cormorant instance for this: Next 15.5 names
+  every instance "Cormorant", and the later `@font-face` (block) would win for all Cormorant text. Checked
+  with frames every ~100 ms over 8 cold loads (5 plain, 3 throttled): 0 fallback frames (v2.2: 7 of 8).
 - **Never** redefine the `--font-*` variables in CSS (the v1 bug). `scripts/shoot.mjs` asserts the computed
   h1/body families and that both faces report `loaded`.
 
 | Token | Size (fluid, 390 → 1440) | Face / weight | Line-height | Use |
 |---|---|---|---|---|
-| `--step-display` | `clamp(3.75rem, min(2rem + 8.5vw, 2rem + 13svh), 11rem)` | Cormorant 300 | 0.9 | Name only. Grows with height too (v2.2): 136 px at 1280×800, 149 at 1440×900, 172 at 1920×1080, 65 at 390 |
+| `--step-display` | `clamp(3.75rem, min(2rem + 8.5vw, 2rem + 13svh), 11rem)` | Cormorant 300 | 0.9 | Name only. Grows with height too (v2.2): 149 at 1440×900, 172 at 1920×1080, 65 at 390. Desktops ≤ 899 px tall use `11svh` (v2.3): 111 px at 1280×720, 116 at 1366×768, 120 at 1280×800, 127 at 1536×864 |
 | `--step-5` | `clamp(2.5rem, 1.6rem + 3.6vw, 5rem)` | Cormorant 400 | 1.0 | Section titles, play manifesto |
 | `--step-figure` | `clamp(3rem, 1.6rem + 4.2vw, 5.75rem)` | Cormorant 300, old-style figures, `--gold-200` | 0.95 | The one big figure ("2,416 of 2,593"). *Added in v2.0.* |
 | `--step-4` | `clamp(1.9rem, 1.4rem + 1.6vw, 3rem)` | Cormorant 500 | 1.05 | Feature titles, pull quotes |
@@ -155,26 +165,35 @@ Other tokens (globals.css): radii `--r-btn: 2px`, `--r-slab: 6px`; spacing `--sp
    to `lib/stone.ts`. Lit the same way in both: moonlight key from the upper left, rune-fire from the
    carving, the right flank in shadow. The halo, contact shadow, mist and motes are persistent layers
    outside the swapped body.
-   - **Material (v2.2): neutral slate, real texture, light does the warming.** v2.1 read as blue plastic
-     (a periwinkle albedo × blue lights, a navy flank, no micro-texture). Now the albedo is a neutral grey
-     (#7b7c7e) mottled by procedural fbm with fine grain, quartz veins and pits, and the same surface drives a
-     `bumpMap` (relief) and a `roughnessMap` (.74–.96) — all generated on a 512 px canvas in the lazy chunk,
-     no image assets. Lights: neutral sky / warm-dark ground hemisphere, a barely cool key (#e4e9f0), a weak
-     rim (#9aa5b4), and one rune-fire point light (#f2b65a) *inside the stone's group*, just off the face,
-     so the warmth sits on the slate around LARS (hue ≈ 30°) and falls off within a hand's breadth; the rest
-     stays neutral (saturation ≤ .02). **Linear tone mapping** (not Neutral): Neutral's toe subtracted an
-     offset from dark values, which crushed the flank toward black and saturated it navy.
+   - **Material (v2.3): night-lit riven slate.** v2.1 read as blue plastic; v2.2's neutral #7b7c7e with 900
+     uniform pits and white-noise relief read as studio-lit cast concrete. Now (all generated on a 512 px
+     canvas in the lazy chunk, no image assets):
+     - albedo #5f6469 (blue-grey, hue ≈ 210) in bedding bands (anisotropic fbm 256×24 + 64×10 px) with a
+       faint blue-grey/green-grey drift and each split layer a shade apart; the bands are generated
+       axis-aligned and turned 8° (descending right) by the textures' UV rotation, so the tile still repeats;
+     - relief (`bumpMap`, `bumpScale` 1.6): cleavage ledges that run along a bed and die out, hairline
+       lamination **in patches** (everywhere at once it read as wood grain), short grit drawn out along the
+       bed, 220 power-law pits (70 % strung along 12 bedding lines); white noise only ×2;
+     - light: hemisphere 0.6 (sky #b9c2cc, warm-dark ground), the moon key at [-2.6, 3.2, 2.4] so the face
+       grades top-left → bottom-right, a weak rim (#a2a8b0), the rune-fire point light inside the group;
+       vertex colours sink the foot into its shadow below y −0.45 (to 0.62). Linear tone mapping, exposure 1.27.
    - **Runes are cut, not neon (v2.2, both renderers):** a moonlit lower lip offset down-right, a wider dark
      cut offset up-left, then a narrower fire with a softer glow, a thin .55 core and a .62 bloom (`GROOVE`
      in `lib/stone.ts` holds the shared widths and alphas).
-   - **SVG twin palette** matched to the lit 3D stone: face #7b7d80 → #646669 → #47494c, flank #33363a →
-     #1d1f22, crown #55585c → #3c3f43, the page's grain tile (`<pattern>`, overlay .065, no new request),
-     four dark mottles and a stronger firelight (.42 at the centre).
-   - The crown now eases into the flank (`smooth(0.48, 1, h)`, segments 28×56×8): no shoulder seam in the sway.
-   **Gates (`shoot.mjs`, 1440 handoff frames):** median face luminance SVG vs WebGL within ±12 % and mean
-   |difference| ≤ 8 (v2.2: +0.3 %, 7.0); WebGL face saturation ≤ .07 away from the runes, hue 25–45° near
-   them; flank saturation ≤ .12; face:flank ≥ 1.8:1; face vs page ≥ 2.3:1; high-pass σ (luminance minus a
-   13 px box blur at 2×) ≥ 4 for WebGL and ≥ 3 for the SVG.
+   - **SVG twin palette (v2.3)**, matched to the lit 3D stone: face #6b7076 → #53575d → #3d4147 (more
+     vertical than v2.2's), flank #30353a → #1b1e22, crown #4a4f55 → #33373c, a foot shadow from 60 % of
+     the stage, a shoulder shade where the 3D face curves away, and the fire (.35) centred where the 3D fire
+     light sits. Bedding is `feTurbulence` (beds + short lamination flecks, overlay .25, turned 8°), inside
+     the clipped group so the overlay blends with the face (v2.2's grain overlay blended with nothing), and
+     only in the stone's box. It is rasterised before the first paint (~+100 ms observed FCP in headless
+     Edge), so it is **not drawn below 861 px**, where the stone is a half-lit backdrop.
+   - The crown eases into the flank (`smooth(0.48, 1, h)`, segments 28×56×8): no shoulder seam in the sway.
+   **Gates (`shoot.mjs`, desktop handoff frames):** median face luminance SVG vs WebGL within ±12 % and mean
+   |difference| ≤ 5 (v2.3: −0.1 %, 4.7–4.9; v2.2 measured 7.0); WebGL face away from the runes hue 200–225,
+   saturation .03–.07, L* 36–41 (v2.3: 219, .038, 38.8); hue 25–45° near them; flank saturation ≤ .12;
+   face:flank ≥ 1.8:1; face vs page ≥ 2.3:1; key fall-off, upper-left / lower-right face ≥ 1.40 (1.48;
+   v2.2 1.30); foot ≥ 28 % darker than mid-face (32 %; v2.2 23 %); high-pass σ 3–6 WebGL (3.9) and
+   SVG/WebGL 0.75–1.3 (0.8); rune glow mean and p90 within ±3 % across the handoff.
 6. **Incised vs ignited runes.**
    - **Incised** (resting): `--gold-700` stroke with `filter: drop-shadow(0 1px 0 rgb(255 255 255/.06))
      drop-shadow(0 -1px 0 rgb(0 0 0/.6))`.
@@ -199,9 +218,12 @@ ladder and motivated light, not from shadows or washes.
 
 Section sigils are incised (`components/CarvedRune.tsx`: dark cut, moonlit lower lip, `--gold-700` inlay)
 and hang left of the section title, in a fixed `--sigil-w` column so every title starts on the same line.
-**Captioned (v2.2):** the rune's name and meaning sit under it (`SIGIL_MEANING` in `lib/runes.ts`; Mona
-Sans 450, 13 px, 11 px on phones, `--text-3`, `aria-hidden` like the rune), so Ehwaz never reads as a
-Latin "M". A caption may overhang its column by half the gap at most and wraps rather than touch the title.
+**Captioned (v2.2; one line each since v2.3):** the rune's name sits under it, and from 1280 px its meaning
+too (`SIGIL_MEANING` in `lib/runes.ts`; Mona Sans 450, 13 px, 11 px below 861 px, `--text-3`,
+`aria-hidden` like the rune), so Ehwaz never reads as a Latin "M". Captions never wrap; `justify-self:
+safe center` keeps a wide one inside the container (it overhangs toward the title only, ≥ 13 px short of
+it). Phones left-align the name under the sigil, inside the 16 px margin. Proof's Ehwaz ignites later
+than the others (see Motion), so in the desktop fold it is an ember, not a lit drop cap.
 Play's Wunjo carries the same caption in place of the old "My massive transformative purpose" kicker.
 The sticky sigil rail is still to come.
 
@@ -247,15 +269,25 @@ rejected untested: its two offset chevrons risk the same "<" reading that failed
   copy, not the stone or a min-height, sets the hero's height (no bottom padding); the stage's foot overlaps
   Proof's top padding (`margin-bottom: -clamp(120px, 16vw, 240px)`), Proof sits above the stone's light
   (`z-index: 1`, no background) with `padding-top: clamp(40px, 7svh, 80px)`, and its title box is capped at
-  8.6em so the stone stands beside its first line, never on it. Gate (`shoot.mjs`, 1280×800 to 1920×1080):
-  the Proof title's top ≤ height − 48 and ≤ 140 px below the email row. **390:** the stone is a half-lit
+  8.6em so the stone stands beside its first line, never on it. **Short desktops (v2.3):** ≤ 899 px tall the
+  hero tightens by height (top padding `clamp(16px, 4svh, 40px)`, name on 11svh, stage ≤ 0.92 × the
+  viewport below the header, foot `min(16vw, 240px, 26svh)`, CTA row and Proof padding by svh); ≤ 760 px
+  the copy's own margins tighten; below 690 px the hero fills the fold so the title starts just below it.
+  1440×900 and taller are unchanged. **Gate (`shoot.mjs`, line-level since v2.3)** at 1280×720/800,
+  1366×768/657, 1440×900, 1536×730/864, 1600×900, 1920×950/1080: the Proof title's first line box is
+  whole in the fold with ≥ 16 px to spare or wholly below it, never sliced; the empty fold below the email
+  row is ≤ 140 px. (v2.2's "top ≤ height − 48" passed a first line cut in half at four laptop sizes.) **390:** the stone is a half-lit
   (.55), masked backdrop beside the name with its crown under the header; the lede starts below the last
   rune so no text crosses LARS; primary CTA bottom ≤ 600 px and the address in the fold.
 - **Proof** (ᛖ Ehwaz). Asymmetric: one feature slab (Immortal Kinematics, the one big figure) + two slim
   slabs. 390: feature first.
 - **Experience** (ᚱ Raidho). Org in Cormorant `--step-3`, meta in two quiet lines, stack as one `--text-3`
-  comma line. v2.2: sticky rail, gold fuse, ≤ 2 bullets + `<details>`.
-- **Research** (ᛞ Dagaz). Duotone micrographs; bibliography with a year column, no pills. v2.3: full-bleed
+  comma line. Org/role columns 3fr/9fr (v2.3; 4fr/8fr left a ~260 px dead gutter): roles start at x 463 at
+  1440. Still to come: sticky rail, gold fuse, ≤ 2 bullets + `<details>`.
+- **Research** (ᛞ Dagaz). Duotone micrographs; bibliography with a year column, no pills. The plates (v2.3)
+  are square crops in `public/images/science/plates/` made by `scripts/crop-science.mjs` from the untouched
+  originals: no SEM info bars, no "Mins" header or labels, no Blender axes or 3D cursor; the SEM's 1 mm
+  bar is redrawn as a clean overlay (`.scaleBar`, shown where the tile is ≥ 150 px). Later: full-bleed
   specimen band, thesis pull quote.
 - **Projects** (ᚠ Fehu). Featured pair as editorial columns, legacy work as a de-boxed archive shelf with
   duotone tiles. v2.3: alternating rows with video loops.
@@ -282,7 +314,7 @@ Everything lives inside `@media (prefers-reduced-motion: no-preference)`; scroll
 | Stone ↔ scroll / pointer (later) | Yaw from scroll progress; runes brighten with proximity | rAF-coalesced | Static stone |
 | Header solidify (v2.4) | `animation-timeline: scroll(root)` | 0–80 px | Solid header |
 | Torch dims on scroll (v2.0; pages without the stone) | `animation-timeline: scroll(root)` on `.atmos__torch` opacity | 0–110vh | Static |
-| Section sigils ignite (v2.2, shipped) | Named `view-timeline: --head` on each `.sectionHead`; inlay `stroke` gold-700 → gold-200, sigil `filter` ember → `--ignited`, pool `opacity` .35 → 1; `animation-range: entry 15% cover 40%`, linear | scroll-linked | **Rendered ignited** (the default rule is the final state) |
+| Section sigils ignite (v2.2, shipped) | Named `view-timeline: --head` on each `.sectionHead`; inlay `stroke` gold-700 → gold-200, sigil `filter` ember → `--ignited`, pool `opacity` .35 → 1; `animation-range: entry 15% cover 40%`, linear. Proof (v2.3): `entry 60% cover 45%`, so its Ehwaz enters the desktop fold as an ember | scroll-linked | **Rendered ignited** (the default rule is the final state) |
 | Experience fuse (v2.2) | `scaleY` on the rail rule | scroll-linked | Static gold-700 rule |
 | Slab torchlight (v2.0) | `--mx/--my` pointer gradient (fine pointers only) | 150 ms fade | None |
 | Links/buttons (v2.0) | Underline 1 → 2 px + offset; primary glow | 160 ms ease-out | Colour change only |
@@ -301,7 +333,7 @@ budgeted). UI motion < 300 ms; long durations only for the one hero moment.
 | Lazy 3D chunk (gz) | ≤ 260 kB. Loaded only after LCP + idle **and** hero visible **and** not `saveData` **and** not reduced motion **and** WebGL. On coarse pointers / mobile UAs: only on first interaction (pointerdown/touch/key/wheel/scroll). The SVG stone (`StoneFallback`) is the designed first impression and the permanent fallback |
 | Fonts | ≤ 3 preloaded woff2, ≤ 150 kB (Cormorant roman 35 kB + Mona Sans 40 kB preloaded). **Text on / stays inside the latin subset** (v2.1): a single ę/ą/Ṯ on the page pulls a 30 kB latin-ext file into the mobile critical path at VeryHigh priority, so / lists only latin-subset titles (the rest are on /writing). Note: `next build` on Windows emits no font preloads (Next 15.5 matches `/next-font-loader/` with forward slashes only), so local Lighthouse runs are slightly pessimistic; Vercel (Linux) builds preload correctly |
 | Images | AVIF/WebP via `next/image`; no `unoptimized` GIFs (→ MP4/WebM, v2.3); below-fold lazy |
-| LCP / TBT / CLS (Lighthouse mobile) | ≤ 2.0 s / ≤ 150 ms / ≤ 0.05 |
+| LCP / TBT / CLS (Lighthouse mobile) | ≤ 2.0 s / ≤ 150 ms / ≤ 0.05. Local Windows builds measure ~2.65 s (no font preloads, see Fonts); v2.3 is level with v2.2 in an interleaved A/B (2.65 vs 2.66 s). Watch the simulated critical path: when the hero SVG stopped referencing `/textures/grain.png`, its CSS-initiated request cost ~60 ms of simulated LCP, so the layout preloads it. `experimental.inlineCss` was tried in v2.3 and dropped (no local gain: 2.73 s) |
 | Lighthouse mobile | Perf ≥ 90, A11y ≥ 95, BP ≥ 95 |
 | Runtime | Animate only transform/opacity/filter on small layers; one rAF-coalesced pointer listener; canvas DPR ≤ 1.5, paused offscreen; never write custom properties on `<html>` at runtime (it restyles the whole document: the torch vars live on `.atmos`); never create a WebGL context before the 3D gate opens (the probe alone cost ~300 ms TBT). `content-visibility: auto` on sections was tried in v2.0 (+1 perf) and dropped: Lighthouse/axe hit-testing then saw the 1400 px placeholders overlap real content (false `target-size` failure, a11y 96) |
 
@@ -369,14 +401,16 @@ CHROME_PATH="C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" \
   npx -y lighthouse@12.8.2 http://localhost:3201 --chrome-flags="--headless=new" --output=json   # ×3, median
 ```
 
-`scripts/shoot.mjs` exits non-zero on any gate failure and writes `report.json` next to the shots. On `/` it
-also gates the primary-CTA bottom (≤ 600 px at 390, ≤ 700 at 1440), the hero's visible words (≤ 40), the page
-height (≤ 9,000 / 8,500), SVG-vs-WebGL face luminance (±12 %), and that every internal link answers 200 with no
+`scripts/shoot.mjs` exits non-zero on any gate failure and writes `report.json` next to the shots.
+`VIEWPORTS="1440x900,1366x768,1280x720,1920x1080,390x844"` adds main-run sizes (default: 1440 and 390). On `/` it
+also gates the primary-CTA bottom (≤ 600 px on phones, ≤ 700 at 1440×900 and 7/9 of the height on other
+desktops), the hero's visible words (≤ 40), the page height (≤ 9,000 / 8,500), SVG-vs-WebGL face luminance (±12 %), and that every internal link answers 200 with no
 redirect (legacy mixed-case letter URLs: one 308); it saves real viewport frames (`-scroll-NN`) and the handoff
 frames (`-handoff-1-svg/2-mid/3-webgl`). v2.2 adds the critique's acceptance checks as gates: the desktop
-folds (`home-fold-WxH.png`: Proof title in the fold, ≤ 140 px below the email row, never under the stone's
-ground), the sigils (each inlay ignited once in view, normal and reduced motion; captions visible and clear
+folds (`home-fold-WxH.png`: since v2.3 the Proof title's first line whole in the fold or wholly below it,
+≤ 140 px of empty fold below the email row, never under the stone's ground), the sigils (each inlay ignited once in view, normal and reduced motion; captions visible and clear
 of the title; band ≥ 1.12:1) and the stone's material (see "Surfaces and light" 5). Its
 `three=` field shows whether three.js was parsed before any interaction (it must be `false` on the 390
 runs). `ROUTES=/,/writing node scripts/shoot.mjs …` limits the routes (in Git Bash prefix
-`MSYS_NO_PATHCONV=1`, or "/" becomes a Windows path). `scripts/make-grain.mjs` regenerates the grain tile.
+`MSYS_NO_PATHCONV=1`, or "/" becomes a Windows path). `scripts/make-grain.mjs` regenerates the grain tile;
+`scripts/crop-science.mjs` regenerates the research plates.
