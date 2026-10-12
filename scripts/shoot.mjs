@@ -34,9 +34,10 @@
  * Sigils (/, desktop, normal and reduced motion): each section header scrolled
  * to 30 % of the viewport has an ignited inlay (median luminance >= 170) and a
  * visible caption clear of its h2; the sunken band reads (>= 1.12:1).
- * Desktop folds (/, 1280x800, 1440x900, 1536x864, 1920x1080, reduced motion): the
- * Proof title's top is inside the fold (<= height - 48) and <= 140 px below the
- * hero's email row; the stone's ground shadow never overlaps it (also at 900, 1024).
+ * Desktop folds (/, 1280x720 to 1920x1080 incl. browser-chrome sizes, reduced motion):
+ * the Proof title's first line is whole in the fold (bottom <= height - 16) or wholly
+ * below it (top >= height), never sliced (v2.3); the empty fold below the hero's email
+ * row is <= 140 px; the stone's ground shadow never overlaps it (also at 900, 1024).
  * Links: every internal href on / and /writing must answer 200 without a
  * redirect; the legacy mixed-case letter URLs must 308 once to a 200.
  * Other routes get fold + full page + the same font/overflow checks.
@@ -50,13 +51,17 @@ import path from "node:path"
 const base = (process.argv[2] || "http://localhost:3200").replace(/\/$/, "")
 const outDir = path.resolve(process.argv[3] || "shots/latest")
 const ROUTES = (process.env.ROUTES || "/,/writing,/writing/poems/imagine,/cottage").split(",")
-const VIEWPORTS = [
-	{ name: "1440", width: 1440, height: 900, touch: false },
-	{ name: "390", width: 390, height: 844, touch: true },
-]
-const CTA_MAX = { 1440: 700, 390: 600 }
+// VIEWPORTS="1440x900,1366x768,1280x720,1920x1080,390x844" adds sizes (default: the rubric's two).
+// 1440x900 and 390x844 keep their short names ("home-1440", "home-390"); < 861 px wide is a touch phone.
+const VIEWPORTS = (process.env.VIEWPORTS || "1440x900,390x844").split(",").map((s) => {
+	const [width, height] = s.split("x").map(Number)
+	const name = s === "1440x900" ? "1440" : s === "390x844" ? "390" : s
+	return { name, width, height, touch: width < 861 }
+})
+const CTA_MAX = { desktop: 700, phone: 600 }
 const HERO_WORDS_MAX = 40
-const HEIGHT_MAX = { 1440: 8500, 390: 9000 } // critique change 3: disclose, never delete
+const HEIGHT_MAX = { desktop: 8500, phone: 9000 } // critique change 3: disclose, never delete
+const kind = (vp) => (vp.touch ? "phone" : "desktop")
 const PARITY = 0.12
 const PARITY_MAD = 8 // mean |luminance difference| per pixel of the face, SVG vs WebGL (v2.2)
 const LEGACY = {
@@ -351,7 +356,7 @@ for (const route of ROUTES) {
 			// Compare with the emulated width: on mobile, wide content silently grows the layout viewport.
 			if (dims.scrollWidth > vp.width || dims.innerWidth > vp.width) fail(`${label}: horizontal overflow ${dims.scrollWidth} > ${vp.width}`)
 			if (route === "/") {
-				if (dims.primaryBottom == null || dims.primaryBottom > CTA_MAX[vp.name]) fail(`${label}: primary CTA bottom ${dims.primaryBottom} > ${CTA_MAX[vp.name]}`)
+				if (dims.primaryBottom == null || dims.primaryBottom > CTA_MAX[kind(vp)]) fail(`${label}: primary CTA bottom ${dims.primaryBottom} > ${CTA_MAX[kind(vp)]}`)
 				if (dims.heroWords == null || dims.heroWords > HERO_WORDS_MAX) fail(`${label}: hero has ${dims.heroWords} visible words > ${HERO_WORDS_MAX}`)
 			}
 
@@ -371,7 +376,7 @@ for (const route of ROUTES) {
 			await page.waitForTimeout(400)
 			// Real height once content-visibility sections have rendered.
 			run.pageHeight = await page.evaluate(() => document.documentElement.scrollHeight)
-			if (route === "/" && run.pageHeight > HEIGHT_MAX[vp.name]) fail(`${label}: page is ${run.pageHeight} px tall > ${HEIGHT_MAX[vp.name]}`)
+			if (route === "/" && run.pageHeight > HEIGHT_MAX[kind(vp)]) fail(`${label}: page is ${run.pageHeight} px tall > ${HEIGHT_MAX[kind(vp)]}`)
 			// Full page at 1 image px per CSS px: Chromium tiles/duplicates captures taller than 16384 device px.
 			await page.screenshot({ path: `${base_}-full.png`, fullPage: true, scale: "css" })
 
@@ -456,15 +461,24 @@ for (const route of ROUTES) {
 	await ctx.close()
 }
 
-// ---------- desktop folds (v2.2 critique fix 1): the next title is in the fold, close to the copy ----------
-// Reduced motion, so the SVG stone and the final layout are measured. At every size: the Proof h2's top
-// is <= viewport height - 48 and <= 140 px below the hero's email row; the stone's ground shadow never
-// overlaps the Proof h2's box (it stands beside the title, not on it).
+// ---------- desktop folds (v2.2 fix 1, line-level since v2.3): no headline is sliced by the fold ----------
+// Reduced motion, so the SVG stone and the final layout are measured. The Proof h2's FIRST LINE (its
+// first line box, from Range.getClientRects()) must be either whole inside the fold with >= 16 px to
+// spare (bottom <= height - 16) or wholly below it (top >= height); v2.2's "h2 top <= height - 48" let a
+// 72-80 px first line hang over the edge at 1280x720/800, 1366x768 and 1536x864. The empty fold between
+// the hero's email row and min(line 1 top, fold) is <= 140 px. The stone's ground shadow never overlaps
+// the h2's box (also at 900 and 1024 wide). Sizes include common browser viewports (screen minus chrome).
 if (ROUTES.includes("/")) {
 	const FOLDS = [
+		[1280, 720, true],
 		[1280, 800, true],
+		[1366, 768, true],
+		[1366, 657, true], // a 1366x768 laptop with browser chrome
 		[1440, 900, true],
+		[1536, 730, true],
 		[1536, 864, true],
+		[1600, 900, true],
+		[1920, 950, true],
 		[1920, 1080, true],
 		[900, 800, false], // ground-overlap check only
 		[1024, 768, false],
@@ -484,14 +498,26 @@ if (ROUTES.includes("/")) {
 				const b = el.getBoundingClientRect()
 				return { x: b.left, y: b.top, r: b.right, b: b.bottom }
 			}
-			return { h2: box("#work h2"), email: box("main .copy-email"), ground: box(".stone__ground") }
+			// the h2's line boxes: client rects of its contents, merged by top
+			const range = document.createRange()
+			range.selectNodeContents(document.querySelector("#work h2"))
+			const lines = []
+			for (const r of range.getClientRects()) {
+				const l = lines.find((x) => Math.abs(x.t - r.top) < 4)
+				if (l) l.b = Math.max(l.b, r.bottom)
+				else lines.push({ t: r.top, b: r.bottom })
+			}
+			lines.sort((a, b) => a.t - b.t)
+			return { h2: box("#work h2"), line1: lines[0], lines: lines.length, email: box("main .copy-email"), ground: box(".stone__ground") }
 		})
-		const gap = Math.round(m.h2.y - m.email.b)
+		const l1 = { t: Math.round(m.line1.t), b: Math.round(m.line1.b) }
+		const state = l1.t >= h ? "below" : l1.b <= h - 16 ? "in" : "cut"
+		const gap = Math.round(Math.min(m.line1.t, h) - m.email.b)
 		const hit = !!m.ground && m.ground.r > m.ground.x && !(m.ground.r <= m.h2.x || m.h2.r <= m.ground.x || m.ground.b <= m.h2.y || m.h2.b <= m.ground.y)
-		report.runs.push({ label, h2Top: Math.round(m.h2.y), emailBottom: Math.round(m.email.b), gap, groundHitsH2: hit })
-		console.log(`> ${label} h2Top=${Math.round(m.h2.y)} (max ${h - 48}) gap=${gap} (max 140) groundHitsH2=${hit}`)
-		if (foldGate && m.h2.y > h - 48) fail(`${label}: Proof title top ${Math.round(m.h2.y)} > ${h - 48} (below the fold)`)
-		if (foldGate && gap > 140) fail(`${label}: ${gap} px of empty fold between the email row and the Proof title (> 140)`)
+		report.runs.push({ label, line1Top: l1.t, line1Bottom: l1.b, line1State: state, clearance: h - l1.b, emailBottom: Math.round(m.email.b), gap, groundHitsH2: hit })
+		console.log(`> ${label} line1=${l1.t}-${l1.b} (${state}; fold ${h}, clearance ${h - l1.b}) gap=${gap} (max 140) groundHitsH2=${hit}`)
+		if (foldGate && state === "cut") fail(`${label}: the Proof title's first line (${l1.t}-${l1.b}) is cut by the fold at ${h} (needs bottom <= ${h - 16} or top >= ${h})`)
+		if (foldGate && gap > 140) fail(`${label}: ${gap} px of empty fold below the email row (> 140)`)
 		if (hit) fail(`${label}: the stone's ground shadow overlaps the Proof title`)
 		await page.screenshot({ path: path.join(outDir, `${label}.png`) })
 		await ctx.close()

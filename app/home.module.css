@@ -185,6 +185,46 @@
 		max-width: 8.6em;
 	}
 }
+/* Short desktop screens (v2.3). At 1280x720, 1280x800, 1366x768 and 1536x864 the v2.2 fold cut the
+   Proof title's first line in half. Rule (shoot.mjs gates it line by line): the first line is either
+   whole inside the fold with >= 16 px to spare, or wholly below it.
+   <= 899 px tall: the hero tightens by height: less top padding, a smaller name (globals.css), a
+   stage no taller than the viewport and a shallower foot, so the first line lands whole in the fold.
+   1440x900 and taller are untouched. */
+@media (min-width: 861px) and (max-height: 899px) {
+	.hero {
+		padding-top: clamp(16px, 4svh, 40px);
+	}
+	.heroArt {
+		width: min(50vw, 740px, calc((100svh - var(--header-h)) * 0.92));
+		margin-bottom: calc(-1 * min(16vw, 240px, 26svh));
+	}
+	.ctaRow {
+		margin-top: clamp(16px, 2.4svh, 24px);
+	}
+	.sectionProof {
+		padding-top: clamp(24px, 4svh, 40px);
+	}
+}
+/* <= 760 px tall (a 1366x768 or 1536x864 laptop with browser chrome): the copy's own spacing tightens too. */
+@media (min-width: 861px) and (max-height: 760px) {
+	.hero {
+		padding-top: 16px;
+	}
+	.name {
+		margin-bottom: 16px;
+	}
+	.lede {
+		margin-bottom: 12px;
+	}
+}
+/* Shorter still, the copy cannot leave room for a whole 72-80 px line: the hero fills the fold, so the
+   Proof title starts just below it instead of being sliced by it (the stone's foot fills the band). */
+@media (min-width: 861px) and (max-height: 689px) {
+	.hero {
+		min-height: calc(100svh - var(--header-h));
+	}
+}
 /* Night / band / night: Research and Writing sit on a sunken slate band, so the page below
    the hero is not one value. The band is a stacking context so its sigil's light shows on it. */
 .sectionBand {
@@ -572,7 +612,8 @@
 @container (min-width: 820px) {
 	.job {
 		display: grid;
-		grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+		/* 3fr/9fr (v2.3): 4fr/8fr left a ~260 px dead gutter between the org names and the roles */
+		grid-template-columns: minmax(0, 3fr) minmax(0, 9fr);
 		column-gap: clamp(24px, 3vw, 48px);
 	}
 	.jobHead {
