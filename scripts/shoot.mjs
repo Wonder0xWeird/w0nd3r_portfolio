@@ -20,7 +20,8 @@
  *     whether three.js was parsed (window.__THREE__);
  *   - runs axe (serious/critical count);
  *   - on /: asserts the primary CTA's bottom edge (<= 600 px at 390, <= 700 at
- *     1440) and the hero's visible word count (<= 40), records the LCP element,
+ *     1440), the hero's visible word count (<= 40) and the page height (<= 9000 px
+ *     at 390, <= 8500 at 1440), records the LCP element,
  *     and saves real viewport frames, one per screen (section crops repaint the
  *     fixed light layer in tiles and show a fake seam).
  * Handoff (/, 1440 and 390): the median luminance of the stone's face as SVG
@@ -45,6 +46,7 @@ const VIEWPORTS = [
 ]
 const CTA_MAX = { 1440: 700, 390: 600 }
 const HERO_WORDS_MAX = 40
+const HEIGHT_MAX = { 1440: 8500, 390: 9000 } // critique change 3: disclose, never delete
 const PARITY = 0.12
 const LEGACY = {
 	"/writing/Dear-Lambda/I-See-You": "/writing/dear-lambda/i-see-you",
@@ -203,6 +205,7 @@ for (const route of ROUTES) {
 			await page.waitForTimeout(400)
 			// Real height once content-visibility sections have rendered.
 			run.pageHeight = await page.evaluate(() => document.documentElement.scrollHeight)
+			if (route === "/" && run.pageHeight > HEIGHT_MAX[vp.name]) fail(`${label}: page is ${run.pageHeight} px tall > ${HEIGHT_MAX[vp.name]}`)
 			// Full page at 1 image px per CSS px: Chromium tiles/duplicates captures taller than 16384 device px.
 			await page.screenshot({ path: `${base_}-full.png`, fullPage: true, scale: "css" })
 

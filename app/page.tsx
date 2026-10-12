@@ -48,6 +48,23 @@ function Meta({ lines, className }: { lines: (string | undefined)[]; className?:
 	)
 }
 
+/**
+ * The rest of a list, disclosed rather than deleted (critique change 3): the
+ * summary names what and how many, it stays keyboard-reachable, and it opens
+ * with the 220 ms height transition (instant under reduced motion).
+ */
+function More({ label, count, className, children }: { label: string; count?: number; className?: string; children: React.ReactNode }) {
+	return (
+		<details className={`${s.disclose} ${className ?? ""}`}>
+			<summary>
+				{label}
+				{count ? <span className={s.discloseCount}> ({count})</span> : null}
+			</summary>
+			<div className={s.discloseBody}>{children}</div>
+		</details>
+	)
+}
+
 function Stack({ items, max }: { items: string[]; max?: number }) {
 	return (
 		<p className={s.stack}>
@@ -63,6 +80,8 @@ export default function Home() {
 	const legacy = projects.filter((p) => !p.featured)
 	const feature = proofCards.find((c) => c.feature)!
 	const slims = proofCards.filter((c) => !c.feature)
+	const [phd, ...earlier] = research
+	const pubs = [...publications].sort((x, y) => Number(y.year) - Number(x.year))
 
 	return (
 		<>
@@ -139,7 +158,7 @@ export default function Home() {
 							)}
 						</article>
 						{slims.map((c) => (
-							<article key={c.title} className={`slab ${s.proofSlim}`}>
+							<article key={c.title} className={`slab ${s.proofSlim} ${s.wideOnly}`}>
 								<Meta lines={[c.org, c.context]} />
 								<h3 className={s.slimTitle}>{c.title}</h3>
 								<p className={s.proofBody}>{c.body}</p>
@@ -157,36 +176,70 @@ export default function Home() {
 				</div>
 			</section>
 
-			{/* ---------- experience ---------- */}
+			{/* ---------- experience: one impact line per org; the rest is disclosed, never deleted ---------- */}
 			<section id="experience" className={s.section} aria-labelledby="experience-title">
 				<div className="container">
 					<SectionHead id="experience" rune="raidho" title="Shipping systems people rely on" />
 					<ol className={s.timeline}>
-						{experience.map((job) => (
-							<li key={job.org} className={s.job}>
-								<div className={s.jobHead}>
-									<h3 className={s.org}>{job.href ? <External href={job.href} icon={false}>{job.org}</External> : job.org}</h3>
-									<Meta lines={[job.location, job.dates]} />
-								</div>
-								<div className={s.jobBody}>
-									{job.roles.map((r) => (
-										<div key={r.title} className={s.role}>
-											<p className={s.roleTitle}>{r.title}</p>
-											<p className="meta">{r.dates}</p>
-											{r.bullets.length ? (
-												<ul className={s.bullets}>
-													{r.bullets.map((b) => (
-														<li key={b}>{b}</li>
-													))}
-												</ul>
-											) : null}
-										</div>
-									))}
-									{job.stack ? <Stack items={job.stack} /> : null}
-								</div>
-							</li>
-						))}
+						{experience.filter((job) => !job.earlier).map((job) => {
+							const [lead, ...firstRest] = job.roles[0].bullets
+							const rest = job.roles
+								.map((r, i) => ({ title: r.title, bullets: i === 0 ? firstRest : r.bullets }))
+								.filter((r) => r.bullets.length)
+							const count = rest.reduce((n, r) => n + r.bullets.length, 0)
+							return (
+								<li key={job.org} className={s.job}>
+									<div className={s.jobHead}>
+										<h3 className={s.org}>{job.href ? <External href={job.href} icon={false}>{job.org}</External> : job.org}</h3>
+										<Meta lines={[job.location, job.dates]} />
+									</div>
+									<div className={s.jobBody}>
+										<ul className={s.roleList}>
+											{job.roles.map((r) => (
+												<li key={r.title}>
+													<span className={s.roleTitle}>{r.title}</span>
+													{r.dates !== job.dates ? <span className="meta">{r.dates}</span> : null}
+												</li>
+											))}
+										</ul>
+										{lead ? <p className={s.impact}>{lead}</p> : null}
+										{count || job.stack ? (
+											<More label={`More from ${job.org}`} count={count}>
+												{rest.map((r) => (
+													<div key={r.title}>
+														{job.roles.length > 1 ? <p className={s.moreRole}>{r.title}</p> : null}
+														<ul className={s.bullets}>
+															{r.bullets.map((b) => (
+																<li key={b}>{b}</li>
+															))}
+														</ul>
+													</div>
+												))}
+												{job.stack ? <Stack items={job.stack} /> : null}
+											</More>
+										) : null}
+									</div>
+								</li>
+							)
+						})}
 					</ol>
+					{experience
+						.filter((job) => job.earlier)
+						.map((job) => (
+							<More key={job.org} label={`Before software: ${job.org}, ${job.dates}`} className={s.earlier}>
+								{job.roles.map((r) => (
+									<div key={r.title}>
+										<p className={s.moreRole}>{r.title}</p>
+										<ul className={s.bullets}>
+											{r.bullets.map((b) => (
+												<li key={b}>{b}</li>
+											))}
+										</ul>
+									</div>
+								))}
+								<p className={s.stack}>{job.location}</p>
+							</More>
+						))}
 				</div>
 			</section>
 
@@ -194,75 +247,115 @@ export default function Home() {
 			<section id="research" className={s.sectionBand} aria-labelledby="research-title">
 				<div className="container">
 					<SectionHead id="research" rune="dagaz" title="Neural engineering, from electrodes to immune cells" />
+					{/* Two independent columns on wide screens (no row alignment, so no voids); on narrow
+					    ones the wrappers dissolve and the blocks reorder: work, images, papers, education. */}
 					<div className={s.researchGrid}>
-						<div>
-							<ol className={s.timeline}>
-								{research.map((r) => (
-									<li key={r.lab} className={s.job}>
+						<div className={s.researchMain}>
+							<div className={s.researchWork}>
+								<ol className={s.timeline}>
+									<li className={s.job}>
 										<div className={s.jobHead}>
-											<h3 className={s.org}>{r.org}</h3>
-											<Meta lines={[`${r.role}, ${r.lab}`, `${r.place}, ${r.dates}`]} />
+											<h3 className={s.org}>{phd.org}</h3>
+											<Meta lines={[`${phd.role}, ${phd.lab}`, `${phd.place}, ${phd.dates}`]} />
 										</div>
 										<div className={s.jobBody}>
-											<ul className={s.bullets}>
-												{r.bullets.map((b) => (
-													<li key={b}>{b}</li>
-												))}
-											</ul>
+											<p className={s.impact}>Thesis: {thesis.title}.</p>
+											<details className={`slab ${s.thesis}`}>
+												<summary>Materials, studies and the dissertation</summary>
+												<div className={s.thesisBody}>
+													<ul className={s.bullets}>
+														{phd.bullets.map((b) => (
+															<li key={b}>{b}</li>
+														))}
+													</ul>
+													<p className={s.moreRole}>{thesis.title}</p>
+													{thesis.paragraphs.map((p) => (
+														<p key={p}>{p}</p>
+													))}
+												</div>
+											</details>
 										</div>
 									</li>
-								))}
-							</ol>
-							<details className={`slab ${s.thesis}`}>
-								<summary>About the dissertation: {thesis.title}</summary>
-								<div className={s.thesisBody}>
-									{thesis.paragraphs.map((p) => (
-										<p key={p}>{p}</p>
+								</ol>
+								<More label="Earlier research" count={earlier.length} className={s.earlier}>
+									<ol className={s.timeline}>
+										{earlier.map((r) => (
+											<li key={r.lab} className={s.job}>
+												<div className={s.jobHead}>
+													<h3 className={s.org}>{r.org}</h3>
+													<Meta lines={[`${r.role}, ${r.lab}`, `${r.place}, ${r.dates}`]} />
+												</div>
+												<div className={s.jobBody}>
+													{r.bullets.map((b) => (
+														<p key={b} className={s.impact}>
+															{b}
+														</p>
+													))}
+												</div>
+											</li>
+										))}
+									</ol>
+								</More>
+							</div>
+							<div className={s.researchPubs}>
+								<h3 className={s.subhead}>Publications and patents</h3>
+								<ol className={s.pubs}>
+									{pubs.map((p) => (
+										<li key={p.title}>
+											<span className={s.pubYear}>{p.year}</span>
+											<span>
+												<span className={s.pubTitle}>{p.href ? <External href={p.href}>{p.title}</External> : p.title}</span>
+												<span className={s.pubVenue}>
+													{p.venue}. {p.kind[0].toUpperCase() + p.kind.slice(1)}
+												</span>
+											</span>
+										</li>
 									))}
-								</div>
-							</details>
+								</ol>
+								<More label="Full citations with authors" count={pubs.length}>
+									<ol className={s.citations}>
+										{pubs.map((p) => (
+											<li key={p.title}>
+												{p.citation} “{p.title}.” <em>{p.venue}</em>, {p.year}.
+											</li>
+										))}
+									</ol>
+								</More>
+							</div>
 						</div>
-						<div className={s.scienceGrid}>
-							{thesis.images.map((img) => (
-								<figure key={img.src} className={`frame ${s.scienceFig}`}>
-									<Image className="duotone" src={img.src} alt={img.alt} fill sizes="(max-width: 860px) 45vw, 260px" />
-								</figure>
-							))}
-						</div>
-					</div>
-
-					<div className={s.pubGrid}>
-						<div>
-							<h3 className={s.subhead}>Publications and patents</h3>
-							<ol className={s.pubs}>
-								{publications.map((p) => (
-									<li key={p.title}>
-										<span className={s.pubYear}>{p.year}</span>
-										<span>
-											{p.citation}{" "}
-											{p.href ? <External href={p.href}>“{p.title}.”</External> : <>“{p.title}.”</>} <em>{p.venue}</em>.{" "}
-											<span className={s.pubKind}>{p.kind[0].toUpperCase() + p.kind.slice(1)}</span>
-										</span>
-									</li>
+						<div className={s.researchAside}>
+							{/* A grid beside the work on wide screens; a keyboard-scrollable strip on narrow ones. */}
+							<div className={s.scienceGrid} role="region" aria-label="Research images" tabIndex={0}>
+								{thesis.images.map((img) => (
+									<figure key={img.src} className={`frame ${s.scienceFig}`}>
+										<Image className="duotone" src={img.src} alt={img.alt} fill sizes="(max-width: 960px) 160px, 260px" />
+									</figure>
 								))}
-							</ol>
-						</div>
-						<div>
-							<h3 className={s.subhead}>Education</h3>
-							<ul className={s.plainList}>
-								{education.map((e) => (
-									<li key={e.degree}>
-										<strong>{e.degree}</strong>
-										<Meta lines={[`${e.school}, ${e.year}`, e.note]} />
-									</li>
-								))}
-							</ul>
-							<h3 className={s.subhead}>Honors</h3>
-							<ul className={s.honors}>
-								{honors.map((h) => (
-									<li key={h}>{h}</li>
-								))}
-							</ul>
+							</div>
+							<div className={s.researchEdu}>
+								<h3 className={s.subhead}>Education</h3>
+								<ul className={s.plainList}>
+									{education.map((e) => (
+										<li key={e.degree}>
+											<strong>{e.degree}</strong>
+											<Meta lines={[`${e.school}, ${e.year}`, e.note]} />
+										</li>
+									))}
+								</ul>
+								<h3 className={s.subhead}>Honors</h3>
+								<ul className={s.honors}>
+									{honors.slice(0, 3).map((h) => (
+										<li key={h}>{h}</li>
+									))}
+								</ul>
+								<More label="More honors" count={honors.length - 3}>
+									<ul className={s.honors}>
+										{honors.slice(3).map((h) => (
+											<li key={h}>{h}</li>
+										))}
+									</ul>
+								</More>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -273,19 +366,23 @@ export default function Home() {
 				<div className="container">
 					<SectionHead id="projects" rune="fehu" title="Things I've built" />
 					<div className={s.featuredGrid}>
+						{/* One sentence in the open; the build details are one tap away (the proof slab
+						    already tells Immortal Kinematics' harness story). */}
 						{featured.map((p) => (
 							<article key={p.name} className={s.featured}>
 								<p className="meta">{p.when}</p>
 								<h3 className={s.featuredTitle}>{p.name}</h3>
 								<p className={s.lead}>{p.summary}</p>
-								{p.details ? (
-									<ul className={s.bullets}>
-										{p.details.map((d) => (
-											<li key={d}>{d}</li>
-										))}
-									</ul>
-								) : null}
-								<Stack items={p.tags} />
+								<More label={`More about ${p.name}`} count={p.details?.length}>
+									{p.details?.length ? (
+										<ul className={s.bullets}>
+											{p.details.map((d) => (
+												<li key={d}>{d}</li>
+											))}
+										</ul>
+									) : null}
+									<Stack items={p.tags} />
+								</More>
 								{p.href ? (
 									<External className={s.proofLink} href={p.href}>
 										{p.linkLabel ?? "Visit"}
@@ -306,21 +403,23 @@ export default function Home() {
 											src={p.image}
 											alt=""
 											fill
-											sizes="(max-width: 600px) 100vw, 300px"
+											sizes="(max-width: 600px) 64px, 300px"
 											unoptimized={p.image.endsWith(".gif")}
 										/>
 									</div>
 								) : null}
-								<h4 className={s.tileTitle}>{p.href ? <External href={p.href}>{p.name}</External> : p.name}</h4>
-								<p className={s.tileText}>{p.summary}</p>
-								<Stack items={p.tags} max={4} />
+								<div className={s.tileCopy}>
+									<h4 className={s.tileTitle}>{p.href ? <External href={p.href}>{p.name}</External> : p.name}</h4>
+									<p className={s.tileText}>{p.summary}</p>
+									<Stack items={p.tags} max={4} />
+								</div>
 							</li>
 						))}
 					</ul>
 				</div>
 			</section>
 
-			{/* ---------- writing ---------- */}
+			{/* ---------- writing: a typographic library; Musings and Art live on /writing below 760 px ---------- */}
 			<section id="writing" className={s.sectionBand} aria-labelledby="writing-title">
 				<div className="container">
 					<SectionHead id="writing" rune="ansuz" title="Letters, poems and musings">
@@ -342,9 +441,9 @@ export default function Home() {
 													.slice(0, 3)
 													.map((p) => ({ title: p.title, href: `/writing/musings/${p.slug}` }))
 											: []
+							const wideOnly = w.id === "musings" || w.id === "art"
 							return (
-								<article key={w.id} className={s.shelfCol}>
-									<Rune name={w.rune} size={22} strokeWidth={0.9} className="rune-incised" />
+								<article key={w.id} className={`${s.shelfCol} ${wideOnly ? s.wideOnly : ""}`}>
 									<h3 className={s.libraryTitle}>
 										<Link href={w.id === "art" ? "/writing/art" : `/writing#${w.id}`}>{w.title}</Link>
 									</h3>

@@ -42,6 +42,8 @@
 	width: min(50vw, 740px);
 	margin-right: calc(-1 * clamp(40px, 8vw, 160px));
 	margin-top: calc(-1 * (var(--header-h) + 34px));
+	/* the empty foot of the stage (mist, ground shadow) may overlap the next section's top padding */
+	margin-bottom: calc(-1 * clamp(0px, 5vw, 72px));
 }
 .heroCopy {
 	grid-area: copy;
@@ -162,7 +164,8 @@
 
 /* ---------- section scaffolding ---------- */
 .section {
-	padding-top: clamp(80px, 11vw, 168px);
+	padding-top: clamp(56px, 9vw, 136px);
+	overflow-x: clip; /* the sigil light may spill sideways off-canvas, never widen the page */
 }
 .sectionProof {
 	padding-top: clamp(64px, 8vw, 120px);
@@ -243,7 +246,7 @@
 	color: var(--text-2);
 }
 .subhead {
-	margin: clamp(48px, 6vw, 80px) 0 var(--space-4);
+	margin: clamp(32px, 6vw, 80px) 0 var(--space-4);
 	font-size: var(--step-3);
 }
 .lead {
@@ -344,11 +347,11 @@
 	margin-top: 4px;
 }
 .proofLink {
-	display: inline-flex;
-	align-items: center;
-	min-height: 44px;
+	display: inline-block;
+	padding-block: 10px;
 	margin-top: auto;
 	font-weight: 500;
+	line-height: 1.5;
 }
 /* Desktop: text on the left, the big figure standing on the right. */
 @media (min-width: 961px) {
@@ -398,7 +401,7 @@
 }
 .job {
 	position: relative;
-	padding: 0 0 clamp(36px, 4vw, 56px) clamp(20px, 3vw, 40px);
+	padding: 0 0 clamp(28px, 4vw, 56px) clamp(20px, 3vw, 40px);
 }
 .job:last-child {
 	padding-bottom: var(--space-2);
@@ -433,15 +436,38 @@
 	color: var(--accent-hot);
 	text-decoration-color: currentColor;
 }
-.role + .role {
-	margin-top: var(--space-5);
+.roleList {
+	display: grid;
+	gap: var(--space-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.roleList li {
+	display: grid;
 }
 .roleTitle {
-	margin: 0;
 	font-size: var(--step-1);
 	font-weight: 600;
 	line-height: 1.35;
 	color: var(--text);
+}
+/* the one line per entry that stays open */
+.impact {
+	max-width: var(--measure);
+	margin: var(--space-3) 0 0;
+	color: var(--text-2);
+}
+.moreRole {
+	margin: var(--space-4) 0 0;
+	font-weight: 600;
+	color: var(--text);
+}
+.earlier {
+	margin-top: var(--space-5);
+}
+.earlier .timeline {
+	margin-top: var(--space-4);
 }
 @container (min-width: 820px) {
 	.job {
@@ -452,7 +478,8 @@
 	.jobHead {
 		margin: 0;
 	}
-	.job .bullets:first-child {
+	.job .roleList:first-child,
+	.job .impact:first-child {
 		margin-top: 0.35em;
 	}
 }
@@ -464,21 +491,68 @@
 	gap: clamp(32px, 4vw, 64px);
 	align-items: start;
 }
+.researchMain,
+.researchAside {
+	min-width: 0;
+}
+.researchEdu > .subhead:first-child {
+	margin-top: clamp(32px, 4vw, 48px);
+}
 @media (max-width: 960px) {
 	.researchGrid {
-		grid-template-columns: 1fr;
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: var(--space-6);
+	}
+	/* the column wrappers dissolve; the blocks read work, images, papers, education */
+	.researchMain,
+	.researchAside {
+		display: contents;
+	}
+	.researchWork {
+		order: 1;
+	}
+	.scienceGrid {
+		order: 2;
+	}
+	.researchPubs {
+		order: 3;
+	}
+	.researchEdu {
+		order: 4;
+	}
+	.researchPubs > .subhead:first-child,
+	.researchEdu > .subhead:first-child {
+		margin-top: 0;
 	}
 }
 .scienceGrid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: var(--space-3);
-	position: sticky;
-	top: calc(var(--header-h) + 24px);
 }
 .scienceFig {
 	margin: 0;
 	aspect-ratio: 1;
+}
+@media (max-width: 960px) {
+	.scienceGrid {
+		position: static;
+		display: flex;
+		gap: var(--space-3);
+		margin-inline: calc(-1 * var(--gutter));
+		padding: 4px var(--gutter) var(--space-2);
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+		scroll-snap-type: x mandatory;
+		scroll-padding-inline: var(--gutter);
+		scrollbar-width: thin;
+		scrollbar-color: var(--slate-700) transparent;
+	}
+	.scienceFig {
+		flex: 0 0 136px;
+		height: 136px;
+		scroll-snap-align: start;
+	}
 }
 .scienceFig img {
 	object-fit: cover;
@@ -491,7 +565,8 @@
 	padding: 0;
 	color: var(--text-2);
 }
-.thesis summary {
+.thesis summary,
+.disclose summary {
 	display: flex;
 	gap: 10px;
 	align-items: baseline;
@@ -502,10 +577,12 @@
 	font-weight: 500;
 	list-style: none;
 }
-.thesis summary::-webkit-details-marker {
+.thesis summary::-webkit-details-marker,
+.disclose summary::-webkit-details-marker {
 	display: none;
 }
-.thesis summary::before {
+.thesis summary::before,
+.disclose summary::before {
 	content: "";
 	flex: 0 0 auto;
 	width: 7px;
@@ -515,44 +592,66 @@
 	transform: translateY(-2px) rotate(-45deg);
 	transition: transform 220ms ease-out;
 }
-.thesis[open] summary::before {
+.thesis[open] summary::before,
+.disclose[open] summary::before {
 	transform: translateY(-4px) rotate(45deg);
 }
-.thesis summary:hover {
+.thesis summary:hover,
+.disclose summary:hover {
 	color: var(--accent-hot);
 }
 .thesisBody {
 	padding: 0 20px 6px 37px;
 	max-width: calc(var(--measure) + 57px);
 }
+.thesisBody .bullets {
+	margin: 0 0 var(--space-4);
+}
+.thesis {
+	margin-top: var(--space-4);
+}
+.disclose {
+	margin: var(--space-2) 0 0;
+	color: var(--text-2);
+}
+.disclose summary {
+	width: fit-content;
+	min-height: 44px;
+	padding: 10px 0;
+}
+.discloseCount {
+	color: var(--text-3);
+	font-weight: 450;
+	font-variant-numeric: tabular-nums;
+}
+.discloseBody {
+	max-width: calc(var(--measure) + 17px);
+	padding: 0 0 var(--space-2) 17px;
+}
+.discloseBody > :first-child {
+	margin-top: 0;
+}
 @media (prefers-reduced-motion: no-preference) {
 	@supports (interpolate-size: allow-keywords) {
-		.thesis {
+		.thesis,
+		.disclose {
 			interpolate-size: allow-keywords;
 		}
-		.thesis::details-content {
+		.thesis::details-content,
+		.disclose::details-content {
 			height: 0;
 			overflow: clip;
 			transition:
 				height 220ms ease-out,
 				content-visibility 220ms allow-discrete;
 		}
-		.thesis[open]::details-content {
+		.thesis[open]::details-content,
+		.disclose[open]::details-content {
 			height: auto;
 		}
 	}
 }
 
-.pubGrid {
-	display: grid;
-	grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
-	gap: 0 clamp(32px, 4vw, 64px);
-}
-@media (max-width: 960px) {
-	.pubGrid {
-		grid-template-columns: 1fr;
-	}
-}
 .pubs {
 	display: grid;
 	gap: var(--space-4);
@@ -569,15 +668,31 @@
 	align-items: baseline;
 	overflow-wrap: anywhere;
 }
+.pubTitle {
+	display: block;
+	font-weight: 500;
+	color: var(--text);
+}
+.pubVenue {
+	display: block;
+	margin-top: 2px;
+	font-size: var(--step--1);
+	line-height: 1.45;
+	color: var(--text-3);
+}
+.citations {
+	display: grid;
+	gap: var(--space-3);
+	margin: 0;
+	padding-left: 1.1em;
+	font-size: 0.94rem;
+	color: var(--text-2);
+	overflow-wrap: anywhere;
+}
 .pubYear {
 	font-size: var(--step--1);
 	font-variant-numeric: tabular-nums;
 	color: var(--text-3);
-}
-.pubKind {
-	font-size: var(--step--1);
-	color: var(--text-3);
-	white-space: nowrap;
 }
 .plainList {
 	display: grid;
@@ -640,7 +755,7 @@
 }
 
 .shelfTitle {
-	margin: clamp(64px, 8vw, 112px) 0 var(--space-5);
+	margin: clamp(40px, 8vw, 112px) 0 var(--space-5);
 	font-size: var(--step-3);
 }
 .shelf {
@@ -681,11 +796,18 @@
 }
 @media (max-width: 600px) {
 	.shelf {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: var(--space-6) var(--space-4);
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-4);
+	}
+	.tile {
+		display: grid;
+		grid-template-columns: 56px minmax(0, 1fr);
+		column-gap: var(--space-4);
+		align-items: start;
 	}
 	.tileImg {
-		margin-bottom: var(--space-3);
+		aspect-ratio: 1;
+		margin: 4px 0 0;
 	}
 	.tileTitle {
 		font-size: 1.2rem;
@@ -777,8 +899,8 @@
 .play {
 	position: relative;
 	isolation: isolate;
-	margin-top: clamp(96px, 12vw, 176px);
-	padding: clamp(64px, 9vw, 136px) 0;
+	margin-top: clamp(64px, 9vw, 136px);
+	padding: clamp(56px, 7.5vw, 112px) 0;
 	text-align: center;
 	background: var(--band);
 	border-block: 1px solid var(--line);
@@ -889,12 +1011,11 @@
 }
 @media (max-width: 560px) {
 	.contact {
-		flex-direction: column;
+		gap: var(--space-4);
 	}
 	.avatar {
-		flex-basis: auto;
-		width: 88px;
-		height: 88px;
+		flex-basis: 72px;
+		height: 72px;
 	}
 }
 /* The door is an object, so its plaque is centred. */
@@ -916,10 +1037,11 @@
 	color: var(--text);
 }
 @media (max-width: 860px) {
+	/* the door is an object with a centred plaque, so it stands centred too */
 	.door {
-		justify-self: start;
+		justify-self: center;
 		width: min(100%, 280px);
-		min-height: 240px;
+		min-height: 200px;
 	}
 }
 .doorRune {
@@ -945,4 +1067,24 @@
 .doorSub {
 	font-size: var(--step--1);
 	color: var(--text-3);
+}
+
+/* Wide screens only (<= 760 px they would repeat the next sections or live on /writing). */
+@media (max-width: 760px) {
+	.wideOnly {
+		display: none;
+	}
+}
+/* two poems on phones; the rest are a tap away on /writing */
+@media (max-width: 760px) {
+	.libraryList li:nth-child(n + 3) {
+		display: none;
+	}
+}
+/* a narrower year column on phones, so titles wrap less */
+@media (max-width: 600px) {
+	.pubs li {
+		grid-template-columns: 2.5rem minmax(0, 1fr);
+		gap: var(--space-3);
+	}
 }

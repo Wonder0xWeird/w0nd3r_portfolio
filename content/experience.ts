@@ -11,6 +11,8 @@ export interface Job {
 	dates: string
 	roles: Role[]
 	stack?: string[]
+	/** Before the software career: listed on / behind a disclosure that still names it. */
+	earlier?: boolean
 }
 
 // Only claims already on the résumé or the legacy site. Unconfirmed items
@@ -77,6 +79,7 @@ export const experience: Job[] = [
 	},
 	{
 		org: "MultiModal Health",
+		earlier: true,
 		location: "Seattle",
 		dates: "2015 – 2016",
 		roles: [

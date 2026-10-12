@@ -530,7 +530,7 @@ strong {
 /* ---------- footer ---------- */
 .site-footer {
 	border-top: 1px solid var(--line);
-	margin-top: clamp(72px, 10vw, 112px);
+	margin-top: clamp(48px, 10vw, 112px);
 	padding: var(--space-6) 0 var(--space-7);
 	color: var(--text-3);
 }
