@@ -100,6 +100,8 @@ for (const route of ROUTES) {
 			page.on("pageerror", (e) => consoleErrors.push(`pageerror: ${e.message}`))
 			page.on("response", (r) => r.status() >= 400 && failedRequests.push(`${r.status()} ${r.url()}`))
 			await page.goto(base + route, { waitUntil: "load" })
+			// Hide the Next dev-mode indicator so dev shots match production.
+			await page.addStyleTag({ content: "nextjs-portal{display:none!important}" })
 			// Give the deferred work (idle callbacks, the gated 3D import) a chance to run.
 			await page.waitForTimeout(reduced ? 600 : 3500)
 
@@ -117,7 +119,7 @@ for (const route of ROUTES) {
 				scrollWidth: document.documentElement.scrollWidth,
 				innerWidth: window.innerWidth,
 				pageHeight: document.documentElement.scrollHeight,
-				three: typeof window.__THREE__ !== "undefined",
+				three: typeof window.__THREE__ !== "undefined", // before any scroll/interaction
 				js: performance
 					.getEntriesByType("resource")
 					.filter((r) => r.initiatorType === "script" || /\.js(\?|$)/.test(r.name))
@@ -134,18 +136,34 @@ for (const route of ROUTES) {
 			Object.assign(run, dims)
 			run.jsEncodedKB = Math.round(dims.js.reduce((n, r) => n + (r.encoded || 0), 0) / 1024)
 			delete run.js
-			if (dims.scrollWidth > dims.innerWidth) fail(`${label}: horizontal overflow ${dims.scrollWidth} > ${dims.innerWidth}`)
+			// Compare with the emulated width: on mobile, wide content silently grows the layout viewport.
+			if (dims.scrollWidth > vp.width || dims.innerWidth > vp.width) fail(`${label}: horizontal overflow ${dims.scrollWidth} > ${vp.width}`)
 
 			const base_ = path.join(outDir, label)
+			// The fold is the untouched first impression (no scroll, so touch devices still show the SVG stone).
 			await page.screenshot({ path: `${base_}-fold.png` })
+			// Then walk the page so lazy images load before the full-page and section shots.
+			// (On touch contexts this scroll counts as a first interaction and may load the 3D stone.)
+			await page.evaluate(async () => {
+				for (let y = 0; y < document.documentElement.scrollHeight; y += Math.round(innerHeight * 0.7)) {
+					window.scrollTo(0, y)
+					await new Promise((r) => setTimeout(r, 140))
+				}
+				window.scrollTo(0, 0)
+			})
+			await page.waitForFunction(() => [...document.images].every((i) => i.complete), null, { timeout: 15000 }).catch(() => {})
+			await page.waitForTimeout(400)
 			await page.screenshot({ path: `${base_}-full.png`, fullPage: true })
 
 			if (route === "/" && !reduced) {
+				// Un-stick the header so stitched section crops don't show it mid-section.
+				const unstick = await page.addStyleTag({ content: ".site-header{position:relative!important}" })
 				const sections = await page.$$("main > section")
 				for (let i = 0; i < sections.length; i++) {
 					const id = (await sections[i].getAttribute("id")) || (await sections[i].getAttribute("aria-labelledby")) || `s${i}`
 					await sections[i].screenshot({ path: `${base_}-section-${String(i).padStart(2, "0")}-${id}.png` })
 				}
+				await unstick.evaluate((el) => el.remove())
 				if (!vp.touch) {
 					for (const [sel, name] of [
 						[".slab", "hover-slab"],
@@ -191,9 +209,16 @@ for (const route of ROUTES) {
 	const page = await ctx.newPage()
 	await page.goto(base + route, { waitUntil: "load" })
 	await page.waitForTimeout(300)
-	const d = await page.evaluate(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth }))
-	report.runs.push({ label: `${slug(route)}-320`, route, viewport: "320", scrollWidth: d.sw, innerWidth: d.iw })
-	if (d.sw > d.iw) fail(`${slug(route)}-320: horizontal overflow ${d.sw} > ${d.iw}`)
+	const d = await page.evaluate(() => {
+		const vw = document.documentElement.clientWidth
+		const wide = [...document.querySelectorAll("body *")]
+			.filter((el) => el.getBoundingClientRect().right > 320.5 && getComputedStyle(el).position !== "fixed")
+			.slice(0, 5)
+			.map((el) => `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)} right=${Math.round(el.getBoundingClientRect().right)}`)
+		return { sw: document.documentElement.scrollWidth, iw: window.innerWidth, vw, wide }
+	})
+	report.runs.push({ label: `${slug(route)}-320`, route, viewport: "320", scrollWidth: d.sw, innerWidth: d.iw, widest: d.wide })
+	if (d.sw > 320 || d.iw > 320) fail(`${slug(route)}-320: horizontal overflow ${d.sw} > 320 (${d.wide.join("; ")})`)
 	console.log(`> ${slug(route)}-320 overflow=${d.sw}/${d.iw}`)
 	await ctx.close()
 }
