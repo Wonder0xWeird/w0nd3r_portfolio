@@ -38,10 +38,15 @@
  * Sigils (/, desktop, normal and reduced motion): each section header scrolled
  * to 30 % of the viewport has an ignited inlay (median luminance >= 170) and a
  * visible caption clear of its h2; the sunken band reads (>= 1.12:1).
- * Desktop folds (/, 1280x720 to 1920x1080 incl. browser-chrome sizes, reduced motion):
- * the Proof title's first line is whole in the fold (bottom <= height - 16) or wholly
- * below it (top >= height), never sliced (v2.3); the empty fold below the hero's email
- * row is <= 140 px; the stone's ground shadow never overlaps it (also at 900, 1024).
+ * Desktop folds (/, 1280x720 to 1920x1080 incl. browser-chrome and MacBook sizes, reduced
+ * motion): every line of the Proof title is whole in the fold (bottom <= height - 16) or the
+ * first is wholly below it (top >= height), never sliced (every line since v2.4; v2.3 gated
+ * line 1 only); the empty fold below the hero's email row is <= 140 px and the row ends >= 32 px
+ * above the title; the stone's ground shadow never overlaps it (also at 900, 1024).
+ * First paint (/, 1440x900, 5 cold loads, CDP screencast; v2.4): from the first painted frame
+ * until the name has ink, the brand and the Proof title are blank or already final (never the
+ * fallback serif); at the name's first frame they match +1.5 s (mean |d| <= 3); the name lags
+ * the lede by <= 150 ms.
  * Links: every internal href on / and /writing must answer 200 without a
  * redirect; the legacy mixed-case letter URLs must 308 once to a 200.
  * Other routes get fold + full page + the same font/overflow checks.
@@ -472,13 +477,16 @@ for (const route of ROUTES) {
 	await ctx.close()
 }
 
-// ---------- desktop folds (v2.2 fix 1, line-level since v2.3): no headline is sliced by the fold ----------
-// Reduced motion, so the SVG stone and the final layout are measured. The Proof h2's FIRST LINE (its
-// first line box, from Range.getClientRects()) must be either whole inside the fold with >= 16 px to
-// spare (bottom <= height - 16) or wholly below it (top >= height); v2.2's "h2 top <= height - 48" let a
-// 72-80 px first line hang over the edge at 1280x720/800, 1366x768 and 1536x864. The empty fold between
-// the hero's email row and min(line 1 top, fold) is <= 140 px. The stone's ground shadow never overlaps
-// the h2's box (also at 900 and 1024 wide). Sizes include common browser viewports (screen minus chrome).
+// ---------- desktop folds (v2.2 fix 1, line-level since v2.3, every line since v2.4): no headline is sliced ----------
+// Reduced motion, so the SVG stone and the final layout are measured. The Proof h2's line boxes (from
+// Range.getClientRects(), merged by top) must ALL be whole inside the fold with >= 16 px to spare
+// (bottom <= height - 16), or the FIRST must be wholly below it (top >= height). v2.3 gated line 1 only
+// and passed a second line sliced through its x-height at 1440x900 (28 px of ascenders showing).
+// The empty fold between the hero's email row and min(line 1 top, fold) is <= 140 px, and the email row
+// ends >= 32 px above line 1 (v2.4: at 20-24 px the hero and Proof read as one block). The stone's
+// ground shadow never overlaps the h2's box (also at 900 and 1024 wide). Sizes include common browser
+// viewports (screen minus chrome) and MacBook screens (v2.4: Air 13"/15", Pro 14", full screen and
+// with Chrome's ~124 px of chrome).
 if (ROUTES.includes("/")) {
 	const FOLDS = [
 		[1280, 720, true],
@@ -486,14 +494,21 @@ if (ROUTES.includes("/")) {
 		[1366, 768, true],
 		[1366, 657, true], // a 1366x768 laptop with browser chrome
 		[1440, 900, true],
+		[1470, 956, true], // MacBook Air 15", full screen
+		[1470, 832, true], // ... in Chrome
+		[1512, 982, true], // MacBook Pro 14", full screen
+		[1512, 858, true], // ... in Chrome
 		[1536, 730, true],
 		[1536, 864, true],
 		[1600, 900, true],
+		[1680, 925, true], // a 1680x1050 screen in a browser
 		[1920, 950, true],
+		[1920, 970, true],
 		[1920, 1080, true],
 		[900, 800, false], // ground-overlap check only
 		[1024, 768, false],
 	]
+	const EMAIL_GAP_MIN = 32
 	for (const [w, h, foldGate] of FOLDS) {
 		const label = `home-fold-${w}x${h}`
 		const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, reducedMotion: "reduce" })
@@ -519,20 +534,200 @@ if (ROUTES.includes("/")) {
 				else lines.push({ t: r.top, b: r.bottom })
 			}
 			lines.sort((a, b) => a.t - b.t)
-			return { h2: box("#work h2"), line1: lines[0], lines: lines.length, email: box("main .copy-email"), ground: box(".stone__ground") }
+			return { h2: box("#work h2"), lines, email: box("main .copy-email"), ground: box(".stone__ground") }
 		})
-		const l1 = { t: Math.round(m.line1.t), b: Math.round(m.line1.b) }
-		const state = l1.t >= h ? "below" : l1.b <= h - 16 ? "in" : "cut"
-		const gap = Math.round(Math.min(m.line1.t, h) - m.email.b)
+		const lines = m.lines.map((l) => ({ t: Math.round(l.t), b: Math.round(l.b) }))
+		const first = lines[0]
+		const last = lines.at(-1)
+		const state = first.t >= h ? "below" : lines.every((l) => l.b <= h - 16) ? "in" : "cut"
+		const gap = Math.round(Math.min(m.lines[0].t, h) - m.email.b)
+		const emailGap = Math.round(m.lines[0].t - m.email.b)
 		const hit = !!m.ground && m.ground.r > m.ground.x && !(m.ground.r <= m.h2.x || m.h2.r <= m.ground.x || m.ground.b <= m.h2.y || m.h2.b <= m.ground.y)
-		report.runs.push({ label, line1Top: l1.t, line1Bottom: l1.b, line1State: state, clearance: h - l1.b, emailBottom: Math.round(m.email.b), gap, groundHitsH2: hit })
-		console.log(`> ${label} line1=${l1.t}-${l1.b} (${state}; fold ${h}, clearance ${h - l1.b}) gap=${gap} (max 140) groundHitsH2=${hit}`)
-		if (foldGate && state === "cut") fail(`${label}: the Proof title's first line (${l1.t}-${l1.b}) is cut by the fold at ${h} (needs bottom <= ${h - 16} or top >= ${h})`)
+		report.runs.push({ label, lines, titleState: state, clearance: h - last.b, emailBottom: Math.round(m.email.b), gap, emailGap, groundHitsH2: hit })
+		console.log(`> ${label} lines=${lines.map((l) => `${l.t}-${l.b}`).join(",")} (${state}; fold ${h}, clearance ${h - last.b}) gap=${gap} (max 140) emailGap=${emailGap} (min ${EMAIL_GAP_MIN}) groundHitsH2=${hit}`)
+		if (foldGate && state === "cut") {
+			const cut = lines.find((l) => l.b > h - 16)
+			fail(`${label}: the fold at ${h} cuts the Proof title (line ${cut.t}-${cut.b}; every line needs bottom <= ${h - 16}, or line 1 top >= ${h})`)
+		}
 		if (foldGate && gap > 140) fail(`${label}: ${gap} px of empty fold below the email row (> 140)`)
+		if (foldGate && emailGap < EMAIL_GAP_MIN) fail(`${label}: the email row ends ${emailGap} px above the Proof title (< ${EMAIL_GAP_MIN}); hero and Proof run together`)
 		if (hit) fail(`${label}: the stone's ground shadow overlaps the Proof title`)
 		await page.screenshot({ path: path.join(outDir, `${label}.png`) })
 		await ctx.close()
 	}
+}
+
+// ---------- first paint (v2.4): one face timing in the fold ----------
+// 5 cold loads at 1440x900 (fresh context = empty cache, unthrottled), each recorded with a CDP
+// screencast (PNG, every frame). The name, the header brand and the Proof title share one block-display
+// Cormorant face, so the first frame in which the h1 has ink must already show the brand and the title
+// as they look 1.5 s later: mean |luminance difference| <= 3 in both regions (v2.3 painted them in the
+// fallback serif and swapped them at ~400 ms). Nor may any earlier frame, from the first paint on, show
+// them with ink that differs from +1.5 s by more than 3 (blank is allowed, the fallback is not: on a
+// local server the swap is over by the name's first frame, so this is what catches it there). And the h1
+// may not lag the lede (Mona Sans, swap) by more than 150 ms: a hero with its lede but no name. A region only counts as inked on the dark page (its
+// median luminance < 80), so about:blank never does. Load 1's first painted frame, first h1-ink frame and
+// +1.5 s frame are saved as first-paint-1-*.png.
+async function frameLab() {
+	const ctx = await browser.newContext()
+	const page = await ctx.newPage()
+	await page.evaluate(() => {
+		window.__store = []
+		window.__measure = async (b64, regions, inkY) => {
+			const img = new Image()
+			img.src = "data:image/png;base64," + b64
+			await img.decode()
+			const c = document.createElement("canvas")
+			c.width = img.width
+			c.height = img.height
+			const g = c.getContext("2d")
+			g.drawImage(img, 0, 0)
+			const out = { i: window.__store.length, regions: {} }
+			const keep = {}
+			for (const [k, r] of Object.entries(regions)) {
+				const x0 = Math.max(0, Math.round(r.x))
+				const y0 = Math.max(0, Math.round(r.y))
+				const w = Math.min(c.width, Math.round(r.x + r.w)) - x0
+				const h = Math.min(c.height, Math.round(r.y + r.h)) - y0
+				if (w < 4 || h < 4) continue
+				const d = g.getImageData(x0, y0, w, h).data
+				const lum = new Float32Array(w * h)
+				let ink = 0
+				for (let p = 0, q = 0; p < d.length; p += 4, q++) {
+					lum[q] = 0.2126 * d[p] + 0.7152 * d[p + 1] + 0.0722 * d[p + 2]
+					if (lum[q] >= inkY) ink++
+				}
+				const median = Float32Array.from(lum).sort()[lum.length >> 1]
+				keep[k] = lum
+				out.regions[k] = { median: Math.round(median), ink: ink / lum.length }
+			}
+			window.__store.push(keep)
+			return out
+		}
+		window.__delta = (i, j, k) => {
+			const a = window.__store[i]?.[k]
+			const b = window.__store[j]?.[k]
+			if (!a || !b || a.length !== b.length) return null
+			let s = 0
+			for (let q = 0; q < a.length; q++) s += Math.abs(a[q] - b[q])
+			return s / a.length
+		}
+	})
+	return { ctx, page }
+}
+
+if (ROUTES.includes("/")) {
+	const LOADS = Number(process.env.FIRST_PAINT_LOADS || 5)
+	const [W, H] = [1440, 900]
+	const INK_Y = 110 // text is ink-1 (luminance ~233) on the night page (~15-50 under the torch)
+	const INK_FRAC = 0.003
+	const DARK = 80
+	const DELTA_MAX = 3
+	const LAG_MAX = 0.15 // s
+	const lab = await frameLab()
+	for (let k = 1; k <= LOADS; k++) {
+		const label = `first-paint-${k}`
+		const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: 1 })
+		const page = await ctx.newPage()
+		const cdp = await ctx.newCDPSession(page)
+		const frames = []
+		cdp.on("Page.screencastFrame", ({ data, metadata, sessionId }) => {
+			frames.push({ t: metadata.timestamp, data })
+			cdp.send("Page.screencastFrameAck", { sessionId }).catch(() => {})
+		})
+		await cdp.send("Page.startScreencast", { format: "png", maxWidth: W, maxHeight: H, everyNthFrame: 1 })
+		await page.goto(base + "/", { waitUntil: "load" })
+		await page.waitForTimeout(2400)
+		await cdp.send("Page.stopScreencast")
+		// Final-layout regions: the name (padded for its 8 px rise), the lede, the brand's words, the Proof title.
+		const regions = await page.evaluate(() => {
+			const r = (el, pad = 4) => {
+				const b = el.getBoundingClientRect()
+				return { x: b.left - pad, y: b.top - pad, w: b.width + 2 * pad, h: b.height + 2 * pad }
+			}
+			const h1 = document.querySelector("#hero-title")
+			return {
+				h1: r(h1, 12),
+				lede: r(h1.parentElement.querySelector("p")),
+				brand: r(document.querySelector(".brand span")),
+				title: r(document.querySelector("#work h2")),
+			}
+		})
+		await ctx.close()
+		// Walk the frames in order until the name and the lede both have ink, then find the frame at +1.5 s.
+		let firstDark = null
+		let h1At = null
+		let ledeAt = null
+		let h1Frame = null
+		const measured = new Map()
+		const measure = async (idx) => {
+			if (!measured.has(idx)) measured.set(idx, await lab.page.evaluate(([b64, rg, inkY]) => window.__measure(b64, rg, inkY), [frames[idx].data, regions, INK_Y]))
+			return measured.get(idx)
+		}
+		const inked = (m, key) => !!m.regions[key] && m.regions[key].median < DARK && m.regions[key].ink >= INK_FRAC
+		for (let i = 0; i < frames.length && (h1At == null || ledeAt == null); i++) {
+			const m = await measure(i)
+			if (firstDark == null && m.regions.h1?.median < DARK) firstDark = i
+			if (ledeAt == null && inked(m, "lede")) ledeAt = frames[i].t
+			if (h1At == null && inked(m, "h1")) {
+				h1At = frames[i].t
+				h1Frame = i
+			}
+		}
+		const run = { label, frames: frames.length, regions }
+		if (h1Frame == null) {
+			fail(`${label}: the name never painted in ${frames.length} screencast frames`)
+			report.runs.push(run)
+			continue
+		}
+		let later = h1Frame
+		for (let i = h1Frame; i < frames.length && frames[i].t <= h1At + 1.5; i++) later = i
+		const a = await measure(h1Frame)
+		const b = await measure(later)
+		const dBrand = await lab.page.evaluate(([i, j]) => window.__delta(i, j, "brand"), [a.i, b.i])
+		const dTitle = await lab.page.evaluate(([i, j]) => window.__delta(i, j, "title"), [a.i, b.i])
+		// Every frame from the first paint up to the name's: the brand and title are blank or final.
+		let fallbackFrames = 0
+		for (let i = firstDark ?? 0; i < h1Frame; i++) {
+			const m = await measure(i)
+			for (const key of ["brand", "title"]) {
+				if (!(m.regions[key]?.ink >= INK_FRAC)) continue
+				const d = await lab.page.evaluate(([x, y, kk]) => window.__delta(x, y, kk), [m.i, b.i, key])
+				if (d > DELTA_MAX) {
+					fallbackFrames++
+					break
+				}
+			}
+		}
+		const t0 = frames[firstDark ?? 0].t
+		Object.assign(run, {
+			fallbackFrames,
+			firstPaintToName: Math.round((h1At - t0) * 1000),
+			nameLagsLede: ledeAt == null ? null : Math.round((h1At - ledeAt) * 1000),
+			comparedAfter: Math.round((frames[later].t - h1At) * 1000),
+			brandDelta: dBrand == null ? null : +dBrand.toFixed(2),
+			titleDelta: dTitle == null ? null : +dTitle.toFixed(2),
+			brandInkAtName: +(a.regions.brand?.ink ?? 0).toFixed(4),
+			titleInkAtName: +(a.regions.title?.ink ?? 0).toFixed(4),
+		})
+		report.runs.push(run)
+		console.log(
+			`> ${label} frames=${frames.length} name inked ${run.firstPaintToName} ms after first paint, lags lede by ${run.nameLagsLede} ms;` +
+				` brand |d|=${run.brandDelta} title |d|=${run.titleDelta} (vs +${run.comparedAfter} ms); fallback frames before it=${fallbackFrames}`
+		)
+		if (run.nameLagsLede != null && run.nameLagsLede > LAG_MAX * 1000) fail(`${label}: the lede has ink ${run.nameLagsLede} ms before the name (> ${LAG_MAX * 1000} ms)`)
+		if (dBrand == null || dBrand > DELTA_MAX) fail(`${label}: the brand changes by mean |d| ${dBrand} between the name's first frame and +1.5 s (> ${DELTA_MAX}; a font swap)`)
+		if (dTitle == null || dTitle > DELTA_MAX) fail(`${label}: the Proof title changes by mean |d| ${dTitle} between the name's first frame and +1.5 s (> ${DELTA_MAX}; a font swap)`)
+		if (fallbackFrames) fail(`${label}: ${fallbackFrames} frame(s) before the name show the brand or the Proof title in another face (|d| > ${DELTA_MAX} vs +1.5 s)`)
+		if (k === 1) {
+			const save = (i, name) => writeFile(path.join(outDir, `${label}-${name}.png`), Buffer.from(frames[i].data, "base64"))
+			await save(firstDark ?? 0, "a-first-paint")
+			await save(h1Frame, "b-name-inked")
+			await save(later, "c-plus-1500ms")
+		}
+		await lab.page.evaluate(() => (window.__store = []))
+	}
+	await lab.ctx.close()
 }
 
 // ---------- stone handoff: SVG (reduced motion) vs WebGL (after the swap) ----------
