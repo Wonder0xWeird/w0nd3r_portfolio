@@ -1,0 +1,33 @@
+import type { Metadata } from "next"
+import Link from "next/link"
+import { StoneFallback } from "@/components/hero/StoneFallback"
+import s from "../writing/writing.module.css"
+
+export const metadata: Metadata = {
+	title: "The cottage",
+	description: "An explorable 3D cottage on a hill: under construction.",
+}
+
+export default function Cottage() {
+	return (
+		<div className={`container ${s.page} ${s.cottage}`}>
+			<div className={s.cottageStone}>
+				<StoneFallback />
+			</div>
+			<p className={s.eyebrow}>Under construction</p>
+			<h1>The cottage</h1>
+			<p className={s.indexLede}>
+				A cottage on a grassy hill, a creek with rune-carved stones, and a table inside strewn with the things I&apos;ve
+				made. It&apos;s being built right now. Until the door opens, everything lives on the front page.
+			</p>
+			<p className={s.cottageLinks}>
+				<Link className="btn btn--gold" href="/">
+					← Back to the front door
+				</Link>
+				<Link className="btn" href="/writing">
+					Read the writing
+				</Link>
+			</p>
+		</div>
+	)
+}
