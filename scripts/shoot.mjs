@@ -173,7 +173,7 @@ for (const route of ROUTES) {
 						if (!el || el.closest(".visually-hidden,[aria-hidden='true'],svg")) continue
 						const cs = getComputedStyle(el)
 						if (cs.display === "none" || cs.visibility === "hidden") continue
-						n += t.textContent.split(/\s+/).filter(Boolean).length
+						n += t.textContent.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length
 					}
 					return n
 				})(),
