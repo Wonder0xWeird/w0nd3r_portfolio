@@ -57,8 +57,9 @@
  */
 import { chromium } from "playwright-core"
 import AxeBuilder from "@axe-core/playwright"
-import { mkdir, writeFile } from "node:fs/promises"
+import { mkdir, readFile, writeFile } from "node:fs/promises"
 import path from "node:path"
+import { fileURLToPath } from "node:url"
 
 const base = (process.argv[2] || "http://localhost:3200").replace(/\/$/, "")
 const outDir = path.resolve(process.argv[3] || "shots/latest")
@@ -83,6 +84,14 @@ const LEGACY = {
 }
 const DISPLAY = /Cormorant/i
 const TEXT = /Mona[ _]?Sans/i
+// ONLY=handoff (or a comma list of main,narrow,folds,firstpaint,handoff,links) runs just those blocks
+// (v2.5; for iterating on one gate). The default runs everything.
+const ONLY = process.env.ONLY ? process.env.ONLY.split(",") : null
+const runs = (block) => !ONLY || ONLY.includes(block)
+// The stone's generated right facet (stage units), for the flank's lamination energy (v2.5); the stage is
+// 400 x 480 units (lib/stone.ts STAGE).
+const [STAGE_W, STAGE_H] = [400, 480]
+const FACET_RIGHT = (await readFile(path.join(path.dirname(fileURLToPath(import.meta.url)), "../components/hero/stone-profile.ts"), "utf8")).match(/"right":\s*"([^"]+)"/)?.[1] ?? null
 
 await mkdir(outDir, { recursive: true })
 
@@ -369,7 +378,7 @@ async function diagramGate(page, label, vp, reduced) {
 	return out
 }
 
-for (const route of ROUTES) {
+for (const route of runs("main") ? ROUTES : []) {
 	for (const vp of VIEWPORTS) {
 		for (const reduced of [false, true]) {
 			if (route !== "/" && reduced) continue
@@ -544,7 +553,7 @@ for (const route of ROUTES) {
 }
 
 // Narrowest supported width: overflow only.
-for (const route of ROUTES) {
+for (const route of runs("narrow") ? ROUTES : []) {
 	const ctx = await browser.newContext({ viewport: { width: 320, height: 640 }, hasTouch: true, isMobile: true })
 	const page = await ctx.newPage()
 	await page.goto(base + route, { waitUntil: "load" })
@@ -573,7 +582,7 @@ for (const route of ROUTES) {
 // ground shadow never overlaps the h2's box (also at 900 and 1024 wide). Sizes include common browser
 // viewports (screen minus chrome) and MacBook screens (v2.4: Air 13"/15", Pro 14", full screen and
 // with Chrome's ~124 px of chrome).
-if (ROUTES.includes("/")) {
+if (ROUTES.includes("/") && runs("folds")) {
 	const FOLDS = [
 		[1280, 720, true],
 		[1280, 800, true],
@@ -702,7 +711,7 @@ async function frameLab() {
 	return { ctx, page }
 }
 
-if (ROUTES.includes("/")) {
+if (ROUTES.includes("/") && runs("firstpaint")) {
 	const LOADS = Number(process.env.FIRST_PAINT_LOADS || 5)
 	const [W, H] = [1440, 900]
 	const INK_Y = 110 // text is ink-1 (luminance ~233) on the night page (~15-50 under the torch)
@@ -852,7 +861,131 @@ async function analyze(svgPng, glPng) {
 	return res
 }
 
-if (ROUTES.includes("/")) {
+/**
+ * The stone's pattern, not just its energy (v2.5, v2.3 critique fix 2), on the SVG and WebGL stage frames.
+ *   - High-pass NCC: luminance minus a 13 x 13 box blur (the material gate's high-pass) in each face band,
+ *     then the normalised cross-correlation of the two renderers over all bands. v2.3 measured ~0 (0.16 at
+ *     1440): the handoff replaced one pattern with another while luminance and sigma matched.
+ *   - Lamination energy: hairline beds are lines along the bed, so the luminance is first smoothed 9 px
+ *     along it (horizontally; the beds descend 8 deg) and then high-passed 9 px across it; the sigma of
+ *     that over the mean luminance (a contrast, so the shadowed flank and the lit face compare). `face` is a
+ *     rect; `flank` is the generated right facet (stage-unit path) mapped by `xf` = [sx, sy, ox, oy] and
+ *     eroded so every window is inside it.
+ */
+async function structure(svgPng, glPng, { bands, face, flank, xf }) {
+	const ctx = await browser.newContext()
+	const page = await ctx.newPage()
+	const res = await page.evaluate(
+		async ([a, b, bands, face, flank, xf]) => {
+			const load = async (b64) => {
+				const img = new Image()
+				img.src = "data:image/png;base64," + b64
+				await img.decode()
+				const c = document.createElement("canvas")
+				c.width = img.width
+				c.height = img.height
+				const g = c.getContext("2d")
+				g.drawImage(img, 0, 0)
+				const { data, width, height } = g.getImageData(0, 0, c.width, c.height)
+				const L = new Float32Array(width * height)
+				for (let i = 0, j = 0; i < data.length; i += 4, j++) L[j] = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]
+				return { L, width, height }
+			}
+			const [A, B] = await Promise.all([load(a), load(b)])
+			const { width: W, height: H } = A
+			// box mean over [x-rx, x+rx] x [y-ry, y+ry] via an integral image
+			const integral = (L) => {
+				const I = new Float64Array((W + 1) * (H + 1))
+				for (let y = 0; y < H; y++) {
+					let row = 0
+					for (let x = 0; x < W; x++) {
+						row += L[y * W + x]
+						I[(y + 1) * (W + 1) + x + 1] = I[y * (W + 1) + x + 1] + row
+					}
+				}
+				return (x0, y0, x1, y1) => I[(y1 + 1) * (W + 1) + x1 + 1] - I[y0 * (W + 1) + x1 + 1] - I[(y1 + 1) * (W + 1) + x0] + I[y0 * (W + 1) + x0]
+			}
+			const rectPx = (r) => {
+				const x0 = Math.max(0, Math.round(r.x))
+				const y0 = Math.max(0, Math.round(r.y))
+				return { x0, y0, x1: Math.min(W, Math.round(r.x + r.w)) - 1, y1: Math.min(H, Math.round(r.y + r.h)) - 1 }
+			}
+			// high-pass NCC over the bands
+			const hpA = integral(A.L)
+			const hpB = integral(B.L)
+			const rad = 6
+			let sa = 0, sb = 0, saa = 0, sbb = 0, sab = 0, n = 0
+			for (const r of Object.values(bands)) {
+				const { x0, y0, x1, y1 } = rectPx(r)
+				for (let y = y0 + rad; y <= y1 - rad; y++)
+					for (let x = x0 + rad; x <= x1 - rad; x++) {
+						const k = (2 * rad + 1) ** 2
+						const p = A.L[y * W + x] - hpA(x - rad, y - rad, x + rad, y + rad) / k
+						const q = B.L[y * W + x] - hpB(x - rad, y - rad, x + rad, y + rad) / k
+						sa += p
+						sb += q
+						saa += p * p
+						sbb += q * q
+						sab += p * q
+						n++
+					}
+			}
+			const cov = sab / n - (sa / n) * (sb / n)
+			const ncc = cov / Math.sqrt((saa / n - (sa / n) ** 2) * (sbb / n - (sb / n) ** 2))
+			// lamination energy: 9 px along the bed, high-passed 9 px across it, over the mean luminance
+			const lamination = (img, inside) => {
+				const { L } = img
+				const I = integral(L)
+				const r = 4
+				const S = new Float32Array(W * H)
+				for (let y = 0; y < H; y++) for (let x = r; x < W - r; x++) S[y * W + x] = I(x - r, y, x + r, y) / (2 * r + 1)
+				const IS = integral(S)
+				let s1 = 0, s2 = 0, sl = 0, m = 0
+				for (let y = 2 * r; y < H - 2 * r; y++)
+					for (let x = 2 * r; x < W - 2 * r; x++) {
+						if (!inside(x, y)) continue
+						const d = S[y * W + x] - IS(x, y - r, x, y + r) / (2 * r + 1)
+						s1 += d
+						s2 += d * d
+						sl += L[y * W + x]
+						m++
+					}
+				if (m < 200) return null
+				return +(Math.sqrt(s2 / m - (s1 / m) ** 2) / (sl / m)).toFixed(4)
+			}
+			const fr = rectPx(face)
+			const inFace = (x, y) => x >= fr.x0 + 8 && x <= fr.x1 - 8 && y >= fr.y0 + 8 && y <= fr.y1 - 8
+			// the flank: the facet path rasterised, eroded by 9 px so every window lies on it
+			const c = document.createElement("canvas")
+			c.width = W
+			c.height = H
+			const g = c.getContext("2d")
+			g.setTransform(xf[0], 0, 0, xf[1], xf[2], xf[3])
+			g.fill(new Path2D(flank))
+			const md = g.getImageData(0, 0, W, H).data
+			const M = new Float32Array(W * H)
+			for (let i = 0; i < W * H; i++) M[i] = md[i * 4 + 3] > 250 ? 1 : 0
+			const IM = integral(M)
+			const e = 9
+			const inFlank = (x, y) => x - e >= 0 && y - e >= 0 && x + e < W && y + e < H && IM(x - e, y - e, x + e, y + e) >= (2 * e + 1) ** 2 - 0.5
+			return {
+				ncc,
+				nccPixels: n,
+				lamination: {
+					svgFace: lamination(A, inFace),
+					webglFace: lamination(B, inFace),
+					svgFlank: lamination(A, inFlank),
+					webglFlank: lamination(B, inFlank),
+				},
+			}
+		},
+		[svgPng.toString("base64"), glPng.toString("base64"), bands, face, flank, xf]
+	)
+	await ctx.close()
+	return res
+}
+
+if (ROUTES.includes("/") && runs("handoff")) {
 	for (const vp of VIEWPORTS) {
 		const label = `home-${vp.name}-handoff`
 		console.log(`> ${label}`)
@@ -892,6 +1025,11 @@ if (ROUTES.includes("/")) {
 			stones[reduced ? "svg" : "gl"] = await page.screenshot({ path: path.join(outDir, `${label}-${reduced ? "1-svg" : "3-webgl"}.png`), clip: stone })
 			stage = { box, stone }
 			shots[reduced ? "svg" : "gl"] = await page.screenshot({ clip: face })
+			// What a retina laptop sees (v2.5): the face from the crown to below the runes, at device scale 2.
+			if (!vp.touch) {
+				const crop = { x: box.x + box.width * 0.25, y: Math.max(0, box.y + box.height * 0.1), width: box.width * 0.5, height: box.height * 0.55 }
+				await page.screenshot({ path: path.join(outDir, `${label}-face-2x-${reduced ? "svg" : "webgl"}.png`), clip: crop })
+			}
 			await ctx.close()
 		}
 		if (!ok) {
@@ -959,11 +1097,32 @@ if (ROUTES.includes("/")) {
 		if (m.highPassRatio < 0.75 || m.highPassRatio > 1.3) fail(`${label}: SVG / WebGL high-pass sigma ${m.highPassRatio}, expected 0.75-1.3`)
 		// The rune fire must not dim (or flare) at the handoff.
 		if (Math.abs(m.runeGlow.mean) > 0.03 || Math.abs(m.runeGlow.p90) > 0.03) fail(`${label}: rune glow changes at the handoff (mean ${m.runeGlow.mean}, p90 ${m.runeGlow.p90}; > ±3 %)`)
+		// One material in both renderers (v2.5): the same pattern on the face (high-pass NCC >= 0.6 in the
+		// bands either side of LARS), and hairline bedding on the edges, not the face (the face's lamination
+		// energy <= 0.6 x the right flank's, WebGL).
+		const st = await structure(stones.svg, stones.gl, {
+			bands: { left: rgn(0.285, 0.37, 0.3, 0.8), right: rgn(0.55, 0.64, 0.45, 0.8) },
+			face: regions.away,
+			flank: FACET_RIGHT,
+			xf: [(box.width / STAGE_W) * 2, (box.height / STAGE_H) * 2, (box.x - stone.x) * 2, (box.y - stone.y) * 2],
+		})
+		const lam = st.lamination
+		const s = {
+			label: `${label}-structure`,
+			highPassNcc: +st.ncc.toFixed(3),
+			nccPixels: st.nccPixels,
+			lamination: lam,
+			faceVsFlankLamination: lam.webglFace != null && lam.webglFlank ? +(lam.webglFace / lam.webglFlank).toFixed(2) : null,
+		}
+		report.runs.push(s)
+		console.log(`  structure: high-pass NCC svg~webgl ${s.highPassNcc} (${s.nccPixels} px); lamination energy webgl face ${lam.webglFace} / flank ${lam.webglFlank} = ${s.faceVsFlankLamination}; svg face ${lam.svgFace} flank ${lam.svgFlank}`)
+		if (!(s.highPassNcc >= 0.6)) fail(`${label}: SVG vs WebGL face high-pass NCC ${s.highPassNcc} < 0.6 (the handoff swaps the pattern)`)
+		if (!(s.faceVsFlankLamination <= 0.6)) fail(`${label}: face lamination energy ${s.faceVsFlankLamination} x the flank's > 0.6 (hairlines belong on the edges)`)
 	}
 }
 
 // ---------- links: internal hrefs answer 200 without a redirect; legacy URLs redirect once ----------
-if (ROUTES.includes("/")) {
+if (ROUTES.includes("/") && runs("links")) {
 	const ctx = await browser.newContext()
 	const page = await ctx.newPage()
 	const hrefs = new Set()
