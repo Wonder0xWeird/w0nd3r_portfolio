@@ -75,7 +75,7 @@ export function StoneFallback({ className, label = true }: { className?: string;
 			<path d={SILHOUETTE} fill="url(#sf-face)" />
 			<g clipPath="url(#sf-clip)">
 				<rect x="0" y="0" width={STAGE.w} height={STAGE.h} fill="url(#sf-mottle)" />
-				<rect x="0" y="0" width={STAGE.w} height={STAGE.h} fill="url(#sf-fire)" />
+				<rect className="stone-firelight" x="0" y="0" width={STAGE.w} height={STAGE.h} fill="url(#sf-fire)" />
 				{FACETS.right ? <path d={FACETS.right} fill="url(#sf-flank)" /> : null}
 				{FACETS.left ? <path d={FACETS.left} fill="url(#sf-flank)" /> : null}
 				{FACETS.top ? <path d={FACETS.top} fill="url(#sf-crown)" /> : null}
