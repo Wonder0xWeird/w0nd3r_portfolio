@@ -106,29 +106,30 @@ function rng(seed: number) {
 }
 
 /**
- * Tileable value-noise fbm on a size x size grid: one octave per [period (px, divides size),
- * amplitude], summed. Quintic-interpolated lattice (smooth slopes, so the bump map shows no grid),
- * wrapped so the texture repeats seamlessly.
+ * Tileable value-noise fbm on a size x size grid: one octave per [x period, y period, amplitude] (px;
+ * each period is rounded so a whole number of lattice cells fits the tile). Unequal periods give
+ * anisotropic noise: long in x, short in y makes bands. Quintic-interpolated lattice (smooth slopes,
+ * so the bump map shows no grid), wrapped so the texture repeats seamlessly.
  */
-function fbm(size: number, octaves: [number, number][], rnd: () => number): Float32Array {
+function fbm(size: number, octaves: [number, number, number][], rnd: () => number): Float32Array {
 	const out = new Float32Array(size * size)
-	for (const [period, amp] of octaves) {
-		const n = size / period
-		const lat = Float32Array.from({ length: n * n }, () => rnd() * 2 - 1)
+	const quintic = (t: number) => t * t * t * (t * (t * 6 - 15) + 10)
+	for (const [px, py, amp] of octaves) {
+		const nx = Math.max(1, Math.round(size / px))
+		const ny = Math.max(1, Math.round(size / py))
+		const lat = Float32Array.from({ length: nx * ny }, () => rnd() * 2 - 1)
 		for (let y = 0; y < size; y++) {
-			const fy = y / period
+			const fy = (y * ny) / size
 			const y0 = Math.floor(fy)
-			const ty = fy - y0
-			const sy = ty * ty * ty * (ty * (ty * 6 - 15) + 10)
-			const r0 = (y0 % n) * n
-			const r1 = ((y0 + 1) % n) * n
+			const sy = quintic(fy - y0)
+			const r0 = (y0 % ny) * nx
+			const r1 = ((y0 + 1) % ny) * nx
 			for (let x = 0; x < size; x++) {
-				const fx = x / period
+				const fx = (x * nx) / size
 				const x0 = Math.floor(fx)
-				const tx = fx - x0
-				const sx = tx * tx * tx * (tx * (tx * 6 - 15) + 10)
-				const c0 = x0 % n
-				const c1 = (x0 + 1) % n
+				const sx = quintic(fx - x0)
+				const c0 = x0 % nx
+				const c1 = (x0 + 1) % nx
 				const top = lat[r0 + c0] + (lat[r0 + c1] - lat[r0 + c0]) * sx
 				const bot = lat[r1 + c0] + (lat[r1 + c1] - lat[r1 + c0]) * sx
 				out[y * size + x] += (top + (bot - top) * sy) * amp
@@ -138,32 +139,57 @@ function fbm(size: number, octaves: [number, number][], rnd: () => number): Floa
 	return out
 }
 
+/** Height-map weights (0-255 levels per unit of each field): bedding bands, lamination, ledge rise. */
+const HEIGHT = { bands: 3, lamina: 15, step: 24 }
+
+/** Bedding angle on the front face (degrees; positive: the beds descend gently to the right, echoing the crown's slope). */
+const BEDDING = 8
+
 /**
- * Slate (v2.2): a neutral grey albedo (#7b7c7e) mottled by fbm (periods 128/32 px) with fine
- * fbm (8/4 px) and per-texel grain, 30 quartz veins and 900 pits; plus a data texture of the same
- * surface: red is the height (bumpMap: mostly the fine relief and grain, with the pits dented in),
- * green the roughness (.74-.96, roughnessMap). 512 px each, generated once in a few ms; no image
- * assets.
+ * Slate (v2.3: night-lit slate, not cast concrete). A darker blue-grey albedo (#5f6469, hue ~210) laid
+ * down in bedding bands (anisotropic fbm, 256 x 24 and 64 x 10 px) with a faint blue-grey/green-grey
+ * drift between them, fine fbm (8/4 px) at half v2.2's amplitude and little per-texel grain; 220 pits
+ * on a power law (most tiny), 70 % of them strung along 12 bedding lines; a few thin quartz veins.
+ * A data texture of the same surface: red is the height (bumpMap: the bands and pits carry the relief,
+ * not white noise), green the roughness (.74-.96, roughnessMap). The bands are generated axis-aligned
+ * (so the tile still repeats seamlessly) and turned to BEDDING by the textures' UV rotation.
+ * 512 px each, generated once in a few ms; no image assets.
  */
 function slateTextures(): { albedo: THREE.CanvasTexture; surface: THREE.CanvasTexture } {
 	const S = 512
 	const rnd = rng(7)
-	const mottle = fbm(
+	const bands = fbm(
 		S,
 		[
-			[128, 9],
-			[32, 8],
+			[256, 24, 8],
+			[64, 10, 5],
 		],
 		rnd
 	)
 	const fine = fbm(
 		S,
 		[
-			[8, 6],
-			[4, 3],
+			[8, 8, 3],
+			[4, 4, 1.5],
 		],
 		rnd
 	)
+	// fine lamination: the cleavage's hairline beds, long and thin
+	const lamina = fbm(
+		S,
+		[
+			[48, 3, 2.4],
+			[24, 1.6, 1.2],
+		],
+		rnd
+	)
+	// some beds split cleaner than others: the lamination's strength drifts from bed to bed
+	const split = fbm(S, [[512, 40, 1]], rnd)
+	// cleavage steps: a slow field terraced into ledges about a bed apart, each with a 2-3 px edge
+	const ledges = fbm(S, [[512, 56, 1]], rnd)
+	const STEPS = 7
+	// slate drifts a few degrees between blue-grey and green-grey from bed to bed
+	const drift = fbm(S, [[512, 64, 1]], rnd)
 	const canvas = () => {
 		const c = document.createElement("canvas")
 		c.width = c.height = S
@@ -177,14 +203,21 @@ function slateTextures(): { albedo: THREE.CanvasTexture; surface: THREE.CanvasTe
 	const bi = b.createImageData(S, S)
 	for (let i = 0; i < S * S; i++) {
 		const grain = rnd() * 2 - 1
-		const v = mottle[i] + fine[i] + grain * 3 // albedo, about +-30 levels
+		const q = (ledges[i] + 1) * STEPS
+		const k = Math.floor(q)
+		const e = Math.min(1, Math.max(0, (q - k - 0.82) / 0.18))
+		const riser = e * e * (3 - 2 * e)
+		const ledge = k % 2 ? 1 - riser : riser // up one ledge, down the next: bounded, every riser a line
+		const lam = lamina[i] * (0.65 + 0.35 * split[i])
+		const v = bands[i] * 0.6 + fine[i] + lam * 0.8 + grain * 2 // albedo, about +-15 levels
+		const g = drift[i] * 2.2
 		const o = i * 4
-		ai.data[o] = 0x7b + v
-		ai.data[o + 1] = 0x7c + v
-		ai.data[o + 2] = 0x7e + v
+		ai.data[o] = 0x5f + v - g * 0.5
+		ai.data[o + 1] = 0x64 + v + g * 0.6
+		ai.data[o + 2] = 0x69 + v - g * 0.2
 		ai.data[o + 3] = 255
-		bi.data[o] = 128 + mottle[i] + fine[i] * 6 + grain * 8
-		bi.data[o + 1] = 255 * (0.85 + (v / 30) * 0.11)
+		bi.data[o] = 128 + bands[i] * HEIGHT.bands + lam * HEIGHT.lamina + (ledge - 0.5) * HEIGHT.step + fine[i] * 4 + grain * 2
+		bi.data[o + 1] = 255 * (0.85 + (v / 20) * 0.11)
 		bi.data[o + 3] = 255
 	}
 	a.putImageData(ai, 0, 0)
@@ -193,9 +226,9 @@ function slateTextures(): { albedo: THREE.CanvasTexture; surface: THREE.CanvasTe
 	const wrapped = (fn: (dx: number, dy: number) => void) => {
 		for (const dx of [-S, 0, S]) for (const dy of [-S, 0, S]) fn(dx, dy)
 	}
-	// quartz veins: thin, pale random walks, 40-180 px long
+	// quartz veins: a few thin, faint random walks, 40-180 px long
 	a.lineCap = a.lineJoin = "round"
-	for (let v = 0; v < 30; v++) {
+	for (let v = 0; v < 10; v++) {
 		const pts: [number, number][] = [[rnd() * S, rnd() * S]]
 		const len = 40 + rnd() * 140
 		let ang = rnd() * Math.PI * 2
@@ -204,49 +237,65 @@ function slateTextures(): { albedo: THREE.CanvasTexture; surface: THREE.CanvasTe
 			const [px, py] = pts[pts.length - 1]
 			pts.push([px + Math.cos(ang) * 6, py + Math.sin(ang) * 6])
 		}
-		a.strokeStyle = `rgba(214,210,200,${(0.1 + rnd() * 0.06).toFixed(3)})`
-		a.lineWidth = 1 + rnd() * 0.5
+		a.strokeStyle = `rgba(196,200,204,${(0.06 + rnd() * 0.05).toFixed(3)})`
+		a.lineWidth = 0.8 + rnd() * 0.5
 		wrapped((dx, dy) => {
 			a.beginPath()
 			pts.forEach(([px, py], i) => (i ? a.lineTo(px + dx, py + dy) : a.moveTo(px + dx, py + dy)))
 			a.stroke()
 		})
 	}
-	// pits: small dark dots in the albedo, dents in the height (rougher inside)
-	for (let p = 0; p < 900; p++) {
+	// pits: 220, radius 0.6-2.6 px on a power law (most small), 70 % strung along 12 bedding lines,
+	// a little longer along the bed; dark in the albedo, dents in the height (rougher inside)
+	const lines = Array.from({ length: 12 }, () => rnd() * S)
+	for (let p = 0; p < 220; p++) {
+		const onLine = rnd() < 0.7
 		const x = rnd() * S
-		const y = rnd() * S
-		const r = 0.5 + rnd() * 1.3
-		const alpha = (0.25 + rnd() * 0.2).toFixed(3)
-		a.fillStyle = `rgba(20,22,26,${alpha})`
-		b.fillStyle = `rgba(30,245,0,${alpha})`
+		const y = onLine ? lines[Math.floor(rnd() * lines.length)] + (rnd() - 0.5) * 3 : rnd() * S
+		const r = 0.6 + 2 * rnd() ** 3
+		const alpha = (0.18 + rnd() * 0.17).toFixed(3)
+		a.fillStyle = `rgba(14,16,20,${alpha})`
+		b.fillStyle = `rgba(40,245,0,${alpha})`
 		wrapped((dx, dy) => {
 			for (const g of [a, b]) {
 				g.beginPath()
-				g.arc(x + dx, y + dy, r, 0, Math.PI * 2)
+				g.ellipse(x + dx, y + dy, r * 1.4, r, 0, 0, Math.PI * 2)
 				g.fill()
 			}
 		})
 	}
+	// The face is 1.2 x 2.3 world units with UVs 0..1, so a UV rotation of t shows on it as
+	// atan(2.3 / 1.2 * tan t): solve for BEDDING.
+	const rotation = Math.atan((Math.tan((BEDDING * Math.PI) / 180) * STONE.w) / STONE.h)
 	const texture = (c: HTMLCanvasElement, srgb: boolean) => {
 		const t = new THREE.CanvasTexture(c)
 		if (srgb) t.colorSpace = THREE.SRGBColorSpace
 		t.wrapS = t.wrapT = THREE.RepeatWrapping
 		t.repeat.set(1.5, 2.5)
+		t.rotation = rotation
 		t.anisotropy = 8
 		return t
 	}
 	return { albedo: texture(albedo, true), surface: texture(surface, false) }
 }
 
+/** The foot sinks into its ground shadow (v2.3): below FOOT.from (world y) the vertex colour ramps down to FOOT.to. */
+const FOOT = { from: -0.45, to: 0.62 }
+
 /** The menhir: lib/stone's deformation applied to a segmented box (the SVG twin is generated from the same function). */
 function stoneGeometry(): THREE.BufferGeometry {
 	const g = new THREE.BoxGeometry(STONE.w, STONE.h, STONE.d, ...STONE.segs)
 	const p = g.attributes.position
+	const colors = new Float32Array(p.count * 3)
+	const bottom = -STONE.h / 2
 	for (let i = 0; i < p.count; i++) {
 		const [x, y, z] = deform(p.getX(i), p.getY(i), p.getZ(i))
 		p.setXYZ(i, x, y, z)
+		const t = Math.min(1, Math.max(0, (FOOT.from - y) / (FOOT.from - bottom)))
+		const k = 1 - (1 - FOOT.to) * t * t * (3 - 2 * t)
+		colors.set([k, k, k], i * 3)
 	}
+	g.setAttribute("color", new THREE.BufferAttribute(colors, 3))
 	g.computeVertexNormals()
 	return g
 }
@@ -255,11 +304,11 @@ function stoneGeometry(): THREE.BufferGeometry {
 
 /** Tuned so the median face luminance matches the SVG twin within ±12 % (scripts/shoot.mjs checks it). */
 const ALBEDO = "#ffffff"
-const EXPOSURE = 1.32
+const EXPOSURE = 1.27
 /** Strength of the slate's relief (bumpMap): the face's high-pass sigma is >= 4 (shoot.mjs gates it). */
-const BUMP = 3
+const BUMP = 1.6
 /** Moonlight key intensity, balanced with the hemisphere so the face matches the SVG twin. */
-const KEY = 36
+const KEY = 60
 
 function Stone({ live, onReady }: { live: boolean; onReady: () => void }) {
 	const group = useRef<THREE.Group>(null)
@@ -277,6 +326,7 @@ function Stone({ live, onReady }: { live: boolean; onReady: () => void }) {
 			color: new THREE.Color(ALBEDO),
 			bumpMap: surface,
 			bumpScale: BUMP,
+			vertexColors: true,
 			roughnessMap: surface,
 			roughness: 1,
 			metalness: 0,
@@ -341,11 +391,11 @@ export default function RuneStoneScene({ active, live, onReady }: { active: bool
 			}}
 		>
 			{/* neutral sky and a warm-dark ground bounce (v2.2: both were blue, so the flank read navy) */}
-			<hemisphereLight args={["#bfc3c8", "#2a2723", 0.95]} />
+			<hemisphereLight args={["#b9c2cc", "#2a2723", 0.6]} />
 			{/* moonlight key from the upper left, only slightly cool; a near point light, so the face falls off toward the bottom right like the SVG */}
-			<pointLight position={[-2.2, 2.8, 2.8]} intensity={KEY} decay={2} color="#e4e9f0" />
+			<pointLight position={[-2.6, 3.2, 2.4]} intensity={KEY} decay={2} color="#e4e9f0" />
 			{/* moon rim from behind on the right, so the shadowed flank still has an edge */}
-			<directionalLight position={[3.5, 2, -3]} intensity={0.3} color="#9aa5b4" />
+			<directionalLight position={[3.5, 2, -3]} intensity={0.3} color="#a2a8b0" />
 			<Stone live={live} onReady={onReady} />
 		</Canvas>
 	)

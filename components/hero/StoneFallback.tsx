@@ -3,15 +3,18 @@ import { ANCHORS, FACETS, RUNE_STROKES, RUNE_UNIT, SILHOUETTE } from "./stone-pr
 
 const rx = (ANCHORS.runes.x / 100) * STAGE.w
 const ry = (ANCHORS.runes.y / 100) * STAGE.h
+const fy = ry + STAGE.h * 0.02
 const u = RUNE_UNIT
 
-/** Dark mottles on the face (centre and radius as fractions of the stage, peak alpha). */
-const MOTTLES = [
-	{ cx: 0.36, cy: 0.3, r: 0.13, a: 0.14 },
-	{ cx: 0.6, cy: 0.68, r: 0.17, a: 0.12 },
-	{ cx: 0.38, cy: 0.79, r: 0.11, a: 0.12 },
-	{ cx: 0.63, cy: 0.38, r: 0.09, a: 0.1 },
-]
+/**
+ * The slate's bedding (v2.3), drawn like the 3D stone's: feTurbulence noise, long across and short down,
+ * turned to the bedding angle and laid over the face in overlay. One pass of bands (the beds) and one of
+ * hairline lamination, rendered once by the browser: no image request. Frequencies are per stage unit.
+ */
+const BEDDING = { angle: 8, bands: "0.006 0.05", lamina: "0.028 0.8", beds: 0.3, opacity: 0.27 }
+
+/** The foot sinks into its ground shadow: the face darkens from FOOT.from to the base (stage fractions), as the 3D stone's vertex colours do. */
+const FOOT = { from: 0.6, to: 0.9, alpha: 0.28 }
 
 /**
  * The menhir as SVG: the server-rendered first paint of the hero and the
@@ -19,9 +22,10 @@ const MOTTLES = [
  * never interact). Its silhouette, facets and rune positions are generated from
  * the 3D stone (stone-profile.ts), so the WebGL swap is invisible. Lit like the
  * scene: moonlight from the upper left, rune-fire from inside the carving, the
- * right flank in shadow. Neutral slate with the page's grain tile and a few
- * dark mottles (v2.2), and runes incised into it: a moonlit lower lip and a
- * shadowed channel up-left of each stroke.
+ * right flank in shadow. Night-lit blue-grey slate with feTurbulence bedding
+ * and lamination at the 3D stone's angle and a foot that sinks into its shadow
+ * (v2.3), and runes incised into it: a moonlit lower lip and a shadowed channel
+ * up-left of each stroke.
  *
  * The rune strokes carry the load sequence (globals.css "the one orchestrated
  * moment"): they draw, then ignite. Without motion they render ignited.
@@ -39,39 +43,46 @@ export function StoneFallback({ className, label = true }: { className?: string;
 			focusable="false"
 		>
 			<defs>
-				{/* moonlit face: lighter top-left, falling into shadow bottom-right; neutral slate (v2.2) */}
-				<linearGradient id="sf-face" x1="0.3" y1="0" x2="0.7" y2="1">
-					<stop offset="0" stopColor="#7b7d80" />
-					<stop offset="0.45" stopColor="#646669" />
-					<stop offset="1" stopColor="#47494c" />
+				{/* moonlit face: lit from the upper left, falling into shadow bottom-right; night-lit blue-grey slate (v2.3) */}
+				<linearGradient id="sf-face" x1="0.32" y1="0" x2="0.68" y2="1">
+					<stop offset="0" stopColor="#6b7076" />
+					<stop offset="0.45" stopColor="#53575d" />
+					<stop offset="1" stopColor="#3d4147" />
 				</linearGradient>
-				<radialGradient id="sf-fire" gradientUnits="userSpaceOnUse" cx={rx} cy={ry} r={STAGE.w * 0.36} gradientTransform={`translate(${rx} ${ry}) scale(0.62 1) translate(${-rx} ${-ry})`}>
-					<stop offset="0" stopColor="#e4b65a" stopOpacity="0.42" />
+				{/* rune-fire on the slate, centred a little below the rune column's middle, like the 3D fire light */}
+				<radialGradient id="sf-fire" gradientUnits="userSpaceOnUse" cx={rx} cy={fy} r={STAGE.w * 0.36} gradientTransform={`translate(${rx} ${fy}) scale(0.62 1) translate(${-rx} ${-fy})`}>
+					<stop offset="0" stopColor="#e4b65a" stopOpacity="0.38" />
 					<stop offset="0.5" stopColor="#cf9c3f" stopOpacity="0.14" />
 					<stop offset="1" stopColor="#cf9c3f" stopOpacity="0" />
 				</radialGradient>
+				<linearGradient id="sf-foot" gradientUnits="userSpaceOnUse" x1="0" y1={STAGE.h * FOOT.from} x2="0" y2={STAGE.h * FOOT.to}>
+					<stop offset="0" stopColor="#0b0e12" stopOpacity="0" />
+					<stop offset="1" stopColor="#0b0e12" stopOpacity={FOOT.alpha} />
+				</linearGradient>
+				{/* the right shoulder turns away from the moon (the 3D face curves into the crown's slope) */}
+				<radialGradient id="sf-shoulder" cx="0.66" cy="0.3" r="0.16">
+					<stop offset="0" stopColor="#0b0e12" stopOpacity="0.22" />
+					<stop offset="1" stopColor="#0b0e12" stopOpacity="0" />
+				</radialGradient>
 				<linearGradient id="sf-flank" x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0" stopColor="#33363a" />
-					<stop offset="1" stopColor="#1d1f22" />
+					<stop offset="0" stopColor="#30353a" />
+					<stop offset="1" stopColor="#1b1e22" />
 				</linearGradient>
 				<linearGradient id="sf-crown" x1="0" y1="0" x2="1" y2="1">
-					<stop offset="0" stopColor="#55585c" />
-					<stop offset="1" stopColor="#3c3f43" />
+					<stop offset="0" stopColor="#4a4f55" />
+					<stop offset="1" stopColor="#33373c" />
 				</linearGradient>
 				<linearGradient id="sf-rim" x1="0" y1="0" x2="1" y2="0.2">
 					<stop offset="0" stopColor="#a9bdd6" stopOpacity="0.55" />
 					<stop offset="0.28" stopColor="#7f95b8" stopOpacity="0" />
 				</linearGradient>
-				{MOTTLES.map((m, i) => (
-					<radialGradient key={i} id={`sf-mottle-${i}`} cx={m.cx} cy={m.cy} r={m.r}>
-						<stop offset="0" stopColor="#141619" stopOpacity={m.a} />
-						<stop offset="1" stopColor="#141619" stopOpacity="0" />
-					</radialGradient>
-				))}
-				{/* the page's grain tile (already loaded for the page light), as the slate's micro-texture */}
-				<pattern id="sf-grain" patternUnits="userSpaceOnUse" width="64" height="64">
-					<image href="/textures/grain.png" width="64" height="64" />
-				</pattern>
+				{/* bedding: grey noise (from the red channel), beds and hairline lamination mixed */}
+				<filter id="sf-slate" filterUnits="userSpaceOnUse" x={-STAGE.w * 0.25} y={-STAGE.h * 0.25} width={STAGE.w * 1.5} height={STAGE.h * 1.5} colorInterpolationFilters="sRGB">
+					<feTurbulence type="fractalNoise" baseFrequency={BEDDING.bands} numOctaves={2} seed={7} result="beds" />
+					<feTurbulence type="fractalNoise" baseFrequency={BEDDING.lamina} numOctaves={1} seed={3} result="lamina" />
+					<feComposite in="beds" in2="lamina" operator="arithmetic" k2={BEDDING.beds} k3={1 - BEDDING.beds} />
+					<feColorMatrix type="matrix" values="1 0 0 0 0  1 0 0 0 0  1 0 0 0 0  0 0 0 0 1" />
+				</filter>
 				<filter id="sf-glow" x="-60%" y="-30%" width="220%" height="160%">
 					<feGaussianBlur stdDeviation={GROOVE.glowBlur * u} result="b" />
 					<feMerge>
@@ -88,18 +99,27 @@ export function StoneFallback({ className, label = true }: { className?: string;
 				</clipPath>
 			</defs>
 
-			<path d={SILHOUETTE} fill="url(#sf-face)" />
 			<g clipPath="url(#sf-clip)">
-				{MOTTLES.map((_, i) => (
-					<rect key={i} x="0" y="0" width={STAGE.w} height={STAGE.h} fill={`url(#sf-mottle-${i})`} />
-				))}
+				{/* the face is inside the clipped (isolated) group, so the overlay layers blend with it */}
+				<path d={SILHOUETTE} fill="url(#sf-face)" />
+				<rect
+					x={-STAGE.w * 0.25}
+					y={-STAGE.h * 0.25}
+					width={STAGE.w * 1.5}
+					height={STAGE.h * 1.5}
+					filter="url(#sf-slate)"
+					transform={`rotate(${BEDDING.angle} ${rx} ${ry})`}
+					opacity={BEDDING.opacity}
+					style={{ mixBlendMode: "overlay" }}
+				/>
+				<rect x="0" y="0" width={STAGE.w} height={STAGE.h} fill="url(#sf-foot)" />
+				<rect x="0" y="0" width={STAGE.w} height={STAGE.h} fill="url(#sf-shoulder)" />
 				<rect className="stone-firelight" x="0" y="0" width={STAGE.w} height={STAGE.h} fill="url(#sf-fire)" />
 				{FACETS.right ? <path d={FACETS.right} fill="url(#sf-flank)" /> : null}
 				{FACETS.left ? <path d={FACETS.left} fill="url(#sf-flank)" /> : null}
 				{FACETS.top ? <path d={FACETS.top} fill="url(#sf-crown)" /> : null}
 				{/* moonlight catching the left edge (half the stroke falls outside and is clipped) */}
 				<path d={SILHOUETTE} fill="none" stroke="url(#sf-rim)" strokeWidth={3} />
-				<rect x="0" y="0" width={STAGE.w} height={STAGE.h} fill="url(#sf-grain)" opacity="0.065" style={{ mixBlendMode: "overlay" }} />
 				{/* incised, lit from the upper left: the groove's lower lip catches the moonlight, its upper-left wall is in shadow */}
 				<g fill="none" stroke="rgb(226 232 240)" strokeOpacity={GROOVE.lip} strokeWidth={GROOVE.lipW * u} strokeLinecap="round" strokeLinejoin="round">
 					{RUNE_STROKES.flat().map((d) => (

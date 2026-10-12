@@ -24,13 +24,16 @@
  *     at 390, <= 8500 at 1440), records the LCP element,
  *     and saves real viewport frames, one per screen (section crops repaint the
  *     fixed light layer in tiles and show a fake seam).
- * Handoff (/, 1440 and 390): the median luminance of the stone's face as SVG
+ * Handoff (/, every viewport): the median luminance of the stone's face as SVG
  * (reduced motion) vs WebGL (after the swap) must agree within ±12 % and their
- * mean per-pixel |difference| must be <= 8; saves the SVG / mid-fade / WebGL
- * frames of the stone. At 1440 the same frames gate the stone's material (v2.2):
- * neutral slate away from the runes (WebGL saturation <= .07), rune-fire warmth
- * near them (hue 25-45), flank saturation <= .12, face:flank >= 1.8:1, face vs
- * page >= 2.3:1, and real texture (high-pass sigma >= 4 WebGL, >= 3 SVG).
+ * mean per-pixel |difference| must be <= 5 (v2.3; 8 before); saves the SVG /
+ * mid-fade / WebGL frames of the stone. On desktop the same frames gate the
+ * stone's material (v2.3, night-lit slate): blue-grey away from the runes (WebGL
+ * hue 200-225, saturation .03-.07, L* 36-41), rune-fire warmth near them (hue
+ * 25-45), flank saturation <= .12, face:flank >= 1.8:1, face vs page >= 2.3:1,
+ * key fall-off (upper-left / lower-right face >= 1.40), a foot >= 28 % darker
+ * than mid-face, texture (high-pass sigma 3-6 WebGL, SVG/WebGL 0.75-1.3) and an
+ * unchanged rune glow (mean and p90 of the LARS column within ±3 %).
  * Sigils (/, desktop, normal and reduced motion): each section header scrolled
  * to 30 % of the viewport has an ignited inlay (median luminance >= 170) and a
  * visible caption clear of its h2; the sunken band reads (>= 1.12:1).
@@ -63,7 +66,7 @@ const HERO_WORDS_MAX = 40
 const HEIGHT_MAX = { desktop: 8500, phone: 9000 } // critique change 3: disclose, never delete
 const kind = (vp) => (vp.touch ? "phone" : "desktop")
 const PARITY = 0.12
-const PARITY_MAD = 8 // mean |luminance difference| per pixel of the face, SVG vs WebGL (v2.2)
+const PARITY_MAD = 5 // mean |luminance difference| per pixel of the face, SVG vs WebGL (v2.3; 8 in v2.2, which measured 7.0)
 const LEGACY = {
 	"/writing/Dear-Lambda/I-See-You": "/writing/dear-lambda/i-see-you",
 	"/writing/Dear-Lambda/Infinity-Is": "/writing/dear-lambda/infinity-is",
@@ -192,11 +195,17 @@ async function imageStats(png, { regions = {}, points = {} } = {}) {
 						s2 += v * v
 						m++
 					}
+				const lin = (c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+				const yy = 0.2126 * lin(r_) + 0.7152 * lin(g_) + 0.0722 * lin(b_)
+				const sorted = Array.from(lum).sort((a, b) => a - b)
 				out.regions[k] = {
 					rgb: [R / n, G / n, B / n].map(Math.round),
 					hue: Math.round(hue),
 					sat: +sat.toFixed(3),
-					lum: +median(Array.from(lum)).toFixed(1),
+					lstar: +(yy > 0.008856 ? 116 * Math.cbrt(yy) - 16 : 903.3 * yy).toFixed(1),
+					lum: +sorted[n >> 1].toFixed(1),
+					mean: +(sorted.reduce((a, b) => a + b, 0) / n).toFixed(1),
+					p90: +sorted[Math.floor(n * 0.9)].toFixed(1),
 					highPass: m ? +Math.sqrt(s2 / m - (s1 / m) ** 2).toFixed(2) : null,
 				}
 			}
@@ -619,13 +628,19 @@ if (ROUTES.includes("/")) {
 		if (Math.abs(delta) > PARITY) fail(`${label}: face luminance differs by ${(delta * 100).toFixed(1)}% (> ±${PARITY * 100}%)`)
 		if (r.meanAbsDiff > PARITY_MAD) fail(`${label}: SVG vs WebGL face mean |diff| ${r.meanAbsDiff.toFixed(1)} > ${PARITY_MAD}`)
 		if (vp.touch) continue
-		// Stone material (v2.2 critique fix 3), on the same frames: regions in % of the stage, as image px.
+		// Stone material (v2.2 fix 3, retuned to night-lit slate in v2.3), on the same frames: regions in %
+		// of the stage, as image px.
 		const { box, stone } = stage
 		const rgn = (x0, x1, y0, y1) => ({ x: (box.x + box.width * x0 - stone.x) * 2, y: (box.y + box.height * y0 - stone.y) * 2, w: box.width * (x1 - x0) * 2, h: box.height * (y1 - y0) * 2 })
 		const regions = {
 			away: rgn(0.285, 0.35, 0.29, 0.78), // the face >= 60 px from the runes
 			near: rgn(0.38, 0.43, 0.35, 0.75), // the face within 60 px of them
 			flank: rgn(0.71, 0.724, 0.62, 0.82), // inside the generated right facet
+			upper: rgn(0.29, 0.37, 0.24, 0.34), // upper-left face, nearest the moon
+			lowerRight: rgn(0.54, 0.64, 0.66, 0.76), // lower-right face, right of the runes
+			mid: rgn(0.29, 0.37, 0.45, 0.55), // mid-face, left of the runes
+			foot: rgn(0.29, 0.37, 0.745, 0.815), // the lowest tenth of the face above the base's mask
+			runes: rgn(0.4, 0.52, 0.3, 0.8), // LARS: strokes, glow and bloom
 		}
 		const sv = (await imageStats(stones.svg, { regions })).regions
 		const gl = (await imageStats(stones.gl, { regions })).regions
@@ -635,18 +650,32 @@ if (ROUTES.includes("/")) {
 			webgl: gl,
 			faceVsBase: +contrast(gl.away.rgb, BASE_RGB).toFixed(2),
 			faceVsFlank: +contrast(gl.away.rgb, gl.flank.rgb).toFixed(2),
+			falloff: +(gl.upper.lum / gl.lowerRight.lum).toFixed(2),
+			footDarker: +(1 - gl.foot.lum / gl.mid.lum).toFixed(2),
+			highPassRatio: +(sv.away.highPass / gl.away.highPass).toFixed(2),
+			runeGlow: { mean: +(gl.runes.mean / sv.runes.mean - 1).toFixed(3), p90: +(gl.runes.p90 / sv.runes.p90 - 1).toFixed(3) },
 		}
 		report.runs.push(m)
 		console.log(
-			`  material webgl: away sat=${gl.away.sat} hp=${gl.away.highPass}, near hue=${gl.near.hue}, flank sat=${gl.flank.sat}, face/base=${m.faceVsBase}:1, face/flank=${m.faceVsFlank}:1; svg away hp=${sv.away.highPass}`
+			`  material webgl: away L*=${gl.away.lstar} hue=${gl.away.hue} sat=${gl.away.sat} hp=${gl.away.highPass}, near hue=${gl.near.hue}, flank sat=${gl.flank.sat}, face/base=${m.faceVsBase}:1, face/flank=${m.faceVsFlank}:1, falloff=${m.falloff}, foot=${m.footDarker}; svg hp=${sv.away.highPass} (x${m.highPassRatio}); rune glow gl/svg mean ${m.runeGlow.mean} p90 ${m.runeGlow.p90}`
 		)
-		if (gl.away.sat > 0.07) fail(`${label}: WebGL face saturation ${gl.away.sat} > .07 away from the runes (slate must be neutral)`)
+		// Night-lit blue-grey slate (v2.3): v2.2's neutral #7b7c7e read as studio-lit concrete (sat .006, L* 45).
+		if (gl.away.sat < 0.03 || gl.away.sat > 0.07) fail(`${label}: WebGL face saturation ${gl.away.sat} away from the runes, expected .03-.07 (blue-grey slate)`)
+		if (gl.away.hue < 200 || gl.away.hue > 225) fail(`${label}: WebGL face hue ${gl.away.hue} away from the runes, expected 200-225`)
+		if (gl.away.lstar < 36 || gl.away.lstar > 41) fail(`${label}: WebGL face L* ${gl.away.lstar} away from the runes, expected 36-41 (night, not studio)`)
 		if (gl.near.hue < 25 || gl.near.hue > 45) fail(`${label}: WebGL face hue ${gl.near.hue} near the runes, expected 25-45 (rune-fire warmth)`)
 		if (gl.flank.sat > 0.12) fail(`${label}: WebGL flank saturation ${gl.flank.sat} > .12`)
 		if (m.faceVsFlank < 1.8) fail(`${label}: face:flank ${m.faceVsFlank}:1 < 1.8:1`)
-		if (gl.away.highPass < 4) fail(`${label}: WebGL face high-pass sigma ${gl.away.highPass} < 4 (reads smooth/plastic)`)
-		if (sv.away.highPass < 3) fail(`${label}: SVG face high-pass sigma ${sv.away.highPass} < 3`)
 		if (m.faceVsBase < 2.3) fail(`${label}: face vs page ${m.faceVsBase}:1 < 2.3:1`)
+		// The moon grades the face top-left -> bottom-right and the foot sits in its shadow. With these
+		// regions v2.2 measured 1.30 and .23, which read "lit evenly, no ground contact": the bars are above it.
+		if (m.falloff < 1.4) fail(`${label}: upper-left / lower-right face luminance ${m.falloff} < 1.40 (key fall-off)`)
+		if (m.footDarker < 0.28) fail(`${label}: the foot is ${Math.round(m.footDarker * 100)} % darker than mid-face (< 28 %)`)
+		// Texture from beds, lamination and pits, not white noise; and the same texture weight in both renderers.
+		if (gl.away.highPass < 3 || gl.away.highPass > 6) fail(`${label}: WebGL face high-pass sigma ${gl.away.highPass}, expected 3-6`)
+		if (m.highPassRatio < 0.75 || m.highPassRatio > 1.3) fail(`${label}: SVG / WebGL high-pass sigma ${m.highPassRatio}, expected 0.75-1.3`)
+		// The rune fire must not dim (or flare) at the handoff.
+		if (Math.abs(m.runeGlow.mean) > 0.03 || Math.abs(m.runeGlow.p90) > 0.03) fail(`${label}: rune glow changes at the handoff (mean ${m.runeGlow.mean}, p90 ${m.runeGlow.p90}; > ±3 %)`)
 	}
 }
 
