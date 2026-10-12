@@ -4,11 +4,12 @@
 .hero {
 	/* containing block for the 390 backdrop. No z-index: the stone's torch must reach the root
 	   stacking context. clip (not hidden) trims the torch and the bleed horizontally without
-	   creating a scroll container, and lets the light spill down into the next section. */
+	   creating a scroll container, and lets the light spill down into the next section.
+	   The copy, not the stone or a min-height, sets the hero's height (v2.2): the stone's foot
+	   overlaps the Proof section's top padding, so the next title rises into the fold. */
 	position: relative;
 	overflow-x: clip;
-	min-height: min(calc(100svh - var(--header-h)), 940px);
-	padding: clamp(28px, 6.2vw, 88px) 0 clamp(32px, 4vw, 56px);
+	padding: clamp(28px, min(6.2vw, 9svh), 88px) 0 0;
 }
 .heroGrid {
 	display: grid;
@@ -42,8 +43,9 @@
 	width: min(50vw, 740px);
 	margin-right: calc(-1 * clamp(40px, 8vw, 160px));
 	margin-top: calc(-1 * (var(--header-h) + 34px));
-	/* the empty foot of the stage (mist, ground shadow) may overlap the next section's top padding */
-	margin-bottom: calc(-1 * clamp(0px, 5vw, 72px));
+	/* The foot of the stage (ground shadow, mist, halo) overlaps the Proof section's top padding;
+	   the stone body ends at --base-y (89.8 %), so it stands beside the Proof title, not on it. */
+	margin-bottom: calc(-1 * clamp(120px, 16vw, 240px));
 }
 .heroCopy {
 	grid-area: copy;
@@ -169,6 +171,19 @@
 }
 .sectionProof {
 	padding-top: clamp(64px, 8vw, 120px);
+}
+/* Desktop fold (v2.2): the Proof title rises into the fold beside the stone's foot. z-index keeps
+   its text above the stone's light layers; it has no background, so that light still shows. */
+@media (min-width: 861px) {
+	.sectionProof {
+		position: relative;
+		z-index: 1;
+		padding-top: clamp(40px, 7svh, 80px);
+	}
+	/* a box as wide as its two lines, so the stone's foot stands beside the title, never under it */
+	.sectionProof .sectionHead h2 {
+		max-width: 8.6em;
+	}
 }
 /* Night / band / night: Research and Writing sit on a sunken slate band, so the page below
    the hero is not one value. The band is a stacking context so its sigil's light shows on it. */

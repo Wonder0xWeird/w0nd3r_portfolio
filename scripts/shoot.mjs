@@ -27,6 +27,9 @@
  * Handoff (/, 1440 and 390): the median luminance of the stone's face as SVG
  * (reduced motion) vs WebGL (after the swap) must agree within ±12 %; saves the
  * SVG / mid-fade / WebGL frames of the stone.
+ * Desktop folds (/, 1280x800, 1440x900, 1536x864, 1920x1080, reduced motion): the
+ * Proof title's top is inside the fold (<= height - 48) and <= 140 px below the
+ * hero's email row; the stone's ground shadow never overlaps it (also at 900, 1024).
  * Links: every internal href on / and /writing must answer 200 without a
  * redirect; the legacy mixed-case letter URLs must 308 once to a 200.
  * Other routes get fold + full page + the same font/overflow checks.
@@ -283,6 +286,48 @@ for (const route of ROUTES) {
 	if (d.sw > 320 || d.iw > 320) fail(`${slug(route)}-320: horizontal overflow ${d.sw} > 320 (${d.wide.join("; ")})`)
 	console.log(`> ${slug(route)}-320 overflow=${d.sw}/${d.iw}`)
 	await ctx.close()
+}
+
+// ---------- desktop folds (v2.2 critique fix 1): the next title is in the fold, close to the copy ----------
+// Reduced motion, so the SVG stone and the final layout are measured. At every size: the Proof h2's top
+// is <= viewport height - 48 and <= 140 px below the hero's email row; the stone's ground shadow never
+// overlaps the Proof h2's box (it stands beside the title, not on it).
+if (ROUTES.includes("/")) {
+	const FOLDS = [
+		[1280, 800, true],
+		[1440, 900, true],
+		[1536, 864, true],
+		[1920, 1080, true],
+		[900, 800, false], // ground-overlap check only
+		[1024, 768, false],
+	]
+	for (const [w, h, foldGate] of FOLDS) {
+		const label = `home-fold-${w}x${h}`
+		const ctx = await browser.newContext({ viewport: { width: w, height: h }, deviceScaleFactor: 1, reducedMotion: "reduce" })
+		const page = await ctx.newPage()
+		await page.goto(base + "/", { waitUntil: "load" })
+		await page.addStyleTag({ content: "nextjs-portal{display:none!important}" })
+		await page.evaluate(() => document.fonts.ready)
+		await page.waitForTimeout(300)
+		const m = await page.evaluate(() => {
+			const box = (sel) => {
+				const el = document.querySelector(sel)
+				if (!el) return null
+				const b = el.getBoundingClientRect()
+				return { x: b.left, y: b.top, r: b.right, b: b.bottom }
+			}
+			return { h2: box("#work h2"), email: box("main .copy-email"), ground: box(".stone__ground") }
+		})
+		const gap = Math.round(m.h2.y - m.email.b)
+		const hit = !!m.ground && m.ground.r > m.ground.x && !(m.ground.r <= m.h2.x || m.h2.r <= m.ground.x || m.ground.b <= m.h2.y || m.h2.b <= m.ground.y)
+		report.runs.push({ label, h2Top: Math.round(m.h2.y), emailBottom: Math.round(m.email.b), gap, groundHitsH2: hit })
+		console.log(`> ${label} h2Top=${Math.round(m.h2.y)} (max ${h - 48}) gap=${gap} (max 140) groundHitsH2=${hit}`)
+		if (foldGate && m.h2.y > h - 48) fail(`${label}: Proof title top ${Math.round(m.h2.y)} > ${h - 48} (below the fold)`)
+		if (foldGate && gap > 140) fail(`${label}: ${gap} px of empty fold between the email row and the Proof title (> 140)`)
+		if (hit) fail(`${label}: the stone's ground shadow overlaps the Proof title`)
+		await page.screenshot({ path: path.join(outDir, `${label}.png`) })
+		await ctx.close()
+	}
 }
 
 // ---------- stone handoff: SVG (reduced motion) vs WebGL (after the swap) ----------

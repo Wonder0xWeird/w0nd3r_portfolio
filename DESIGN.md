@@ -47,7 +47,7 @@ projects shelf + writing + play + threshold. v2.4 motion polish + perf/a11y hard
 
 | Token | Size (fluid, 390 → 1440) | Face / weight | Line-height | Use |
 |---|---|---|---|---|
-| `--step-display` | `clamp(3.75rem, 2rem + 8.5vw, 9.5rem)` | Cormorant 300 | 0.9 | Name only |
+| `--step-display` | `clamp(3.75rem, min(2rem + 8.5vw, 2rem + 13svh), 11rem)` | Cormorant 300 | 0.9 | Name only. Grows with height too (v2.2): 136 px at 1280×800, 149 at 1440×900, 172 at 1920×1080, 65 at 390 |
 | `--step-5` | `clamp(2.5rem, 1.6rem + 3.6vw, 5rem)` | Cormorant 400 | 1.0 | Section titles, play manifesto |
 | `--step-figure` | `clamp(3rem, 1.6rem + 4.2vw, 5.75rem)` | Cormorant 300, old-style figures, `--gold-200` | 0.95 | The one big figure ("2,416 of 2,593"). *Added in v2.0.* |
 | `--step-4` | `clamp(1.9rem, 1.4rem + 1.6vw, 3rem)` | Cormorant 500 | 1.05 | Feature titles, pull quotes |
@@ -212,7 +212,12 @@ rejected untested: its two offset chevrons risk the same "<" reading that failed
   **Résumé** (gold primary, shown only once `public/resume.pdf` exists; otherwise "Email me" is the primary),
   LinkedIn and GitHub as text links, and the address itself as visible text with a Copy button.
   **1440:** 6fr/6fr; the stone stage is `min(50vw, 740px)` (~670 px of menhir), bleeds up to 160 px past the
-  container and rises toward the header; primary CTA bottom ≤ 700 px. **390:** the stone is a half-lit
+  container and rises toward the header; primary CTA bottom ≤ 700 px. **Composed fold (v2.2, ≥ 861 px):** the
+  copy, not the stone or a min-height, sets the hero's height (no bottom padding); the stage's foot overlaps
+  Proof's top padding (`margin-bottom: -clamp(120px, 16vw, 240px)`), Proof sits above the stone's light
+  (`z-index: 1`, no background) with `padding-top: clamp(40px, 7svh, 80px)`, and its title box is capped at
+  8.6em so the stone stands beside its first line, never on it. Gate (`shoot.mjs`, 1280×800 to 1920×1080):
+  the Proof title's top ≤ height − 48 and ≤ 140 px below the email row. **390:** the stone is a half-lit
   (.55), masked backdrop beside the name with its crown under the header; the lede starts below the last
   rune so no text crosses LARS; primary CTA bottom ≤ 600 px and the address in the fold.
 - **Proof** (ᛖ Ehwaz). Asymmetric: one feature slab (Immortal Kinematics, the one big figure) + two slim
