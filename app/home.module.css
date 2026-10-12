@@ -182,9 +182,13 @@
 		z-index: 1;
 		padding-top: clamp(40px, 7svh, 80px);
 	}
-	/* a box as wide as its two lines, so the stone's foot stands beside the title, never under it */
+	/* One line (v2.4): at --step-5 the title was two lines in an 8.6em box, so wherever its first line
+	   was whole in the fold and the title wasn't, the second was sliced (28 px of ascenders at
+	   1440x900). At --step-4 the whole title is one ~45 px line that ends left of the stone's foot,
+	   so the fold shows all of it or none of it. */
 	.sectionProof .sectionHead h2 {
-		max-width: 8.6em;
+		justify-self: start; /* the box hugs the line, so it ends where the words do, left of the stone */
+		font-size: var(--step-4);
 	}
 }
 /* Short desktop screens (v2.3). At 1280x720, 1280x800, 1366x768 and 1536x864 the v2.2 fold cut the
@@ -204,8 +208,9 @@
 	.ctaRow {
 		margin-top: clamp(16px, 2.4svh, 24px);
 	}
+	/* >= 32 px between the email row and the title (v2.4): at 20-24 px the hero and Proof read as one block */
 	.sectionProof {
-		padding-top: clamp(24px, 4svh, 40px);
+		padding-top: clamp(40px, 5svh, 48px);
 	}
 }
 /* <= 760 px tall (a 1366x768 or 1536x864 laptop with browser chrome): the copy's own spacing tightens too. */
@@ -268,6 +273,12 @@
 	font-size: var(--step-5);
 	font-weight: 400;
 	line-height: 1;
+}
+/* The Proof title sits in the fold beside the name, so it takes the name's face timing (v2.4):
+   Cormorant with display: block (app/layout.tsx, same file, no extra download). Every frame shows
+   it in Cormorant or not at all, never in the heavier fallback. Titles below the fold stay on swap. */
+.sectionProof .sectionHead h2 {
+	font-family: var(--font-display-name), serif;
 }
 .sectionHead > :not(.sigilMark) {
 	grid-column: 2;

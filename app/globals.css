@@ -498,7 +498,9 @@ strong {
 	gap: 10px;
 	color: var(--text);
 	text-decoration: none;
-	font-family: var(--face-display);
+	/* the name's face timing (display: block, same file; v2.4): the brand is in every fold, so it never
+	   paints in the fallback serif and swaps (app/layout.tsx) */
+	font-family: var(--font-display-name), serif;
 	font-size: var(--step-2);
 	font-weight: 500;
 	letter-spacing: 0;
