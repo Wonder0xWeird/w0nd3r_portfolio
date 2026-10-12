@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next"
+import { preload } from "react-dom"
 import { Cormorant, Mona_Sans } from "next/font/google"
 import localFont from "next/font/local"
 import { SiteHeader } from "@/components/SiteHeader"
@@ -78,6 +79,10 @@ export const viewport: Viewport = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+	// The grain tile lights the page at first paint (.atmos__grain, the bands). Until v2.2 the hero SVG's
+	// <pattern> fetched it straight from the HTML; now only CSS references it, so it would wait for the
+	// stylesheet. Preload it from the head instead (5.7 kB).
+	preload("/textures/grain.png", { as: "image", fetchPriority: "low" })
 	return (
 		<html lang="en" className={`${display.variable} ${cormorantName.variable} ${displayItalic.variable} ${text.variable}`}>
 			<body>
