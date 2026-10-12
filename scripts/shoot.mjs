@@ -25,8 +25,15 @@
  *     and saves real viewport frames, one per screen (section crops repaint the
  *     fixed light layer in tiles and show a fake seam).
  * Handoff (/, 1440 and 390): the median luminance of the stone's face as SVG
- * (reduced motion) vs WebGL (after the swap) must agree within ±12 %; saves the
- * SVG / mid-fade / WebGL frames of the stone.
+ * (reduced motion) vs WebGL (after the swap) must agree within ±12 % and their
+ * mean per-pixel |difference| must be <= 8; saves the SVG / mid-fade / WebGL
+ * frames of the stone. At 1440 the same frames gate the stone's material (v2.2):
+ * neutral slate away from the runes (WebGL saturation <= .07), rune-fire warmth
+ * near them (hue 25-45), flank saturation <= .12, face:flank >= 1.8:1, face vs
+ * page >= 2.3:1, and real texture (high-pass sigma >= 4 WebGL, >= 3 SVG).
+ * Sigils (/, desktop, normal and reduced motion): each section header scrolled
+ * to 30 % of the viewport has an ignited inlay (median luminance >= 170) and a
+ * visible caption clear of its h2; the sunken band reads (>= 1.12:1).
  * Desktop folds (/, 1280x800, 1440x900, 1536x864, 1920x1080, reduced motion): the
  * Proof title's top is inside the fold (<= height - 48) and <= 140 px below the
  * hero's email row; the stone's ground shadow never overlaps it (also at 900, 1024).
@@ -51,6 +58,7 @@ const CTA_MAX = { 1440: 700, 390: 600 }
 const HERO_WORDS_MAX = 40
 const HEIGHT_MAX = { 1440: 8500, 390: 9000 } // critique change 3: disclose, never delete
 const PARITY = 0.12
+const PARITY_MAD = 8 // mean |luminance difference| per pixel of the face, SVG vs WebGL (v2.2)
 const LEGACY = {
 	"/writing/Dear-Lambda/I-See-You": "/writing/dear-lambda/i-see-you",
 	"/writing/Dear-Lambda/Infinity-Is": "/writing/dear-lambda/infinity-is",
@@ -99,6 +107,161 @@ async function fontProbe(page) {
 			faces,
 		}
 	})
+}
+
+// ---------- pixel measurements (v2.2 critique gates) ----------
+const relLum = (rgb) => {
+	const f = (c) => {
+		c /= 255
+		return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+	}
+	return 0.2126 * f(rgb[0]) + 0.7152 * f(rgb[1]) + 0.0722 * f(rgb[2])
+}
+const contrast = (a, b) => {
+	const [hi, lo] = [relLum(a), relLum(b)].sort((p, q) => q - p)
+	return (hi + 0.05) / (lo + 0.05)
+}
+const BASE_RGB = [16, 20, 26] // --slate-950, the page base
+
+/**
+ * Decodes a PNG in a scratch page and measures it. Per region ({x, y, w, h} in image px): the mean
+ * colour, its HSL hue and saturation, the median luminance and the high-pass sigma (luminance minus
+ * a 13 x 13 box blur, i.e. "a 6 px blur" at device scale 2, as the v2.1 critique measured texture).
+ * Per point list ([[x, y]] in image px): the median luminance at those points.
+ */
+async function imageStats(png, { regions = {}, points = {} } = {}) {
+	const ctx = await browser.newContext()
+	const page = await ctx.newPage()
+	const res = await page.evaluate(
+		async ([b64, regions, points]) => {
+			const img = new Image()
+			img.src = "data:image/png;base64," + b64
+			await img.decode()
+			const c = document.createElement("canvas")
+			c.width = img.width
+			c.height = img.height
+			const g = c.getContext("2d")
+			g.drawImage(img, 0, 0)
+			const { data, width, height } = g.getImageData(0, 0, c.width, c.height)
+			const Y = (i) => 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]
+			const median = (v) => v.sort((a, b) => a - b)[v.length >> 1]
+			const out = { regions: {}, points: {} }
+			for (const [k, r] of Object.entries(regions)) {
+				const x0 = Math.max(0, Math.round(r.x))
+				const y0 = Math.max(0, Math.round(r.y))
+				const w = Math.min(width, Math.round(r.x + r.w)) - x0
+				const h = Math.min(height, Math.round(r.y + r.h)) - y0
+				if (w < 16 || h < 16) continue
+				let R = 0, G = 0, B = 0
+				const lum = new Float64Array(w * h)
+				for (let y = 0; y < h; y++)
+					for (let x = 0; x < w; x++) {
+						const i = ((y0 + y) * width + x0 + x) * 4
+						R += data[i]
+						G += data[i + 1]
+						B += data[i + 2]
+						lum[y * w + x] = Y(i)
+					}
+				const n = w * h
+				const [r_, g_, b_] = [R / n / 255, G / n / 255, B / n / 255]
+				const mx = Math.max(r_, g_, b_), mn = Math.min(r_, g_, b_), d = mx - mn, l = (mx + mn) / 2
+				const sat = d ? d / (1 - Math.abs(2 * l - 1)) : 0
+				let hue = 0
+				if (d) hue = (((mx === r_ ? ((g_ - b_) / d) % 6 : mx === g_ ? (b_ - r_) / d + 2 : (r_ - g_) / d + 4) * 60) + 360) % 360
+				const rad = 6
+				const W1 = w + 1
+				const I = new Float64Array(W1 * (h + 1))
+				for (let y = 0; y < h; y++) {
+					let row = 0
+					for (let x = 0; x < w; x++) {
+						row += lum[y * w + x]
+						I[(y + 1) * W1 + x + 1] = I[y * W1 + x + 1] + row
+					}
+				}
+				let s1 = 0, s2 = 0, m = 0
+				for (let y = rad + 2; y < h - rad - 2; y++)
+					for (let x = rad + 2; x < w - rad - 2; x++) {
+						const box = I[(y + rad + 1) * W1 + x + rad + 1] - I[(y - rad) * W1 + x + rad + 1] - I[(y + rad + 1) * W1 + x - rad] + I[(y - rad) * W1 + x - rad]
+						const v = lum[y * w + x] - box / (2 * rad + 1) ** 2
+						s1 += v
+						s2 += v * v
+						m++
+					}
+				out.regions[k] = {
+					rgb: [R / n, G / n, B / n].map(Math.round),
+					hue: Math.round(hue),
+					sat: +sat.toFixed(3),
+					lum: +median(Array.from(lum)).toFixed(1),
+					highPass: m ? +Math.sqrt(s2 / m - (s1 / m) ** 2).toFixed(2) : null,
+				}
+			}
+			for (const [k, pts] of Object.entries(points)) {
+				const v = pts.filter(([x, y]) => x >= 0 && y >= 0 && x < width && y < height).map(([x, y]) => Y((Math.round(y) * width + Math.round(x)) * 4))
+				out.points[k] = v.length ? +median(v).toFixed(1) : null
+			}
+			return out
+		},
+		[png.toString("base64"), regions, points]
+	)
+	await ctx.close()
+	return res
+}
+
+/**
+ * Section sigils (v2.2 critique fix 2), at desktop widths. Each section header is scrolled to 30 % of
+ * the viewport (past the end of its ignition range); its inlay's median luminance must be >= 170
+ * (normal and reduced motion alike: the final state is ignited), its caption must be visible and
+ * clear of its h2, and the sunken band must read against the night beside it (>= 1.12:1).
+ */
+async function sigilGate(page, label, vp) {
+	const heads = await page.$$eval("main header", (els) => els.filter((e) => e.querySelector(".sigil__inlay")).map((e) => e.querySelector("h2").id))
+	const sigils = []
+	for (const id of heads) {
+		const m = await page.evaluate(async (id) => {
+			const head = document.getElementById(id).closest("header")
+			window.scrollTo({ top: head.getBoundingClientRect().top + scrollY - innerHeight * 0.3, behavior: "instant" })
+			await new Promise((r) => setTimeout(r, 150))
+			const inlay = head.querySelector(".sigil__inlay")
+			const L = inlay.getTotalLength()
+			const ctm = inlay.getScreenCTM()
+			const pts = []
+			for (let k = 0; k <= 48; k++) {
+				const p = inlay.getPointAtLength((L * k) / 48)
+				const s = new DOMPoint(p.x, p.y).matrixTransform(ctm)
+				pts.push([s.x * devicePixelRatio, s.y * devicePixelRatio])
+			}
+			const cap = head.querySelector("svg + span")
+			const cb = cap?.getBoundingClientRect()
+			const hb = head.querySelector("h2").getBoundingClientRect()
+			const capVisible = !!cb && cb.width > 0 && getComputedStyle(cap).display !== "none"
+			const capHit = capVisible && !(cb.right <= hb.left || hb.right <= cb.left || cb.bottom <= hb.top || hb.bottom <= cb.top)
+			return { pts, capVisible, capHit, caption: cap?.textContent ?? null }
+		}, id)
+		const st = await imageStats(await page.screenshot(), { points: { inlay: m.pts } })
+		sigils.push({ id, inlayLum: st.points.inlay, caption: m.caption, capVisible: m.capVisible, capHit: m.capHit })
+		if (!(st.points.inlay >= 170)) fail(`${label}: sigil ${id} inlay median luminance ${st.points.inlay} < 170 once in view`)
+		if (vp.width >= 861 && !m.capVisible) fail(`${label}: sigil ${id} has no visible caption`)
+		if (m.capHit) fail(`${label}: sigil ${id} caption overlaps its title`)
+	}
+	// The band vs the night above it: two empty 100 x 100 px regions right of centre, either side of the
+	// Research band's top edge, below its inset shadow (the margin above is empty; the title ends left of them).
+	const band = await page.evaluate(async () => {
+		const el = document.getElementById("research")
+		window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - 300, behavior: "instant" })
+		await new Promise((r) => setTimeout(r, 150))
+		const top = el.getBoundingClientRect().top
+		return { top, x: innerWidth * 0.5 + 280, dpr: devicePixelRatio }
+	})
+	const k = band.dpr
+	const bs = await imageStats(await page.screenshot(), {
+		regions: {
+			night: { x: band.x * k, y: (band.top - 110) * k, w: 100 * k, h: 100 * k },
+			band: { x: band.x * k, y: (band.top + 50) * k, w: 100 * k, h: 100 * k },
+		},
+	})
+	const bandContrast = bs.regions.band && bs.regions.night ? +contrast(bs.regions.band.rgb, bs.regions.night.rgb).toFixed(3) : null
+	if (!(bandContrast >= 1.12)) fail(`${label}: sunken band vs night ${bandContrast}:1 < 1.12:1`)
+	return { sigils, bandContrast, bandRgb: bs.regions.band?.rgb, nightRgb: bs.regions.night?.rgb }
 }
 
 for (const route of ROUTES) {
@@ -253,6 +416,11 @@ for (const route of ROUTES) {
 				if (bad.length) fail(`${label}: axe ${bad.map((v) => `${v.id}(${v.impact})`).join(", ")}`)
 			}
 
+			if (route === "/" && !vp.touch) {
+				run.sigils = await sigilGate(page, label, vp)
+				console.log(`  sigils ${run.sigils.sigils.map((x) => `${x.id.replace("-title", "")}=${x.inlayLum}`).join(" ")} band=${run.sigils.bandContrast}:1`)
+			}
+
 			run.consoleErrors = consoleErrors
 			run.failedRequests = failedRequests
 			if (consoleErrors.length) fail(`${label}: console errors: ${consoleErrors.join(" | ")}`)
@@ -371,6 +539,8 @@ if (ROUTES.includes("/")) {
 		const label = `home-${vp.name}-handoff`
 		console.log(`> ${label}`)
 		const shots = {}
+		const stones = {}
+		let stage = null
 		let ok = true
 		for (const reduced of [true, false]) {
 			const ctx = await browser.newContext({
@@ -401,7 +571,8 @@ if (ROUTES.includes("/")) {
 					ok = false
 				}
 			}
-			await page.screenshot({ path: path.join(outDir, `${label}-${reduced ? "1-svg" : "3-webgl"}.png`), clip: stone })
+			stones[reduced ? "svg" : "gl"] = await page.screenshot({ path: path.join(outDir, `${label}-${reduced ? "1-svg" : "3-webgl"}.png`), clip: stone })
+			stage = { box, stone }
 			shots[reduced ? "svg" : "gl"] = await page.screenshot({ clip: face })
 			await ctx.close()
 		}
@@ -420,6 +591,36 @@ if (ROUTES.includes("/")) {
 		})
 		console.log(`  face median svg=${r.svg.toFixed(1)} webgl=${r.webgl.toFixed(1)} delta=${(delta * 100).toFixed(1)}% meanAbsDiff=${r.meanAbsDiff.toFixed(1)}`)
 		if (Math.abs(delta) > PARITY) fail(`${label}: face luminance differs by ${(delta * 100).toFixed(1)}% (> ±${PARITY * 100}%)`)
+		if (r.meanAbsDiff > PARITY_MAD) fail(`${label}: SVG vs WebGL face mean |diff| ${r.meanAbsDiff.toFixed(1)} > ${PARITY_MAD}`)
+		if (vp.touch) continue
+		// Stone material (v2.2 critique fix 3), on the same frames: regions in % of the stage, as image px.
+		const { box, stone } = stage
+		const rgn = (x0, x1, y0, y1) => ({ x: (box.x + box.width * x0 - stone.x) * 2, y: (box.y + box.height * y0 - stone.y) * 2, w: box.width * (x1 - x0) * 2, h: box.height * (y1 - y0) * 2 })
+		const regions = {
+			away: rgn(0.285, 0.35, 0.29, 0.78), // the face >= 60 px from the runes
+			near: rgn(0.38, 0.43, 0.35, 0.75), // the face within 60 px of them
+			flank: rgn(0.71, 0.724, 0.62, 0.82), // inside the generated right facet
+		}
+		const sv = (await imageStats(stones.svg, { regions })).regions
+		const gl = (await imageStats(stones.gl, { regions })).regions
+		const m = {
+			label: `${label}-material`,
+			svg: sv,
+			webgl: gl,
+			faceVsBase: +contrast(gl.away.rgb, BASE_RGB).toFixed(2),
+			faceVsFlank: +contrast(gl.away.rgb, gl.flank.rgb).toFixed(2),
+		}
+		report.runs.push(m)
+		console.log(
+			`  material webgl: away sat=${gl.away.sat} hp=${gl.away.highPass}, near hue=${gl.near.hue}, flank sat=${gl.flank.sat}, face/base=${m.faceVsBase}:1, face/flank=${m.faceVsFlank}:1; svg away hp=${sv.away.highPass}`
+		)
+		if (gl.away.sat > 0.07) fail(`${label}: WebGL face saturation ${gl.away.sat} > .07 away from the runes (slate must be neutral)`)
+		if (gl.near.hue < 25 || gl.near.hue > 45) fail(`${label}: WebGL face hue ${gl.near.hue} near the runes, expected 25-45 (rune-fire warmth)`)
+		if (gl.flank.sat > 0.12) fail(`${label}: WebGL flank saturation ${gl.flank.sat} > .12`)
+		if (m.faceVsFlank < 1.8) fail(`${label}: face:flank ${m.faceVsFlank}:1 < 1.8:1`)
+		if (gl.away.highPass < 4) fail(`${label}: WebGL face high-pass sigma ${gl.away.highPass} < 4 (reads smooth/plastic)`)
+		if (sv.away.highPass < 3) fail(`${label}: SVG face high-pass sigma ${sv.away.highPass} < 3`)
+		if (m.faceVsBase < 2.3) fail(`${label}: face vs page ${m.faceVsBase}:1 < 2.3:1`)
 	}
 }
 

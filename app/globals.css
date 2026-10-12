@@ -594,8 +594,8 @@ strong {
 	background: radial-gradient(
 		closest-side in oklch,
 		rgb(228 182 90 / 0.2),
-		rgb(228 182 90 / 0.11) 32%,
-		rgb(228 182 90 / 0.055) 62%,
+		rgb(228 182 90 / 0.08) 32%,
+		rgb(228 182 90 / 0.035) 62%,
 		rgb(228 182 90 / 0.018) 84%,
 		rgb(228 182 90 / 0)
 	);
@@ -685,15 +685,16 @@ strong {
 		stroke-dashoffset: 0;
 	}
 }
+/* the bloom flares, then settles at GROOVE.bloom (lib/stone.ts) */
 @keyframes rune-ignite {
 	0% {
 		opacity: 0;
 	}
 	55% {
-		opacity: 1;
+		opacity: 0.9;
 	}
 	100% {
-		opacity: 0.8;
+		opacity: 0.62;
 	}
 }
 @keyframes torch-rise {

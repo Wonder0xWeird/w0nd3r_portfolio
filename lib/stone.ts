@@ -9,7 +9,7 @@
  */
 
 /** Undeformed box: width, height, depth (world units) and segments. */
-export const STONE = { w: 1.2, h: 2.3, d: 0.46, segs: [20, 36, 6] as const }
+export const STONE = { w: 1.2, h: 2.3, d: 0.46, segs: [28, 56, 8] as const }
 
 /** Camera of the 3D scene. R3F calls lookAt(0, 0, 0) on its default camera; the generator does the same. */
 export const CAMERA = { position: [0, 0.12, 5.2] as const, fov: 34, near: 0.1, far: 50 }
@@ -19,6 +19,13 @@ export const STAGE = { w: 400, h: 480 }
 
 /** Yaw at first paint and at the handoff; the 3D stone only starts to sway after the crossfade. */
 export const START_YAW = -0.3
+
+/**
+ * How LARS is cut and lit, in rune-box units (both renderers): the moonlit lower lip (width, alpha),
+ * the shadowed cut (width, alpha), the fire stroke's width and glow blur, and the bloom's alpha.
+ * v2.2: a wider cut and lip and a narrower, softer fire, so the runes read as grooves, not tubes.
+ */
+export const GROOVE = { lipW: 1.0, lip: 0.24, cutW: 1.2, cut: 0.78, fireW: 0.46, glowBlur: 0.32, bloom: 0.62 }
 
 /** Where the LARS runes sit on the front face texture (canvas px; the texture is 256 x 512). */
 export const RUNE_FACE = { w: 256, h: 512, size: 70, gap: 22, offsetY: 18 }
@@ -47,7 +54,7 @@ export function deform(x: number, y: number, z: number): [number, number, number
 	const h = (y + H / 2) / H // 0 bottom -> 1 top
 	const nx = x / (w / 2) // -1 .. 1
 	const taper = 1 - 0.15 * h
-	const s = smooth(0.55, 1, h)
+	const s = smooth(0.48, 1, h) // v2.2: 0.55 met the flank as a step (a seam in the sway)
 	const p = -0.32 // crown peak, left of centre
 	const t = nx < p ? (p - nx) / (1 + p) : (nx - p) / (1 - p)
 	const crown = nx < p ? 0.24 * t * t : 0.66 * Math.pow(t, 1.35)

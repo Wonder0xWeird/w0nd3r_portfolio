@@ -119,7 +119,8 @@ Other tokens (globals.css): radii `--r-btn: 2px`, `--r-slab: 6px`; spacing `--sp
    transparent 60%)`), an edge **vignette** toward `--slate-1000`, and, on pages without the stone, a torch
    spilling in from off-canvas.
    - **On `/` the torch belongs to the stone** (v2.1): `.stone__torch`, a 125×92 vmax radial (gold .20 at the
-     centre, .11 at 32 %, .055 at 62 %) centred on the rune column. It is `position:absolute; z-index:-1`
+     centre, .08 at 32 %, .035 at 62 %; quieter in v2.2, now the stone's face carries its own warm spill)
+     centred on the rune column. It is `position:absolute; z-index:-1`
      inside the hero, so it scrolls away with the stone (v2.0's viewport-pinned torch was light without a
      source below the hero). No ancestor of it may create a stacking context; `.hero` clips it horizontally
      with `overflow-x: clip` (never `hidden`).
@@ -148,10 +149,29 @@ Other tokens (globals.css): radii `--r-btn: 2px`, `--r-slab: 6px`; spacing `--sp
    crown with a long chipped slope, slight lean, rough surface), camera, start yaw and rune slots;
    `scripts/stone-profile.mjs` projects that mesh and writes `components/hero/stone-profile.ts` (silhouette,
    facets, LARS strokes on the curved face), from which the SVG twin is drawn. Re-run it after any change
-   to `lib/stone.ts`. Lit the same way in both: cool moonlight key from the upper left, rune-fire from the
-   carving, the right flank in shadow; WebGL uses Neutral tone mapping so slate mid-tones keep their sRGB
-   value. The halo, contact shadow, mist and motes are persistent layers outside the swapped body.
-   **Handoff gate:** median face luminance SVG vs WebGL within ±12 % (`shoot.mjs`; v2.1: −0.5 % at 1440).
+   to `lib/stone.ts`. Lit the same way in both: moonlight key from the upper left, rune-fire from the
+   carving, the right flank in shadow. The halo, contact shadow, mist and motes are persistent layers
+   outside the swapped body.
+   - **Material (v2.2): neutral slate, real texture, light does the warming.** v2.1 read as blue plastic
+     (a periwinkle albedo × blue lights, a navy flank, no micro-texture). Now the albedo is a neutral grey
+     (#7b7c7e) mottled by procedural fbm with fine grain, quartz veins and pits, and the same surface drives a
+     `bumpMap` (relief) and a `roughnessMap` (.74–.96) — all generated on a 512 px canvas in the lazy chunk,
+     no image assets. Lights: neutral sky / warm-dark ground hemisphere, a barely cool key (#e4e9f0), a weak
+     rim (#9aa5b4), and one rune-fire point light (#f2b65a) *inside the stone's group*, just off the face,
+     so the warmth sits on the slate around LARS (hue ≈ 30°) and falls off within a hand's breadth; the rest
+     stays neutral (saturation ≤ .02). **Linear tone mapping** (not Neutral): Neutral's toe subtracted an
+     offset from dark values, which crushed the flank toward black and saturated it navy.
+   - **Runes are cut, not neon (v2.2, both renderers):** a moonlit lower lip offset down-right, a wider dark
+     cut offset up-left, then a narrower fire with a softer glow, a thin .55 core and a .62 bloom (`GROOVE`
+     in `lib/stone.ts` holds the shared widths and alphas).
+   - **SVG twin palette** matched to the lit 3D stone: face #7b7d80 → #646669 → #47494c, flank #33363a →
+     #1d1f22, crown #55585c → #3c3f43, the page's grain tile (`<pattern>`, overlay .065, no new request),
+     four dark mottles and a stronger firelight (.42 at the centre).
+   - The crown now eases into the flank (`smooth(0.48, 1, h)`, segments 28×56×8): no shoulder seam in the sway.
+   **Gates (`shoot.mjs`, 1440 handoff frames):** median face luminance SVG vs WebGL within ±12 % and mean
+   |difference| ≤ 8 (v2.2: +0.3 %, 7.0); WebGL face saturation ≤ .07 away from the runes, hue 25–45° near
+   them; flank saturation ≤ .12; face:flank ≥ 1.8:1; face vs page ≥ 2.3:1; high-pass σ (luminance minus a
+   13 px box blur at 2×) ≥ 4 for WebGL and ≥ 3 for the SVG.
 6. **Incised vs ignited runes.**
    - **Incised** (resting): `--gold-700` stroke with `filter: drop-shadow(0 1px 0 rgb(255 255 255/.06))
      drop-shadow(0 -1px 0 rgb(0 0 0/.6))`.
