@@ -47,6 +47,9 @@
  * until the name has ink, the brand and the Proof title are blank or already final (never the
  * fallback serif); at the name's first frame they match +1.5 s (mean |d| <= 3); the name lags
  * the lede by <= 150 ms.
+ * Proof diagram (/, desktop, normal and reduced motion; v2.4): an accessible name; fully drawn
+ * 1.2 s after scrolling in, nothing left running, never armed under reduced motion; from 1200 px,
+ * >= 24 px clear of the figure and the slab's edges, and >= 15 % ink in the slab's top-right quadrant.
  * Links: every internal href on / and /writing must answer 200 without a
  * redirect; the legacy mixed-case letter URLs must 308 once to a 200.
  * Other routes get fold + full page + the same font/overflow checks.
@@ -285,6 +288,87 @@ async function sigilGate(page, label, vp) {
 	return { sigils, bandContrast, bandRgb: bs.regions.band?.rgb, nightRgb: bs.regions.night?.rgb }
 }
 
+/**
+ * The Proof harness diagram (v2.4, v2.3 critique fix 3), at desktop widths. It has an accessible name;
+ * from 1200 px (where it sits in the slab's top right) it is >= 24 px clear of the figure and of the
+ * slab's edges, and the slab's top-right quadrant is no longer empty: >= 15 % of its pixels differ from
+ * the slab's median luminance by >= 10 (v2.3's empty quadrant: 0.6 %; the grain stays under 10).
+ * Scrolled into view it is fully drawn within 1.2 s with no animation left running; under reduced
+ * motion it is never armed and nothing runs.
+ */
+async function diagramGate(page, label, vp, reduced) {
+	const m = await page.evaluate(async () => {
+		const fig = document.querySelector("#work figure")
+		if (!fig) return null
+		const svg = fig.querySelector("svg")
+		const slab = fig.closest("article")
+		window.scrollTo({ top: slab.getBoundingClientRect().top + scrollY - 120, behavior: "instant" })
+		await new Promise((r) => setTimeout(r, 1200))
+		const r = (el) => {
+			const b = el.getBoundingClientRect()
+			return { x: b.left, y: b.top, r: b.right, b: b.bottom }
+		}
+		const figure = slab.querySelector(":scope > p:not(.meta):has(> span + span)")
+		const name = (svg.getAttribute("aria-labelledby") || "").split(" ").map((id) => document.getElementById(id)?.textContent.trim() ?? "").join(" ")
+		return {
+			svg: r(svg),
+			slab: r(slab),
+			figure: figure ? r(figure) : null,
+			role: svg.getAttribute("role"),
+			name,
+			draw: fig.dataset.draw ?? null,
+			running: fig.getAnimations({ subtree: true }).filter((a) => a.playState === "running").length,
+			undrawn: [...svg.querySelectorAll("path")].filter((p) => parseFloat(getComputedStyle(p).strokeDashoffset) > 0.001).length,
+			dpr: devicePixelRatio,
+		}
+	})
+	if (!m) {
+		fail(`${label}: no harness diagram in the Proof slab`)
+		return null
+	}
+	const out = { name: m.name.slice(0, 60), draw: m.draw, running: m.running, undrawn: m.undrawn }
+	if (m.role !== "img" || m.name.length < 40) fail(`${label}: the harness diagram has no accessible name (role ${m.role}, "${m.name}")`)
+	if (m.undrawn || m.running) fail(`${label}: the harness diagram is not fully drawn 1.2 s after scrolling in (${m.undrawn} edges undrawn, ${m.running} animations running)`)
+	if (reduced && m.draw) fail(`${label}: the harness diagram is armed under reduced motion (data-draw="${m.draw}")`)
+	if (vp.width >= 1200) {
+		out.clearFigure = Math.round(m.figure.y - m.svg.b)
+		out.clearRight = Math.round(m.slab.r - m.svg.r)
+		out.clearTop = Math.round(m.svg.y - m.slab.y)
+		if (Math.min(out.clearFigure, out.clearRight, out.clearTop) < 24) fail(`${label}: the harness diagram is < 24 px from the figure or the slab's edge (${out.clearFigure}/${out.clearRight}/${out.clearTop})`)
+		// the slab's top-right quadrant, inset 2 px from the slab's border
+		const k = m.dpr
+		const q = { x: ((m.slab.x + m.slab.r) / 2) * k, y: (m.slab.y + 2) * k, w: ((m.slab.r - m.slab.x) / 2 - 2) * k, h: ((m.slab.b - m.slab.y) / 2 - 2) * k }
+		await page.mouse.move(2, 2) // no pointer torchlight on the slab
+		await page.waitForTimeout(200)
+		const shot = await page.screenshot()
+		const ctx = await browser.newContext()
+		const scratch = await ctx.newPage()
+		out.inkPct = await scratch.evaluate(
+			async ([b64, q]) => {
+				const img = new Image()
+				img.src = "data:image/png;base64," + b64
+				await img.decode()
+				const c = document.createElement("canvas")
+				c.width = img.width
+				c.height = img.height
+				const g = c.getContext("2d")
+				g.drawImage(img, 0, 0)
+				const d = g.getImageData(Math.round(q.x), Math.round(q.y), Math.round(q.w), Math.round(q.h)).data
+				const L = new Float32Array(d.length / 4)
+				for (let i = 0, j = 0; i < d.length; i += 4, j++) L[j] = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2]
+				const med = Float32Array.from(L).sort()[L.length >> 1]
+				let ink = 0
+				for (const v of L) if (Math.abs(v - med) >= 10) ink++
+				return +((ink / L.length) * 100).toFixed(1)
+			},
+			[shot.toString("base64"), q]
+		)
+		await ctx.close()
+		if (!(out.inkPct >= 15)) fail(`${label}: the Proof slab's top-right quadrant is ${out.inkPct} % ink (< 15 %)`)
+	}
+	return out
+}
+
 for (const route of ROUTES) {
 	for (const vp of VIEWPORTS) {
 		for (const reduced of [false, true]) {
@@ -440,6 +524,8 @@ for (const route of ROUTES) {
 			if (route === "/" && !vp.touch) {
 				run.sigils = await sigilGate(page, label, vp)
 				console.log(`  sigils ${run.sigils.sigils.map((x) => `${x.id.replace("-title", "")}=${x.inlayLum}`).join(" ")} band=${run.sigils.bandContrast}:1`)
+				run.diagram = await diagramGate(page, label, vp, reduced)
+				console.log(`  diagram ${JSON.stringify(run.diagram)}`)
 			}
 
 			run.consoleErrors = consoleErrors
