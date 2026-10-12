@@ -26,13 +26,12 @@ const hasResume = existsSync(path.join(process.cwd(), "public", "resume.pdf"))
 // It is still listed on /writing.
 const LATIN = /^[\u0020-\u007E\u00A0-\u00FF\u2013\u2014\u2018\u2019\u201C\u201D]*$/
 
-/** The sigil's name and meaning, captioned under it on wide screens (decorative, like the rune). */
+/** The sigil's name and meaning, captioned under it (decorative, like the rune); phones show the name only. */
 function SigilName({ rune }: { rune: RuneName }) {
 	return (
 		<span className={s.sigilName} aria-hidden="true">
 			{RUNE_LABEL[rune]}
-			<br />
-			{SIGIL_MEANING[rune]}
+			<span className={s.sigilMeaning}>{SIGIL_MEANING[rune]}</span>
 		</span>
 	)
 }
@@ -346,6 +345,11 @@ export default function Home() {
 								{thesis.images.map((img) => (
 									<figure key={img.src} className={`frame ${s.scienceFig}`}>
 										<Image className="duotone" src={img.src} alt={img.alt} fill sizes="(max-width: 960px) 25vw, 260px" />
+										{img.scale ? (
+											<span className={s.scaleBar} style={{ "--bar": img.scale.fraction } as React.CSSProperties} aria-hidden="true">
+												{img.scale.label}
+											</span>
+										) : null}
 									</figure>
 								))}
 							</div>

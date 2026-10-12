@@ -60,11 +60,17 @@ export const thesis = {
 		"Interfacing robustly with the brain is still a major challenge, because of the neuroinflammatory response to implanted materials, which is not fully understood. That immune reaction is driven not only by the implantation procedure but by the materials chosen for the device itself.",
 		"This work contributes new methods for synthesizing soft electronic materials and new understanding of the mechanisms behind the neuroinflammatory response, toward a wholly organic, immunomodulatory interface that could be translated into a robust medical device.",
 	],
+	// Square plates cut from the originals in /images/science/ by scripts/crop-science.mjs (v2.3): no
+	// instrument info bars, time headers or viewport axes. `scale` redraws the SEM's 1 mm bar.
 	images: [
-		{ src: "/images/science/gelectrode.png", alt: "A soft conductive hydrogel electrode" },
-		{ src: "/images/science/seeded-scaffold.jpg", alt: "A cell-seeded precision-porous hydrogel scaffold" },
-		{ src: "/images/science/rapid-photochemical-synthesis.png", alt: "Schematic of the rapid one-pot photochemical conductive-hydrogel synthesis" },
-		{ src: "/images/science/6s.jpg", alt: "Scanning electron micrograph of a 3D-printed precision-porous scaffold (1 mm scale bar)" },
+		{ src: "/images/science/plates/hydrogel-electrode.png", alt: "A soft conductive hydrogel electrode (3D model)" },
+		{ src: "/images/science/plates/seeded-scaffold-sem.jpg", alt: "Scanning electron micrograph of immune cells seeded on a precision-porous hydrogel scaffold" },
+		{ src: "/images/science/plates/photochemical-synthesis.png", alt: "Hydrogel discs turning from grey to black as the one-pot photochemical synthesis makes them conductive" },
+		{
+			src: "/images/science/plates/scaffold-sem.jpg",
+			alt: "Scanning electron micrograph of a 3D-printed precision-porous scaffold, about 2 mm across",
+			scale: { label: "1 mm", fraction: 161 / 344 },
+		},
 	],
 }
 

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Cormorant, Mona_Sans } from "next/font/google"
+import localFont from "next/font/local"
 import { SiteHeader } from "@/components/SiteHeader"
 import { SiteFooter } from "@/components/SiteFooter"
 import { SlabLight } from "@/components/SlabLight"
@@ -16,6 +17,23 @@ const display = Cormorant({
 	style: "normal",
 	variable: "--font-display",
 	display: "swap",
+})
+
+// The name (v2.3): Cormorant again, with display "block", for the h1 only, so the first frames never
+// paint "Lars Crawford" in the heavier metric-adjusted fallback and swap it mid-rise (the FOUT open
+// since v2.1); every other text stays on swap. A second next/font/google instance would share the
+// family name "Cormorant" and its later @font-face would turn ALL Cormorant text to block, so this is
+// the same latin variable woff2 (OFL; CREDITS.md) self-hosted under its own family name ("cormorantName",
+// from the const). Its bytes are
+// identical to the Google instance's latin file, so it resolves to the same /_next/static/media URL:
+// one download.
+const cormorantName = localFont({
+	src: "./fonts/cormorant-latin-wght.woff2",
+	weight: "300 700",
+	style: "normal",
+	variable: "--font-display-name",
+	display: "block",
+	adjustFontFallback: "Times New Roman",
 })
 
 // Italic is only for genuine quoted verse/prose, so it is not preloaded.
@@ -61,7 +79,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en" className={`${display.variable} ${displayItalic.variable} ${text.variable}`}>
+		<html lang="en" className={`${display.variable} ${cormorantName.variable} ${displayItalic.variable} ${text.variable}`}>
 			<body>
 				{/* Page light: moonlight, vignette, torchlight from the stone, grain (DESIGN.md "Surfaces and light"). */}
 				<div className="atmos" aria-hidden="true">
