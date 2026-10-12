@@ -26,9 +26,12 @@ fixes): a composed desktop fold, sections lit by their sigils (ignite on scroll,
 the stone as neutral slate with real texture and incised runes; plus a craft sweep. v2.3 (shipped on
 `feat/front-door-v2-3`, the v2.2 critique's top three): no headline sliced by any desktop fold, the stone
 as night-lit riven slate with a quiet handoff, and craft sweep 2 (no h1 font flash, clean research plates,
-one-line sigil captions). Still to come: the sticky sigil rail, the proof slab diagram and the
-proof/experience recomposition; research band + projects shelf + writing + play + threshold; v2.4 motion
-polish + perf/a11y hardening.
+one-line sigil captions). v2.4 (on `feat/front-door-v2-4`, the v2.3 critique's fixes 1 and 3): the fold
+never slices the Proof title (one line on desktop, gated line by line at 19 sizes incl. MacBooks), the
+brand and Proof title share the name's block face (gated on 5 cold loads), and the Proof feature carries
+the agent-harness diagram with the slim slabs retired. Still to come: the stone as one material in both
+renderers (critique fix 2), the sticky sigil rail and type/rhythm system; research band + projects shelf
++ writing + play + threshold; motion polish + perf/a11y hardening.
 
 ---
 
@@ -55,6 +58,10 @@ polish + perf/a11y hardening.
   (`cormorantName`). Do **not** add a second `next/font/google` Cormorant instance for this: Next 15.5 names
   every instance "Cormorant", and the later `@font-face` (block) would win for all Cormorant text. Checked
   with frames every ~100 ms over 8 cold loads (5 plain, 3 throttled): 0 fallback frames (v2.2: 7 of 8).
+- **So are the fold's other display words (v2.4):** the header brand and the Proof title use
+  `--font-display-name` too (same face, no extra download), so the first frames show them in Cormorant
+  or not at all; v2.3 painted them in the fallback serif and swapped them at ~400 ms. Titles below the
+  fold stay on swap. `shoot.mjs` gates it (see Gates).
 - **Never** redefine the `--font-*` variables in CSS (the v1 bug). `scripts/shoot.mjs` asserts the computed
   h1/body families and that both faces report `loaded`.
 
@@ -268,19 +275,32 @@ rejected untested: its two offset chevrons risk the same "<" reading that failed
   container and rises toward the header; primary CTA bottom ≤ 700 px. **Composed fold (v2.2, ≥ 861 px):** the
   copy, not the stone or a min-height, sets the hero's height (no bottom padding); the stage's foot overlaps
   Proof's top padding (`margin-bottom: -clamp(120px, 16vw, 240px)`), Proof sits above the stone's light
-  (`z-index: 1`, no background) with `padding-top: clamp(40px, 7svh, 80px)`, and its title box is capped at
-  8.6em so the stone stands beside its first line, never on it. **Short desktops (v2.3):** ≤ 899 px tall the
+  (`z-index: 1`, no background) with `padding-top: clamp(40px, 7svh, 80px)`. **The Proof title is one line
+  on desktop (v2.4):** `--step-4` (43–48 px) from 861 px, its box hugging the words (`justify-self:
+  start`), so it ends left of the stone's foot and every fold shows all of it or none of it (v2.3's
+  two 77 px lines in an 8.6em box left line 2 sliced at 1440×900). The copy is unchanged; "Now, and
+  before" (one line at `--step-5`) is proposed and awaits Lars. **Short desktops (v2.3):** ≤ 899 px tall the
   hero tightens by height (top padding `clamp(16px, 4svh, 40px)`, name on 11svh, stage ≤ 0.92 × the
-  viewport below the header, foot `min(16vw, 240px, 26svh)`, CTA row and Proof padding by svh); ≤ 760 px
+  viewport below the header, foot `min(16vw, 240px, 26svh)`, CTA row by svh, Proof padding `clamp(40px,
+  5svh, 48px)` so the email row ends ≥ 32 px above the title); ≤ 760 px
   the copy's own margins tighten; below 690 px the hero fills the fold so the title starts just below it.
-  1440×900 and taller are unchanged. **Gate (`shoot.mjs`, line-level since v2.3)** at 1280×720/800,
-  1366×768/657, 1440×900, 1536×730/864, 1600×900, 1920×950/1080: the Proof title's first line box is
-  whole in the fold with ≥ 16 px to spare or wholly below it, never sliced; the empty fold below the email
-  row is ≤ 140 px. (v2.2's "top ≤ height − 48" passed a first line cut in half at four laptop sizes.) **390:** the stone is a half-lit
+  1440×900 and taller are unchanged. **Gate (`shoot.mjs`, every line since v2.4)** at 1280×720/800,
+  1366×768/657, 1440×900, 1470×956/832, 1512×982/858, 1536×730/864, 1600×900, 1680×925, 1920×950/970/1080:
+  every line box of the Proof title is whole in the fold with ≥ 16 px to spare, or the first is wholly
+  below it; the empty fold below the email row is ≤ 140 px and the row ends ≥ 32 px above the title.
+  (v2.2's "top ≤ height − 48" passed a first line cut in half; v2.3's line-1 gate passed line 2 sliced.) **390:** the stone is a half-lit
   (.55), masked backdrop beside the name with its crown under the header; the lede starts below the last
   rune so no text crosses LARS; primary CTA bottom ≤ 600 px and the address in the fold.
-- **Proof** (ᛖ Ehwaz). Asymmetric: one feature slab (Immortal Kinematics, the one big figure) + two slim
-  slabs. 390: feature first.
+- **Proof** (ᛖ Ehwaz). One feature slab, standing alone (v2.4; the two slims restated Experience and
+  Research and were the last SaaS-card partial): Immortal Kinematics, its harness diagram and the one big
+  figure. **The harness diagram** (`components/HarnessDiagram.tsx`): an inline SVG drawn 1:1 (480 × 156,
+  Mona Sans 13 px labels) of the real harness: lead (cold start) → briefs → three Opus subagents (own
+  worktree) → diffs → verify gate (one command) → ship. Gold-700 1.5 px lines on carved nodes (a darker
+  recess, 2 px radius); the verify gate is the one lit node. Facts only, from `content/projects.ts`; no
+  numbers. `role="img"`, named by a visually hidden figcaption. ≥ 1200 px it fills the slab's top right
+  with the figure under it (no top rule); 961–1199 px it follows the body in the left column; 600–960 px
+  it stacks under the body; < 600 px it is hidden (it would shrink below ~11 px; the sentence above it
+  says the same).
 - **Experience** (ᚱ Raidho). Org in Cormorant `--step-3`, meta in two quiet lines, stack as one `--text-3`
   comma line. Org/role columns 3fr/9fr (v2.3; 4fr/8fr left a ~260 px dead gutter): roles start at x 463 at
   1440. Still to come: sticky rail, gold fuse, ≤ 2 bullets + `<details>`.
@@ -316,6 +336,7 @@ Everything lives inside `@media (prefers-reduced-motion: no-preference)`; scroll
 | Torch dims on scroll (v2.0; pages without the stone) | `animation-timeline: scroll(root)` on `.atmos__torch` opacity | 0–110vh | Static |
 | Section sigils ignite (v2.2, shipped) | Named `view-timeline: --head` on each `.sectionHead`; inlay `stroke` gold-700 → gold-200, sigil `filter` ember → `--ignited`, pool `opacity` .35 → 1; `animation-range: entry 15% cover 40%`, linear. Proof (v2.3): `entry 60% cover 45%`, so its Ehwaz enters the desktop fold as an ember | scroll-linked | **Rendered ignited** (the default rule is the final state) |
 | Experience fuse (v2.2) | `scaleY` on the rail rule | scroll-linked | Static gold-700 rule |
+| Proof diagram (v2.4) | `components/DrawOnView.tsx` arms it after hydration if it is below the fold; when 40 % is in view (IntersectionObserver, once) the edges draw in sequence (`stroke-dashoffset`, `pathLength=1`): lead stem, briefs branching, diffs merging, into the gate; the gate lights gold-700 → gold-200, then the line to Ship | 820 ms, linear per stage | **Fully drawn, gate lit** (server render, no JS, already in view at hydration) |
 | Slab torchlight (v2.0) | `--mx/--my` pointer gradient (fine pointers only) | 150 ms fade | None |
 | Links/buttons (v2.0) | Underline 1 → 2 px + offset; primary glow | 160 ms ease-out | Colour change only |
 | Disclosure (v2.0) | `<details>` + `interpolate-size: allow-keywords` | 220 ms | Instant |
@@ -333,7 +354,7 @@ budgeted). UI motion < 300 ms; long durations only for the one hero moment.
 | Lazy 3D chunk (gz) | ≤ 260 kB. Loaded only after LCP + idle **and** hero visible **and** not `saveData` **and** not reduced motion **and** WebGL. On coarse pointers / mobile UAs: only on first interaction (pointerdown/touch/key/wheel/scroll). The SVG stone (`StoneFallback`) is the designed first impression and the permanent fallback |
 | Fonts | ≤ 3 preloaded woff2, ≤ 150 kB (Cormorant roman 35 kB + Mona Sans 40 kB preloaded). **Text on / stays inside the latin subset** (v2.1): a single ę/ą/Ṯ on the page pulls a 30 kB latin-ext file into the mobile critical path at VeryHigh priority, so / lists only latin-subset titles (the rest are on /writing). Note: `next build` on Windows emits no font preloads (Next 15.5 matches `/next-font-loader/` with forward slashes only), so local Lighthouse runs are slightly pessimistic; Vercel (Linux) builds preload correctly |
 | Images | AVIF/WebP via `next/image`; no `unoptimized` GIFs (→ MP4/WebM, v2.3); below-fold lazy |
-| LCP / TBT / CLS (Lighthouse mobile) | ≤ 2.0 s / ≤ 150 ms / ≤ 0.05. Local Windows builds measure ~2.65 s (no font preloads, see Fonts); v2.3 is level with v2.2 in an interleaved A/B (2.65 vs 2.66 s). Watch the simulated critical path: when the hero SVG stopped referencing `/textures/grain.png`, its CSS-initiated request cost ~60 ms of simulated LCP, so the layout preloads it. `experimental.inlineCss` was tried in v2.3 and dropped (no local gain: 2.73 s) |
+| LCP / TBT / CLS (Lighthouse mobile) | ≤ 2.0 s / ≤ 150 ms / ≤ 0.05. Local Windows builds measure ~2.65 s (no font preloads, see Fonts); v2.3 is level with v2.2 in an interleaved A/B (2.65 vs 2.66 s). Watch the simulated critical path: when the hero SVG stopped referencing `/textures/grain.png`, its CSS-initiated request cost ~60 ms of simulated LCP, so the layout preloads it. `experimental.inlineCss` was tried in v2.3 and dropped (no local gain: 2.73 s). v2.4 is level with v2.3 locally (interleaved ×3: 2.65 vs 2.65 s, Perf 96 vs 96); first-load JS +0.45 kB gz (the diagram's draw trigger) |
 | Lighthouse mobile | Perf ≥ 90, A11y ≥ 95, BP ≥ 95 |
 | Runtime | Animate only transform/opacity/filter on small layers; one rAF-coalesced pointer listener; canvas DPR ≤ 1.5, paused offscreen; never write custom properties on `<html>` at runtime (it restyles the whole document: the torch vars live on `.atmos`); never create a WebGL context before the 3D gate opens (the probe alone cost ~300 ms TBT). `content-visibility: auto` on sections was tried in v2.0 (+1 perf) and dropped: Lighthouse/axe hit-testing then saw the 1400 px placeholders overlap real content (false `target-size` failure, a11y 96) |
 
@@ -412,5 +433,12 @@ folds (`home-fold-WxH.png`: since v2.3 the Proof title's first line whole in the
 of the title; band ≥ 1.12:1) and the stone's material (see "Surfaces and light" 5). Its
 `three=` field shows whether three.js was parsed before any interaction (it must be `false` on the 390
 runs). `ROUTES=/,/writing node scripts/shoot.mjs …` limits the routes (in Git Bash prefix
-`MSYS_NO_PATHCONV=1`, or "/" becomes a Windows path). `scripts/make-grain.mjs` regenerates the grain tile;
+`MSYS_NO_PATHCONV=1`, or "/" becomes a Windows path; and give the output directory as a Windows path).
+v2.4 adds: **first paint** (5 cold loads at 1440×900 recorded with a CDP screencast: from the first painted
+frame until the name has ink, the brand and Proof title are blank or already final, never the fallback
+serif; at the name's first frame they match +1.5 s, mean |Δ| ≤ 3; the name lags the lede ≤ 150 ms;
+`first-paint-1-*.png` keeps load 1's frames; `FIRST_PAINT_LOADS` overrides the count) and **the Proof
+diagram** (accessible name; drawn 1.2 s after scrolling in with nothing running; never armed under reduced
+motion; ≥ 1200 px: ≥ 24 px clear of the figure and the slab's edges, ≥ 15 % ink in the slab's top-right
+quadrant). `scripts/make-grain.mjs` regenerates the grain tile;
 `scripts/crop-science.mjs` regenerates the research plates.
