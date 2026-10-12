@@ -32,6 +32,26 @@ export type RuneName = keyof typeof RUNES
 
 export const RUNE_NAMES = Object.keys(RUNES) as RuneName[]
 
+/** Rune names as captioned under the section sigils (DESIGN.md "Sigils"). */
+export const RUNE_LABEL: Partial<Record<RuneName, string>> = {
+	ehwaz: "Ehwaz",
+	raidho: "Raidho",
+	dagaz: "Dagaz",
+	fehu: "Fehu",
+	ansuz: "Ansuz",
+	wunjo: "Wunjo",
+}
+
+/** What each section sigil means: its caption, so Ehwaz never reads as a Latin "M" (v2.2). */
+export const SIGIL_MEANING: Partial<Record<RuneName, string>> = {
+	ehwaz: "the horse",
+	raidho: "the journey",
+	dagaz: "dawn",
+	fehu: "wealth",
+	ansuz: "the word",
+	wunjo: "joy",
+}
+
 /** "LARS" spelled in Elder Futhark, carved on the hero stone. */
 export const LARS: RuneName[] = ["laguz", "ansuz", "raidho", "sowilo"]
 

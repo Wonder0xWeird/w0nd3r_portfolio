@@ -14,7 +14,7 @@ import { research, thesis, education } from "@/content/research"
 import { publications, honors } from "@/content/publications"
 import { projects, proofCards } from "@/content/projects"
 import { letters, poems, musings, writingSections } from "@/content/writing"
-import type { RuneName } from "@/lib/runes"
+import { RUNE_LABEL, SIGIL_MEANING, type RuneName } from "@/lib/runes"
 import s from "./home.module.css"
 
 // The résumé CTA only renders once the final PDF is in public/ (the primary
@@ -26,11 +26,28 @@ const hasResume = existsSync(path.join(process.cwd(), "public", "resume.pdf"))
 // It is still listed on /writing.
 const LATIN = /^[\u0020-\u007E\u00A0-\u00FF\u2013\u2014\u2018\u2019\u201C\u201D]*$/
 
-/** Section title with its sigil rune incised beside it (rune map: DESIGN.md "Sigils"). */
+/** The sigil's name and meaning, captioned under it on wide screens (decorative, like the rune). */
+function SigilName({ rune }: { rune: RuneName }) {
+	return (
+		<span className={s.sigilName} aria-hidden="true">
+			{RUNE_LABEL[rune]}
+			<br />
+			{SIGIL_MEANING[rune]}
+		</span>
+	)
+}
+
+/**
+ * Section title with its sigil rune incised beside it (rune map: DESIGN.md "Sigils"). The sigil
+ * ignites as its header scrolls into view and casts the warm pool around the title (v2.2).
+ */
 function SectionHead({ id, rune, title, children }: { id: string; rune: RuneName; title: string; children?: React.ReactNode }) {
 	return (
 		<header className={s.sectionHead}>
-			<CarvedRune name={rune} className={s.sigil} />
+			<span className={s.sigilMark}>
+				<CarvedRune name={rune} className={s.sigil} />
+				<SigilName rune={rune} />
+			</span>
 			<h2 id={`${id}-title`}>{title}</h2>
 			{children}
 		</header>
@@ -471,7 +488,7 @@ export default function Home() {
 			<section className={s.play} aria-labelledby="play-title">
 				<div className="container">
 					<Rune name="wunjo" size={40} strokeWidth={0.8} className={`rune-ignited ${s.playRune}`} />
-					<p className={s.playKicker}>My massive transformative purpose</p>
+					<SigilName rune="wunjo" />
 					<h2 id="play-title" className={s.playTitle}>
 						To make play the only task.
 					</h2>

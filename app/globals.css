@@ -29,7 +29,7 @@
 	--moon-500: #7f95b8;
 	/* semantic */
 	--bg: var(--slate-950);
-	--band: var(--slate-900);
+	--band: #1a2029; /* between slate-900 and slate-850: 1.13:1 on the base (v2.2), so the bands read */
 	--slab: var(--slate-850);
 	--slab-raised: var(--slate-800);
 	--line: rgb(169 189 214 / 0.12);
