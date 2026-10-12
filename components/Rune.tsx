@@ -4,12 +4,15 @@ interface Props {
 	name: RuneName
 	size?: number | string
 	className?: string
+	/** Stroke width in the rune's 10-unit box (scales with size). */
 	strokeWidth?: number
+	/** Stroke width in CSS px that stays constant at any size (carved sigils). */
+	fixedStroke?: number
 	title?: string
 }
 
 /** A single rune glyph as inline SVG. Decorative unless a title is given. */
-export function Rune({ name, size = "1em", className, strokeWidth = 1.1, title }: Props) {
+export function Rune({ name, size = "1em", className, strokeWidth = 1.1, fixedStroke, title }: Props) {
 	return (
 		<svg
 			viewBox="0 0 10 10"
@@ -18,27 +21,14 @@ export function Rune({ name, size = "1em", className, strokeWidth = 1.1, title }
 			className={className}
 			fill="none"
 			stroke="currentColor"
-			strokeWidth={strokeWidth}
+			strokeWidth={fixedStroke ?? strokeWidth}
 			strokeLinecap="round"
 			strokeLinejoin="round"
 			role={title ? "img" : undefined}
 			aria-hidden={title ? undefined : true}
 		>
 			{title ? <title>{title}</title> : null}
-			<path d={runePath(name)} />
+			<path d={runePath(name)} vectorEffect={fixedStroke ? "non-scaling-stroke" : undefined} />
 		</svg>
-	)
-}
-
-/** A thin rune-studded rule used between sections. */
-export function RuneRule({ runes = ["ansuz", "gebo", "othala"] }: { runes?: RuneName[] }) {
-	return (
-		<div className="rune-rule" aria-hidden="true">
-			<span />
-			{runes.map((r, i) => (
-				<Rune key={i} name={r} size={14} />
-			))}
-			<span />
-		</div>
 	)
 }

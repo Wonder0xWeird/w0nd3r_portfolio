@@ -7,19 +7,25 @@ export function SiteFooter() {
 	return (
 		<footer className="site-footer">
 			<div className="container site-footer__inner">
-				<div className="site-footer__runes" aria-hidden="true">
+				<div className="site-footer__runes rune-incised" aria-hidden="true">
 					{LARS.map((r) => (
-						<Rune key={r} name={r} size={16} />
+						<Rune key={r} name={r} size={18} strokeWidth={1.2} />
 					))}
 				</div>
-				<p>
-					<a href={links.email.href}>{profile.email}</a>
-					<span aria-hidden="true"> · </span>
-					<a href={links.linkedin.href}>LinkedIn</a>
-					<span aria-hidden="true"> · </span>
-					<a href={links.github.href}>GitHub</a>
+				<ul className="site-footer__links">
+					<li>
+						<a href={links.email.href}>{profile.email}</a>
+					</li>
+					<li>
+						<a href={links.linkedin.href}>LinkedIn</a>
+					</li>
+					<li>
+						<a href={links.github.href}>GitHub</a>
+					</li>
+				</ul>
+				<p className="site-footer__legal meta">
+					© {new Date().getFullYear()} Lars Crawford, w0nd3r.rune.love
 				</p>
-				<p className="muted small">© {new Date().getFullYear()} Lars Crawford · w0nd3r.rune.love</p>
 			</div>
 		</footer>
 	)

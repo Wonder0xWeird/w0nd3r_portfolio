@@ -14,7 +14,7 @@ export function SiteHeader() {
 						<li><Link href="/#work">Work</Link></li>
 						<li><Link href="/#research">Research</Link></li>
 						<li><Link href="/writing">Writing</Link></li>
-						<li><Link href="/cottage" className="nav__cottage">Cottage</Link></li>
+						<li className="nav__cottage"><Link href="/cottage">Cottage</Link></li>
 					</ul>
 				</nav>
 			</div>
