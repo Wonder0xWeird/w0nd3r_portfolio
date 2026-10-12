@@ -8,7 +8,11 @@ export function ExternalIcon() {
 	)
 }
 
-/** An off-site link: opens in a new tab and carries the external-link icon. */
+/**
+ * An off-site link: opens in a new tab and carries the external-link icon. The last word and the
+ * icon never part: a word joiner does not hold before an inline SVG in Chromium (v2.1 critique), so
+ * they share a no-wrap span.
+ */
 export function External({
 	href,
 	children,
@@ -20,17 +24,23 @@ export function External({
 	className?: string
 	icon?: boolean
 }) {
+	if (!icon) {
+		return (
+			<a href={href} className={className} target="_blank" rel="noopener noreferrer">
+				{children}
+			</a>
+		)
+	}
+	const text = typeof children === "string" ? children : null
+	const cut = text ? text.lastIndexOf(" ") + 1 : 0
 	return (
 		<a href={href} className={className} target="_blank" rel="noopener noreferrer">
-			{children}
-			{icon ? (
-				<>
-					{/* word joiner: the icon never wraps onto a line of its own */}
-					{"\u2060"}
-					<ExternalIcon />
-					<span className="visually-hidden"> (opens in a new tab)</span>
-				</>
-			) : null}
+			{text ? text.slice(0, cut) : children}
+			<span className="nowrap">
+				{text ? text.slice(cut) : null}
+				<ExternalIcon />
+			</span>
+			<span className="visually-hidden"> (opens in a new tab)</span>
 		</a>
 	)
 }

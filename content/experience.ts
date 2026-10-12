@@ -71,7 +71,7 @@ export const experience: Job[] = [
 				title: "Lead Full-Stack Developer (part-time)",
 				dates: "Jun 2022 – May 2025",
 				bullets: [
-					"One of the first projects in Axie Infinity's Builders Program. Built server-side auth, gameplay-data ingestion, and a role-based analytics system for skill balancing.",
+					"One of the first projects in Axie Infinity’s Builders Program. Built server-side auth, gameplay-data ingestion, and a role-based analytics system for skill balancing.",
 					"Built payment processing that handled 10k+ payments and $100k+ in revenue; shipped the first third-party NFT on the Ronin blockchain.",
 				],
 			},

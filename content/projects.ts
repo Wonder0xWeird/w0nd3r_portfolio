@@ -60,7 +60,7 @@ export const projects: Project[] = [
 		tags: ["Solidity", "Hardhat", "Ethers.js", "NFT.Storage", "IPFS"],
 	},
 	{
-		name: "Beezlebop's Blunder",
+		name: "Beezlebop’s Blunder",
 		summary: "A multiplayer rogue-like dungeon crawler set in the Axie Infinity universe.",
 		href: "https://blunder.beezle.buzz",
 		image: "/images/Beezlebop.gif",
@@ -82,7 +82,7 @@ export const projects: Project[] = [
 	},
 	{
 		name: "The Andtheneum",
-		summary: "A social storytelling platform for the Forgotten Runes Wizard's Cult NFT.",
+		summary: "A social storytelling platform for the Forgotten Runes Wizard’s Cult NFT.",
 		href: "https://andtheneum-wonder0xweird.vercel.app/",
 		image: "/images/Andtheneum.png",
 		tags: ["Next.js", "MongoDB", "Ethers.js", "JavaScript"],

@@ -24,8 +24,8 @@ export default function Cottage() {
 			<h1>The cottage</h1>
 			<p className="meta">Under construction</p>
 			<p className={s.indexLede}>
-				A cottage on a grassy hill, a creek with rune-carved stones, and a table inside strewn with the things I&apos;ve
-				made. It&apos;s being built right now. Until the door opens, everything lives on the front page.
+				A cottage on a grassy hill, a creek with rune-carved stones, and a table inside strewn with the things I’ve
+				made. It’s being built right now. Until the door opens, everything lives on the front page.
 			</p>
 			<p className={s.cottageLinks}>
 				<Link className="btn--primary" href="/">

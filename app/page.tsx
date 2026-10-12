@@ -381,7 +381,7 @@ export default function Home() {
 			{/* ---------- projects ---------- */}
 			<section id="projects" className={s.section} aria-labelledby="projects-title">
 				<div className="container">
-					<SectionHead id="projects" rune="fehu" title="Things I've built" />
+					<SectionHead id="projects" rune="fehu" title="Things I’ve built" />
 					<div className={s.featuredGrid}>
 						{/* One sentence in the open; the build details are one tap away (the proof slab
 						    already tells Immortal Kinematics' harness story). */}
@@ -510,12 +510,15 @@ export default function Home() {
 						</div>
 						<div>
 							<h2 id="contact-title" className={s.contactTitle}>
-								Let&apos;s build something
+								Let’s build something
 							</h2>
 							<p className={s.contactText}>
-								The fastest way to reach me is email: <a href={links.email.href}>{profile.email}</a>. I&apos;m also on{" "}
+								The fastest way to reach me is email: <a href={links.email.href}>{profile.email}</a>. I’m also on{" "}
 								<External href={links.linkedin.href}>LinkedIn</External> and{" "}
-								<External href={links.github.href}>GitHub</External>.
+								{/* the full stop stays with the link and its icon */}
+								<span className="nowrap">
+									<External href={links.github.href}>GitHub</External>.
+								</span>
 							</p>
 						</div>
 					</div>

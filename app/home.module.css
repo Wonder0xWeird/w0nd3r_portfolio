@@ -881,6 +881,47 @@
 	font-size: 0.97rem;
 	color: var(--text-2);
 }
+/* Seven tiles fill whole rows (no orphan cell): the first spans two columns, and in three columns
+   the last does too. A spanning tile lays its image and text side by side on the same two columns,
+   so it is as tall as its neighbours (no void beside it). Only for exactly seven tiles, so a changed
+   list falls back to the plain grid. */
+@media (min-width: 601px) and (max-width: 899px) {
+	.shelf {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+@media (min-width: 900px) and (max-width: 1179px) {
+	.shelf {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+	.tile:last-child:nth-child(7) {
+		grid-column: span 2;
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		column-gap: var(--space-5);
+		align-items: start;
+	}
+	.tile:last-child:nth-child(7) .tileImg {
+		margin-bottom: 0;
+	}
+}
+@media (min-width: 1180px) {
+	.shelf {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+}
+@media (min-width: 601px) {
+	.tile:first-child:nth-last-child(7) {
+		grid-column: span 2;
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		column-gap: var(--space-5);
+		align-items: start;
+	}
+	.tile:first-child:nth-last-child(7) .tileImg {
+		margin-bottom: 0;
+	}
+}
 @media (max-width: 600px) {
 	.shelf {
 		grid-template-columns: minmax(0, 1fr);
