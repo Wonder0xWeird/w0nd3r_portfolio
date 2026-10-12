@@ -76,7 +76,7 @@
 	color: var(--text);
 }
 .letterCardTitle {
-	font-family: var(--font-serif);
+	font-family: var(--font-display), serif;
 	font-size: 1.7rem;
 	font-weight: 600;
 	color: var(--gold-bright);
@@ -96,7 +96,7 @@
 	border-bottom: 1px dashed var(--line-soft);
 }
 .titleList a {
-	font-family: var(--font-serif);
+	font-family: var(--font-display), serif;
 	font-size: 1.35rem;
 	font-weight: 600;
 	text-decoration: none;
@@ -150,7 +150,7 @@
 .poem {
 	max-width: 36em;
 	margin: 0 auto;
-	font-family: var(--font-serif);
+	font-family: var(--font-display), serif;
 	font-size: clamp(1.2rem, 2.6vw, 1.38rem);
 	line-height: 1.6;
 	color: var(--text);
@@ -174,7 +174,7 @@
 	max-width: 32em;
 	margin: 0 auto;
 	text-align: center;
-	font-family: var(--font-serif);
+	font-family: var(--font-display), serif;
 	font-size: clamp(1.4rem, 3.4vw, 1.8rem);
 	line-height: 1.45;
 	font-style: italic;

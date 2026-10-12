@@ -12,8 +12,8 @@
 
 ## Fonts
 Loaded via `next/font/google` and self-hosted at build time:
-- **Cormorant Garamond** by Christian Thalmann (Catharsis Fonts): SIL Open Font License 1.1
-- **Inter** by Rasmus Andersson: SIL Open Font License 1.1
+- **Cormorant** (display; variable, roman + italic) by Christian Thalmann (Catharsis Fonts): SIL Open Font License 1.1. https://fonts.google.com/specimen/Cormorant
+- **Mona Sans** (text/UI; variable wght + wdth) by GitHub, Inc.: SIL Open Font License 1.1. https://fonts.google.com/specimen/Mona+Sans
 
 ## Art & images
 - The rune stone (hero), its slate texture, the rune glyphs and the favicon are procedural or hand-written code in this repo (`lib/runes.ts`, `components/hero/*`, `app/icon.svg`). They use no third-party assets.

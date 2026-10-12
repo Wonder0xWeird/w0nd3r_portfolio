@@ -1,21 +1,34 @@
 import type { Metadata, Viewport } from "next"
-import { Cormorant_Garamond, Inter } from "next/font/google"
+import { Cormorant, Mona_Sans } from "next/font/google"
 import { SiteHeader } from "@/components/SiteHeader"
 import { SiteFooter } from "@/components/SiteFooter"
 import { profile } from "@/content/profile"
 import "./globals.css"
 
-const serif = Cormorant_Garamond({
+// Fonts (DESIGN.md "Type"). next/font defines these CSS variables on <html>.
+// Never redefine --font-display / --font-display-italic / --font-text in CSS:
+// a same-specificity :root rule later in globals.css silently wins and the
+// faces never load (the v1 bug).
+const display = Cormorant({
 	subsets: ["latin"],
-	weight: ["500", "600", "700"],
-	style: ["normal", "italic"],
-	variable: "--font-serif",
+	style: "normal",
+	variable: "--font-display",
 	display: "swap",
 })
 
-const sans = Inter({
+// Italic is only for genuine quoted verse/prose, so it is not preloaded.
+const displayItalic = Cormorant({
 	subsets: ["latin"],
-	variable: "--font-sans",
+	style: "italic",
+	variable: "--font-display-italic",
+	display: "swap",
+	preload: false,
+})
+
+const text = Mona_Sans({
+	subsets: ["latin"],
+	axes: ["wdth"],
+	variable: "--font-text",
 	display: "swap",
 })
 
@@ -45,7 +58,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<html lang="en" className={`${serif.variable} ${sans.variable}`}>
+		<html lang="en" className={`${display.variable} ${displayItalic.variable} ${text.variable}`}>
 			<body>
 				<a className="skip-link" href="#main">
 					Skip to content
