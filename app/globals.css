@@ -1,24 +1,99 @@
-/* ---------- tokens: slate + gold ---------- */
+/* =========================================================================
+   w0nd3r.rune.love — "night-lit slate, rune-fire gold". See DESIGN.md.
+   Fonts: --font-display / --font-display-italic / --font-text come from
+   next/font on <html>. NEVER redefine them here (that was the v1 bug).
+   ========================================================================= */
 :root {
-	--bg: #14171c;
-	--bg-raised: #1b1f26;
-	--surface: #212630;
-	--surface-2: #282e39;
-	--line: #323a46;
-	--line-soft: #2a313c;
-	--text: #ece7dc;
-	--text-soft: #c4c1b9;
-	--muted: #969ca7;
-	--gold: #e2b34a;
-	--gold-bright: #f4d27a;
-	--gold-deep: #a9832f;
-	--gold-wash: rgba(226, 179, 74, 0.1);
-	--radius: 14px;
-	--radius-lg: 22px;
-	--maxw: 1120px;
-	--measure: 68ch;
+	/* slate: the stone (cool blue-grey, hue ≈ 215–250) */
+	--slate-1000: #0b0e12; /* vignette / deepest shadow only */
+	--slate-950: #10141a; /* page base ("night") */
+	--slate-900: #161b22; /* sunken band */
+	--slate-850: #1d232c; /* slab */
+	--slate-800: #252c37; /* raised slab */
+	--slate-700: #323b48; /* strong line, carved edge */
+	--slate-600: #46505e; /* stone mid */
+	--slate-500: #5d6876; /* stone face */
+	/* ink: parchment text (warm) */
+	--ink-1: #efe9dc;
+	--ink-2: #c9c4b8;
+	--ink-3: #959ba5;
+	/* gold: rune-fire (light, not paint) */
+	--gold-50: #fff4d6;
+	--gold-200: #f7d98c;
+	--gold-400: #e4b65a;
+	--gold-500: #cf9c3f;
+	--gold-700: #8f6a2a; /* decorative only */
+	--gold-900: #3d2d12;
+	/* moonlight: cool rim */
+	--moon-300: #a9bdd6;
+	--moon-500: #7f95b8;
+	/* semantic */
+	--bg: var(--slate-950);
+	--band: var(--slate-900);
+	--slab: var(--slate-850);
+	--slab-raised: var(--slate-800);
+	--line: rgb(169 189 214 / 0.12);
+	--line-strong: var(--slate-700);
+	--text: var(--ink-1);
+	--text-2: var(--ink-2);
+	--text-3: var(--ink-3);
+	--accent: var(--gold-400);
+	--accent-hot: var(--gold-200);
+	--focus: var(--gold-200);
+	--on-gold: #1a140a;
+
+	/* type scale (DESIGN.md "Type") */
+	--step-display: clamp(3.75rem, 2rem + 8.5vw, 9.5rem);
+	--step-figure: clamp(3rem, 1.6rem + 4.2vw, 5.75rem);
+	--step-5: clamp(2.5rem, 1.6rem + 3.6vw, 5rem);
+	--step-4: clamp(1.9rem, 1.4rem + 1.6vw, 3rem);
+	--step-3: 1.75rem;
+	--step-2: 1.375rem;
+	--step-1: 1.125rem;
+	--step-0: 1.0625rem;
+	--step--1: 0.9375rem;
+	--face-display: var(--font-display), serif;
+	--face-text: var(--font-text), sans-serif;
+
+	/* space, radii, layout */
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-5: 24px;
+	--space-6: 32px;
+	--space-7: 48px;
+	--space-8: 72px;
+	--space-9: 112px;
+	--r-btn: 2px;
+	--r-slab: 6px;
+	--maxw: 1280px;
 	--gutter: clamp(16px, 4vw, 32px);
+	--measure: 66ch;
+	--header-h: 60px;
+
+	/* light: torch origin. With no stone on the page the light spills in from
+	   off-canvas; on / HeroStone writes the stone's box over these defaults. */
+	--torch-x: 96%;
+	--torch-y: -14vh;
+
+	/* shared light recipes */
+	--incised: drop-shadow(0 1px 0 rgb(255 255 255 / 0.06)) drop-shadow(0 -1px 0 rgb(0 0 0 / 0.6));
+	--ignited: drop-shadow(0 0 4px rgb(247 217 140 / 0.7)) drop-shadow(0 0 18px rgb(207 156 63 / 0.35));
+	--grain: url("/textures/grain.png");
+
 	color-scheme: dark;
+}
+
+:root:has(.hero-stone) {
+	--torch-x: 72%;
+	--torch-y: 44vh;
+}
+@media (max-width: 860px) {
+	:root:has(.hero-stone) {
+		--torch-x: 80%;
+		--torch-y: 170px;
+	}
 }
 
 *,
@@ -29,14 +104,17 @@
 
 html {
 	-webkit-text-size-adjust: 100%;
-	scroll-behavior: smooth;
-	scroll-padding-top: 72px;
+	scroll-padding-top: calc(var(--header-h) + 16px);
+	background: var(--bg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	html {
+		scroll-behavior: smooth;
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
-	html {
-		scroll-behavior: auto;
-	}
 	*,
 	*::before,
 	*::after {
@@ -49,30 +127,76 @@ html {
 body {
 	margin: 0;
 	min-height: 100vh;
-	background:
-		radial-gradient(1200px 600px at 80% -10%, rgba(226, 179, 74, 0.07), transparent 60%),
-		radial-gradient(900px 500px at -10% 30%, rgba(120, 140, 170, 0.06), transparent 60%),
-		var(--bg);
+	background: transparent;
 	color: var(--text);
-	font-family: var(--font-text), sans-serif;
-	font-size: 17px;
-	line-height: 1.65;
+	font-family: var(--face-text);
+	font-size: var(--step-0);
+	line-height: 1.6;
 	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 	text-rendering: optimizeLegibility;
-	overflow-x: hidden;
+	overflow-x: clip;
 }
 
+/* ---------- page light (fixed, behind the content) ---------- */
+.atmos {
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background:
+		radial-gradient(50vmax 40vmax at 8% -6%, rgb(127 149 184 / 0.11), transparent 60%),
+		radial-gradient(140% 110% at 50% 35%, transparent 52%, rgb(11 14 18 / 0.78) 100%),
+		var(--bg);
+}
+.atmos__torch,
+.atmos__grain {
+	position: absolute;
+	inset: 0;
+}
+.atmos__torch {
+	background:
+		radial-gradient(22vmax 18vmax at var(--torch-x) var(--torch-y), rgb(228 182 90 / 0.09), transparent 70%),
+		radial-gradient(55vmax 45vmax at var(--torch-x) var(--torch-y), rgb(228 182 90 / 0.16), transparent 62%);
+}
+.atmos__grain {
+	background: var(--grain) 0 0 / 128px 128px repeat;
+	opacity: 0.07;
+	mix-blend-mode: overlay;
+}
+@media (prefers-reduced-motion: no-preference) {
+	@supports (animation-timeline: scroll()) {
+		.atmos__torch {
+			animation: torch-dim linear both;
+			animation-timeline: scroll(root);
+			animation-range: 0 110vh;
+		}
+	}
+}
+@keyframes torch-dim {
+	to {
+		opacity: 0.35;
+	}
+}
+
+/* ---------- base type ---------- */
 h1,
 h2,
 h3,
 h4 {
-	font-family: var(--font-display), serif;
-	font-weight: 600;
-	line-height: 1.12;
-	letter-spacing: 0.005em;
+	font-family: var(--face-display);
+	font-weight: 400;
+	line-height: 1.05;
+	letter-spacing: -0.01em;
 	margin: 0 0 0.5em;
 	color: var(--text);
 	text-wrap: balance;
+}
+h3,
+h4 {
+	font-weight: 500;
+	letter-spacing: 0;
+	line-height: 1.15;
 }
 
 p {
@@ -81,19 +205,27 @@ p {
 }
 
 a {
-	color: var(--gold-bright);
-	text-decoration-color: rgba(244, 210, 122, 0.4);
-	text-underline-offset: 3px;
-	transition: color 0.2s, text-decoration-color 0.2s;
+	color: var(--accent);
+	text-decoration-line: underline;
+	text-decoration-color: color-mix(in oklch, var(--gold-700) 80%, transparent);
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.22em;
+	transition:
+		color 160ms ease-out,
+		text-decoration-color 160ms ease-out,
+		text-decoration-thickness 160ms ease-out,
+		text-underline-offset 160ms ease-out;
 }
 a:hover {
-	color: #fff2cc;
+	color: var(--accent-hot);
 	text-decoration-color: currentColor;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 0.3em;
 }
 :focus-visible {
-	outline: 2px solid var(--gold-bright);
+	outline: 2px solid var(--focus);
 	outline-offset: 3px;
-	border-radius: 4px;
+	border-radius: var(--r-btn);
 }
 
 img,
@@ -105,23 +237,36 @@ svg {
 ul {
 	padding-left: 1.2em;
 }
+li::marker {
+	color: var(--gold-700);
+}
+
+strong {
+	font-weight: 600;
+	color: var(--text);
+}
 
 .container {
 	width: 100%;
-	max-width: var(--maxw);
+	max-width: calc(var(--maxw) + 2 * var(--gutter));
 	margin: 0 auto;
 	padding: 0 var(--gutter);
 }
 
-.muted {
-	color: var(--muted);
+/* meta: dates, places — quiet tabular sans, two short lines, never "·" */
+.meta {
+	font-size: var(--step--1);
+	font-weight: 450;
+	font-stretch: 92%;
+	font-variant-numeric: tabular-nums;
+	line-height: 1.45;
+	color: var(--text-3);
+	margin: 0;
 }
-.small {
-	font-size: 0.85rem;
+.meta > span {
+	display: block;
 }
-.gold {
-	color: var(--gold);
-}
+
 .visually-hidden {
 	position: absolute !important;
 	width: 1px;
@@ -136,32 +281,163 @@ ul {
 	left: 12px;
 	top: -60px;
 	z-index: 100;
-	background: var(--gold);
-	color: #1a1a1a;
+	background: var(--gold-500);
+	color: var(--on-gold);
 	padding: 8px 14px;
-	border-radius: 8px;
+	border-radius: var(--r-btn);
 	font-weight: 600;
+	text-decoration: none;
 }
 .skip-link:focus {
 	top: 12px;
 }
 
-/* ---------- header / footer ---------- */
+/* ---------- runes: incised (resting) / ignited ---------- */
+.rune-incised {
+	color: var(--gold-700);
+	filter: var(--incised);
+}
+.rune-ignited {
+	color: var(--gold-200);
+	filter: var(--ignited);
+}
+
+/* ---------- external-link icon ---------- */
+.ext {
+	display: inline-block;
+	width: 0.7em;
+	height: 0.7em;
+	margin-left: 0.3em;
+	vertical-align: 0.02em;
+	opacity: 0.75;
+}
+
+/* ---------- buttons: gilt primary, text-link secondary ---------- */
+.btn--primary {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 48px;
+	padding: 0 22px;
+	border-radius: var(--r-btn);
+	background: linear-gradient(180deg in oklch, #dcac50, var(--gold-500) 70%);
+	color: var(--on-gold);
+	font-size: 1rem;
+	font-weight: 600;
+	letter-spacing: 0.005em;
+	line-height: 1.2;
+	text-decoration: none;
+	box-shadow:
+		inset 0 1px 0 var(--gold-200),
+		inset 0 -2px 0 var(--gold-700),
+		0 1px 2px rgb(0 0 0 / 0.4),
+		0 12px 28px -14px rgb(0 0 0 / 0.8);
+	transition:
+		box-shadow 160ms ease-out,
+		filter 160ms ease-out;
+}
+.btn--primary:hover {
+	color: var(--on-gold);
+	filter: brightness(1.06);
+	box-shadow:
+		inset 0 1px 0 var(--gold-50),
+		inset 0 -2px 0 var(--gold-700),
+		0 1px 2px rgb(0 0 0 / 0.4),
+		0 0 0 1px rgb(247 217 140 / 0.22),
+		0 0 32px -6px rgb(228 182 90 / 0.55);
+}
+.btn--primary:focus-visible {
+	outline-offset: 4px;
+}
+
+.textlink {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	font-weight: 500;
+}
+
+/* ---------- slate slab (replaces cards; not every section gets one) ---------- */
+.slab {
+	position: relative;
+	isolation: isolate;
+	background:
+		linear-gradient(180deg, rgb(255 255 255 / 0.035), transparent 38%),
+		var(--slab);
+	border-radius: var(--r-slab);
+	border: 1px solid var(--line);
+	box-shadow:
+		inset 0 1px 0 rgb(169 189 214 / 0.1),
+		inset 0 -1px 0 rgb(0 0 0 / 0.45),
+		0 1px 2px rgb(0 0 0 / 0.35),
+		0 28px 56px -28px rgb(0 0 0 / 0.75);
+}
+.slab::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	z-index: -1;
+	border-radius: inherit;
+	background: var(--grain) 0 0 / 128px 128px repeat;
+	opacity: 0.1;
+	mix-blend-mode: overlay;
+	pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+	.slab::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border-radius: inherit;
+		background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 0%), rgb(228 182 90 / 0.1), transparent 70%);
+		opacity: 0;
+		transition: opacity 150ms ease-out;
+		pointer-events: none;
+	}
+	.slab:hover::before {
+		opacity: 1;
+	}
+}
+
+/* ---------- imagery: duotone at rest ---------- */
+/* slate shadows -> gold-lit highlights; the filter is defined once in layout (DuotoneFilter) */
+.duotone {
+	filter: url("#duotone");
+}
+.frame {
+	position: relative;
+	border-radius: var(--r-slab);
+	overflow: hidden;
+	background: var(--slate-1000);
+}
+.frame::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	box-shadow:
+		inset 0 0 0 1px rgb(169 189 214 / 0.14),
+		inset 0 1px 0 rgb(255 255 255 / 0.06);
+	pointer-events: none;
+}
+
+/* ---------- header ---------- */
 .site-header {
 	position: sticky;
 	top: 0;
 	z-index: 50;
-	backdrop-filter: blur(10px);
-	-webkit-backdrop-filter: blur(10px);
-	background: rgba(20, 23, 28, 0.78);
-	border-bottom: 1px solid var(--line-soft);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+	background: rgb(16 20 26 / 0.8);
+	border-bottom: 1px solid var(--line);
 }
 .site-header__inner {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: 12px;
-	height: 58px;
+	gap: var(--space-4);
+	height: var(--header-h);
 }
 .brand {
 	display: inline-flex;
@@ -169,123 +445,87 @@ ul {
 	gap: 10px;
 	color: var(--text);
 	text-decoration: none;
-	font-family: var(--font-display), serif;
-	font-size: 1.3rem;
-	font-weight: 600;
+	font-family: var(--face-display);
+	font-size: var(--step-2);
+	font-weight: 500;
+	letter-spacing: 0;
 	white-space: nowrap;
 }
+.brand:hover {
+	color: var(--text);
+}
 .brand svg {
-	color: var(--gold);
+	color: var(--gold-400);
+	filter: drop-shadow(0 0 6px rgb(228 182 90 / 0.45));
 }
 .nav {
 	display: flex;
-	gap: clamp(10px, 3vw, 26px);
+	gap: clamp(16px, 3vw, 32px);
 	list-style: none;
 	margin: 0;
 	padding: 0;
-	font-size: 0.92rem;
+	font-size: var(--step--1);
+	font-weight: 500;
 }
 .nav a {
-	color: var(--text-soft);
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	color: var(--text-2);
 	text-decoration: none;
 }
 .nav a:hover {
-	color: var(--gold-bright);
+	color: var(--accent-hot);
 }
-.nav .nav__cottage {
-	color: var(--gold);
+@media (max-width: 419px) {
+	.nav__cottage {
+		display: none;
+	}
 }
-@media (max-width: 420px) {
+@media (max-width: 359px) {
 	.brand span {
 		display: none;
 	}
 }
 
+/* ---------- footer ---------- */
 .site-footer {
-	border-top: 1px solid var(--line-soft);
-	margin-top: 64px;
-	padding: 36px 0 44px;
-	text-align: center;
-	color: var(--text-soft);
+	border-top: 1px solid var(--line);
+	margin-top: clamp(72px, 10vw, 112px);
+	padding: var(--space-6) 0 var(--space-7);
+	color: var(--text-3);
 }
-.site-footer p {
-	margin: 0.4em 0;
+.site-footer__inner {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-4) var(--space-6);
 }
 .site-footer__runes {
 	display: inline-flex;
 	gap: 10px;
-	color: var(--gold-deep);
-	margin-bottom: 10px;
 }
-
-/* ---------- shared bits ---------- */
-.rune-rule {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	color: var(--gold-deep);
-	margin: 0 auto;
-	max-width: 360px;
-}
-.rune-rule span {
-	flex: 1;
-	height: 1px;
-	background: linear-gradient(90deg, transparent, var(--line), transparent);
-}
-
-.btn {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 8px;
-	min-height: 44px;
-	padding: 10px 18px;
-	border-radius: 999px;
-	border: 1px solid var(--line);
-	background: var(--surface);
-	color: var(--text);
-	text-decoration: none;
-	font-size: 0.95rem;
-	font-weight: 500;
-	line-height: 1.2;
-	transition: border-color 0.2s, background 0.2s, color 0.2s, transform 0.2s;
-}
-.btn:hover {
-	border-color: var(--gold-deep);
-	color: var(--gold-bright);
-	background: var(--surface-2);
-}
-.btn--gold {
-	background: linear-gradient(180deg, #f0c968, #d6a43c);
-	border-color: #f0c968;
-	color: #1d1a12;
-	font-weight: 600;
-}
-.btn--gold:hover {
-	background: linear-gradient(180deg, #f7d781, #e2b34a);
-	color: #14120c;
-}
-
-.tag-list {
+.site-footer__links {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 6px;
-	list-style: none;
-	padding: 0;
+	gap: var(--space-2) var(--space-5);
 	margin: 0;
+	padding: 0;
+	list-style: none;
 }
-.tag-list li {
-	font-size: 0.75rem;
-	padding: 3px 10px;
-	border-radius: 999px;
-	border: 1px solid rgba(226, 179, 74, 0.35);
-	color: var(--text-soft);
-	background: var(--gold-wash);
+.site-footer__links a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
 }
-
-.prose {
-	max-width: var(--measure);
-	margin: 0 auto;
+.site-footer__legal {
+	margin: 0 0 0 auto;
+}
+@media (max-width: 640px) {
+	.site-footer__legal {
+		margin-left: 0;
+		flex-basis: 100%;
+	}
 }
 
 /* ---------- hero stone ---------- */
@@ -293,7 +533,6 @@ ul {
 	position: relative;
 	width: 100%;
 	aspect-ratio: 5 / 6;
-	max-width: 440px;
 	margin: 0 auto;
 }
 .hero-stone__fallback,

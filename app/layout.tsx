@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next"
 import { Cormorant, Mona_Sans } from "next/font/google"
 import { SiteHeader } from "@/components/SiteHeader"
 import { SiteFooter } from "@/components/SiteFooter"
+import { SlabLight } from "@/components/SlabLight"
+import { DuotoneFilter } from "@/components/DuotoneFilter"
 import { profile } from "@/content/profile"
 import "./globals.css"
 
@@ -37,8 +39,8 @@ const description = `${profile.name}, ${profile.honorific}: ${profile.tagline}. 
 export const metadata: Metadata = {
 	metadataBase: new URL(profile.siteUrl),
 	title: {
-		default: `${profile.name} · ${profile.tagline}`,
-		template: `%s · ${profile.name}`,
+		default: `${profile.name}: ${profile.tagline}`,
+		template: `%s | ${profile.name}`,
 	},
 	description,
 	openGraph: {
@@ -52,7 +54,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-	themeColor: "#14171c",
+	themeColor: "#10141a",
 	colorScheme: "dark",
 }
 
@@ -60,12 +62,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 	return (
 		<html lang="en" className={`${display.variable} ${displayItalic.variable} ${text.variable}`}>
 			<body>
+				{/* Page light: moonlight, vignette, torchlight from the stone, grain (DESIGN.md "Surfaces and light"). */}
+				<div className="atmos" aria-hidden="true">
+					<div className="atmos__torch" />
+					<div className="atmos__grain" />
+				</div>
 				<a className="skip-link" href="#main">
 					Skip to content
 				</a>
 				<SiteHeader />
 				<main id="main">{children}</main>
 				<SiteFooter />
+				<SlabLight />
+				<DuotoneFilter />
 			</body>
 		</html>
 	)
