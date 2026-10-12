@@ -7,7 +7,7 @@ export const profile = {
 	name: "Lars Crawford",
 	honorific: "Ph.D.",
 	handle: "w0nd3r",
-	tagline: "AI transformation lead · PhD neural engineer · builder",
+	tagline: "AI transformation lead, PhD neural engineer, builder",
 	location: "San Francisco, CA (relocating from London)",
 	intro: [
 		"Neural engineer turned production software engineer, now leading AI transformation at Blockchain.com.",

@@ -90,19 +90,26 @@ export const projects: Project[] = [
 ]
 
 export interface ProofCard {
-	kicker: string
+	/** Who/where, shown as the first meta line. */
+	org: string
+	/** When/what kind, shown as the second meta line. */
+	context: string
 	title: string
 	body: string
+	/** The one big figure (feature card only). */
+	figure?: { value: string; label: string }
 	points: string[]
 	href: string
 	linkLabel: string
 	external?: boolean
-	rune: "tiwaz" | "raidho" | "kenaz"
+	/** The feature slab in the asymmetric proof composition. */
+	feature?: boolean
 }
 
 export const proofCards: ProofCard[] = [
 	{
-		kicker: "Now · Blockchain.com",
+		org: "Blockchain.com",
+		context: "Now",
 		title: "Leading AI transformation",
 		body: "Technical Product Lead of AI Transformation since May 2026: strategy, administration, architecture and build of internal AI solutions, org-wide.",
 		points: [
@@ -111,23 +118,22 @@ export const proofCards: ProofCard[] = [
 		],
 		href: "#experience",
 		linkLabel: "See experience",
-		rune: "tiwaz",
 	},
 	{
-		kicker: "Side build · Immortal Kinematics",
+		org: "Immortal Kinematics",
+		context: "Side build",
 		title: "An agent team that ships",
 		body: "A scheduled Claude lead delegates to Opus subagents in isolated worktrees and ships only through a one-command verify gate.",
-		points: [
-			"2,416 of 2,593 commits co-authored by Claude in 8 weeks",
-			"270 ADRs + 241 briefs as shared memory for stateless agents",
-		],
+		figure: { value: "2,416 of 2,593", label: "commits co-authored by Claude in 8 weeks" },
+		points: ["270 ADRs + 241 briefs as shared memory for stateless agents"],
 		href: immortalKinematicsPost,
 		linkLabel: "Read the write-up",
 		external: true,
-		rune: "raidho",
+		feature: true,
 	},
 	{
-		kicker: "PhD · University of Washington",
+		org: "University of Washington",
+		context: "PhD",
 		title: "Neural-interface research",
 		body: "Soft, conductive hydrogels for long-term neural interfacing, made by a novel one-pot photochemical synthesis; in vitro and in vivo immunomodulation studies.",
 		points: [
@@ -136,6 +142,5 @@ export const proofCards: ProofCard[] = [
 		],
 		href: "#research",
 		linkLabel: "See research",
-		rune: "kenaz",
 	},
 ]

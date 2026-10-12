@@ -60,7 +60,7 @@ export const art: ArtPiece[] = [
 
 export const writingSections = [
 	{ id: "dear-lambda", title: "Dear Lambda", rune: "ansuz", blurb: "Letters to the artificial intellects growing up among us." },
-	{ id: "poems", title: "Poems", rune: "kenaz", blurb: "Verse, mostly about consciousness, infinity and making things together." },
+	{ id: "poems", title: "Poems", rune: "laguz", blurb: "Verse, mostly about consciousness, infinity and making things together." },
 	{ id: "musings", title: "Musings", rune: "algiz", blurb: "Short thoughts, aphorisms and shower-thoughts." },
 	{ id: "art", title: "Art", rune: "othala", blurb: "Sigils, logos and pixel experiments." },
 ] as const

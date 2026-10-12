@@ -1,7 +1,11 @@
+import { existsSync } from "node:fs"
+import path from "node:path"
 import Image from "next/image"
 import Link from "next/link"
 import { HeroStone } from "@/components/hero/HeroStone"
-import { Rune, RuneRule } from "@/components/Rune"
+import { External } from "@/components/External"
+import { Rune } from "@/components/Rune"
+import { CarvedRune } from "@/components/CarvedRune"
 import { profile, play } from "@/content/profile"
 import { experience } from "@/content/experience"
 import { research, thesis, education } from "@/content/research"
@@ -11,23 +15,38 @@ import { letters, poems, musings, writingSections } from "@/content/writing"
 import type { RuneName } from "@/lib/runes"
 import s from "./home.module.css"
 
-function SectionHead({ id, rune, kicker, title }: { id: string; rune: RuneName; kicker: string; title: string }) {
+// The résumé CTA only renders once the final PDF is in public/ (the primary
+// CTA must never 404). Until then, email is the primary action.
+const hasResume = existsSync(path.join(process.cwd(), "public", "resume.pdf"))
+
+/** Section title with its sigil rune incised beside it (rune map: DESIGN.md "Sigils"). */
+function SectionHead({ id, rune, title, children }: { id: string; rune: RuneName; title: string; children?: React.ReactNode }) {
 	return (
 		<header className={s.sectionHead}>
-			<p className={s.kicker}>
-				<Rune name={rune} size={14} />
-				{kicker}
-			</p>
+			<CarvedRune name={rune} className={s.sigil} />
 			<h2 id={`${id}-title`}>{title}</h2>
+			{children}
 		</header>
 	)
 }
 
-function External({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) {
+/** Two quiet meta lines, never joined with "·". */
+function Meta({ lines, className }: { lines: (string | undefined)[]; className?: string }) {
 	return (
-		<a href={href} className={className} target="_blank" rel="noopener noreferrer">
-			{children}
-		</a>
+		<p className={`meta ${className ?? ""}`}>
+			{lines.filter(Boolean).map((l) => (
+				<span key={l}>{l}</span>
+			))}
+		</p>
+	)
+}
+
+function Stack({ items, max }: { items: string[]; max?: number }) {
+	return (
+		<p className={s.stack}>
+			<span className="visually-hidden">Stack: </span>
+			{(max ? items.slice(0, max) : items).join(", ")}
+		</p>
 	)
 }
 
@@ -35,77 +54,111 @@ export default function Home() {
 	const { links } = profile
 	const featured = projects.filter((p) => p.featured)
 	const legacy = projects.filter((p) => !p.featured)
+	const feature = proofCards.find((c) => c.feature)!
+	const slims = proofCards.filter((c) => !c.feature)
 
 	return (
 		<>
 			{/* ---------- hero ---------- */}
 			<section className={s.hero} aria-labelledby="hero-title">
 				<div className={`container ${s.heroGrid}`}>
-					<div className={s.heroText}>
-						<p className={s.kicker}>
-							<Rune name="laguz" size={14} />
-							w0nd3r · {profile.location}
-						</p>
-						<h1 id="hero-title" className={s.name}>
-							Lars Crawford<span className={s.honorific}>, {profile.honorific}</span>
-						</h1>
-						<p className={s.tagline}>{profile.tagline}</p>
+					<h1 id="hero-title" className={s.name}>
+						<span className={s.nameLine}>Lars</span>{" "}
+						<span className={s.nameLine}>
+							Crawford<span className={s.honorific}>{profile.honorific.replace(/\./g, "")}</span>
+						</span>
+					</h1>
+					<div className={s.heroArt}>
+						<HeroStone />
+					</div>
+					<div className={s.heroCopy}>
+						<p className={s.roles}>{profile.tagline}</p>
+						<p className={`meta ${s.place}`}>{profile.location}</p>
 						<div className={s.intro}>
 							{profile.intro.map((p) => (
 								<p key={p}>{p}</p>
 							))}
 						</div>
 						<div className={s.ctaRow}>
-							<a className="btn btn--gold" href={links.resume.href}>
-								{links.resume.label}
-							</a>
-							<External className="btn" href={links.linkedin.href}>
-								LinkedIn
-							</External>
-							<External className="btn" href={links.github.href}>
-								GitHub
-							</External>
-							<a className="btn" href={links.email.href}>
-								Email
-							</a>
+							{hasResume ? (
+								<a className="btn--primary" href={links.resume.href}>
+									{links.resume.label}
+								</a>
+							) : (
+								<a className="btn--primary" href={links.email.href}>
+									Email me
+								</a>
+							)}
+							<ul className={s.ctaLinks}>
+								{hasResume ? (
+									<li>
+										<a className="textlink" href={links.email.href}>
+											Email
+										</a>
+									</li>
+								) : null}
+								<li>
+									<External className="textlink" href={links.linkedin.href}>
+										LinkedIn
+									</External>
+								</li>
+								<li>
+									<External className="textlink" href={links.github.href}>
+										GitHub
+									</External>
+								</li>
+							</ul>
 						</div>
 						<p className={s.heroAside}>
-							Prefer to wander? <Link href="/cottage">Enter the cottage →</Link>
+							Prefer to wander? <Link href="/cottage">Enter the cottage</Link>
 						</p>
-					</div>
-					<div className={s.heroArt}>
-						<HeroStone />
 					</div>
 				</div>
 			</section>
 
 			{/* ---------- proof ---------- */}
-			<section id="work" className={s.section} aria-labelledby="work-title">
+			<section id="work" className={`${s.section} ${s.sectionProof}`} aria-labelledby="work-title">
 				<div className="container">
-					<SectionHead id="work" rune="tiwaz" kicker="Proof of work" title="What I do now, and what I did before" />
+					<SectionHead id="work" rune="sowilo" title="What I do now, and what I did before" />
 					<div className={s.proofGrid}>
-						{proofCards.map((c) => (
-							<article key={c.title} className={s.proofCard}>
-								<div className={s.proofRune} aria-hidden="true">
-									<Rune name={c.rune} size={28} strokeWidth={0.9} />
-								</div>
-								<p className={s.proofKicker}>{c.kicker}</p>
-								<h3>{c.title}</h3>
-								<p>{c.body}</p>
-								<ul>
+						<article className={`slab ${s.proofFeature}`}>
+							<Meta lines={[feature.org, feature.context]} />
+							<h3 className={s.featureTitle}>{feature.title}</h3>
+							<p className={s.proofBody}>{feature.body}</p>
+							{feature.figure ? (
+								<p className={s.figure}>
+									<span className={s.figureValue}>{feature.figure.value}</span>
+									<span className={s.figureLabel}>{feature.figure.label}</span>
+								</p>
+							) : null}
+							<ul className={s.proofPoints}>
+								{feature.points.map((pt) => (
+									<li key={pt}>{pt}</li>
+								))}
+							</ul>
+							{feature.external ? (
+								<External className={s.proofLink} href={feature.href}>
+									{feature.linkLabel}
+								</External>
+							) : (
+								<a className={s.proofLink} href={feature.href}>
+									{feature.linkLabel}
+								</a>
+							)}
+						</article>
+						{slims.map((c) => (
+							<article key={c.title} className={`slab ${s.proofSlim}`}>
+								<Meta lines={[c.org, c.context]} />
+								<h3 className={s.slimTitle}>{c.title}</h3>
+								<p className={s.proofBody}>{c.body}</p>
+								<ul className={s.proofPoints}>
 									{c.points.map((pt) => (
 										<li key={pt}>{pt}</li>
 									))}
 								</ul>
-								{c.external ? (
-									<External className={s.cardLink} href={c.href}>
-										{c.linkLabel} ↗
-									</External>
-								) : (
-									<a className={s.cardLink} href={c.href}>
-										{c.linkLabel} ↓
-									</a>
-								)}
+								<a className={s.proofLink} href={c.href}>
+									{c.linkLabel}
+								</a>
 							</article>
 						))}
 					</div>
@@ -115,37 +168,30 @@ export default function Home() {
 			{/* ---------- experience ---------- */}
 			<section id="experience" className={s.section} aria-labelledby="experience-title">
 				<div className="container">
-					<SectionHead id="experience" rune="raidho" kicker="Experience" title="Shipping systems people rely on" />
+					<SectionHead id="experience" rune="raidho" title="Shipping systems people rely on" />
 					<ol className={s.timeline}>
 						{experience.map((job) => (
 							<li key={job.org} className={s.job}>
 								<div className={s.jobHead}>
-									<h3>{job.href ? <External href={job.href}>{job.org}</External> : job.org}</h3>
-									<p className={s.meta}>
-										{job.location} · {job.dates}
-									</p>
+									<h3 className={s.org}>{job.href ? <External href={job.href} icon={false}>{job.org}</External> : job.org}</h3>
+									<Meta lines={[job.location, job.dates]} />
 								</div>
-								{job.roles.map((r) => (
-									<div key={r.title} className={s.role}>
-										<p className={s.roleTitle}>
-											{r.title} <span className={s.meta}>· {r.dates}</span>
-										</p>
-										{r.bullets.length ? (
-											<ul>
-												{r.bullets.map((b) => (
-													<li key={b}>{b}</li>
-												))}
-											</ul>
-										) : null}
-									</div>
-								))}
-								{job.stack ? (
-									<ul className="tag-list" aria-label="Stack">
-										{job.stack.map((t) => (
-											<li key={t}>{t}</li>
-										))}
-									</ul>
-								) : null}
+								<div className={s.jobBody}>
+									{job.roles.map((r) => (
+										<div key={r.title} className={s.role}>
+											<p className={s.roleTitle}>{r.title}</p>
+											<p className="meta">{r.dates}</p>
+											{r.bullets.length ? (
+												<ul className={s.bullets}>
+													{r.bullets.map((b) => (
+														<li key={b}>{b}</li>
+													))}
+												</ul>
+											) : null}
+										</div>
+									))}
+									{job.stack ? <Stack items={job.stack} /> : null}
+								</div>
 							</li>
 						))}
 					</ol>
@@ -155,39 +201,39 @@ export default function Home() {
 			{/* ---------- research ---------- */}
 			<section id="research" className={s.section} aria-labelledby="research-title">
 				<div className="container">
-					<SectionHead id="research" rune="kenaz" kicker="Research & publications" title="Neural engineering, from electrodes to immune cells" />
+					<SectionHead id="research" rune="dagaz" title="Neural engineering, from electrodes to immune cells" />
 					<div className={s.researchGrid}>
 						<div>
 							<ol className={s.timeline}>
 								{research.map((r) => (
 									<li key={r.lab} className={s.job}>
 										<div className={s.jobHead}>
-											<h3>
-												{r.org} <span className={s.lab}>· {r.lab}</span>
-											</h3>
-											<p className={s.meta}>
-												{r.role} · {r.place} · {r.dates}
-											</p>
+											<h3 className={s.org}>{r.org}</h3>
+											<Meta lines={[`${r.role}, ${r.lab}`, `${r.place}, ${r.dates}`]} />
 										</div>
-										<ul>
-											{r.bullets.map((b) => (
-												<li key={b}>{b}</li>
-											))}
-										</ul>
+										<div className={s.jobBody}>
+											<ul className={s.bullets}>
+												{r.bullets.map((b) => (
+													<li key={b}>{b}</li>
+												))}
+											</ul>
+										</div>
 									</li>
 								))}
 							</ol>
-							<details className={s.thesis}>
+							<details className={`slab ${s.thesis}`}>
 								<summary>About the dissertation: {thesis.title}</summary>
-								{thesis.paragraphs.map((p) => (
-									<p key={p}>{p}</p>
-								))}
+								<div className={s.thesisBody}>
+									{thesis.paragraphs.map((p) => (
+										<p key={p}>{p}</p>
+									))}
+								</div>
 							</details>
 						</div>
 						<div className={s.scienceGrid}>
 							{thesis.images.map((img) => (
-								<figure key={img.src} className={s.scienceFig}>
-									<Image src={img.src} alt={img.alt} fill sizes="(max-width: 860px) 45vw, 240px" />
+								<figure key={img.src} className={`frame ${s.scienceFig}`}>
+									<Image className="duotone" src={img.src} alt={img.alt} fill sizes="(max-width: 860px) 45vw, 260px" />
 								</figure>
 							))}
 						</div>
@@ -195,19 +241,15 @@ export default function Home() {
 
 					<div className={s.pubGrid}>
 						<div>
-							<h3 className={s.subhead}>Publications & patents</h3>
+							<h3 className={s.subhead}>Publications and patents</h3>
 							<ol className={s.pubs}>
 								{publications.map((p) => (
 									<li key={p.title}>
-										<span className={s.pubKind}>{p.kind}</span>
+										<span className={s.pubYear}>{p.year}</span>
 										<span>
 											{p.citation}{" "}
-											{p.href ? (
-												<External href={p.href}>“{p.title}.”</External>
-											) : (
-												<>“{p.title}.”</>
-											)}{" "}
-											<em>{p.venue}</em> ({p.year}).
+											{p.href ? <External href={p.href}>“{p.title}.”</External> : <>“{p.title}.”</>} <em>{p.venue}</em>.{" "}
+											<span className={s.pubKind}>{p.kind[0].toUpperCase() + p.kind.slice(1)}</span>
 										</span>
 									</li>
 								))}
@@ -219,10 +261,7 @@ export default function Home() {
 								{education.map((e) => (
 									<li key={e.degree}>
 										<strong>{e.degree}</strong>
-										<br />
-										<span className={s.meta}>
-											{e.school}, {e.year}. {e.note}
-										</span>
+										<Meta lines={[`${e.school}, ${e.year}`, e.note]} />
 									</li>
 								))}
 							</ul>
@@ -240,75 +279,65 @@ export default function Home() {
 			{/* ---------- projects ---------- */}
 			<section id="projects" className={s.section} aria-labelledby="projects-title">
 				<div className="container">
-					<SectionHead id="projects" rune="gebo" kicker="Projects" title="Things I've built" />
+					<SectionHead id="projects" rune="fehu" title="Things I've built" />
 					<div className={s.featuredGrid}>
 						{featured.map((p) => (
 							<article key={p.name} className={s.featured}>
-								<p className={s.meta}>{p.when}</p>
-								<h3>{p.name}</h3>
+								<p className="meta">{p.when}</p>
+								<h3 className={s.featuredTitle}>{p.name}</h3>
 								<p className={s.lead}>{p.summary}</p>
 								{p.details ? (
-									<ul>
+									<ul className={s.bullets}>
 										{p.details.map((d) => (
 											<li key={d}>{d}</li>
 										))}
 									</ul>
 								) : null}
-								<ul className="tag-list">
-									{p.tags.map((t) => (
-										<li key={t}>{t}</li>
-									))}
-								</ul>
+								<Stack items={p.tags} />
 								{p.href ? (
-									<External className={s.cardLink} href={p.href}>
-										{p.linkLabel ?? "Visit"} ↗
+									<External className={s.proofLink} href={p.href}>
+										{p.linkLabel ?? "Visit"}
 									</External>
 								) : null}
 							</article>
 						))}
 					</div>
 
-					<h3 className={s.subhead}>Earlier: games, web3 and tools</h3>
-					<div className={s.projectGrid}>
+					<h3 className={s.shelfTitle}>Earlier: games, web3 and tools</h3>
+					<ul className={s.shelf}>
 						{legacy.map((p) => (
-							<article key={p.name} className={s.project}>
+							<li key={p.name} className={s.tile}>
 								{p.image ? (
-									<div className={s.projectImg}>
-										<Image src={p.image} alt="" fill sizes="(max-width: 600px) 100vw, 340px" unoptimized={p.image.endsWith(".gif")} />
+									<div className={`frame ${s.tileImg}`}>
+										<Image
+											className="duotone"
+											src={p.image}
+											alt=""
+											fill
+											sizes="(max-width: 600px) 100vw, 300px"
+											unoptimized={p.image.endsWith(".gif")}
+										/>
 									</div>
 								) : null}
-								<div className={s.projectBody}>
-									<h4>
-										{p.href ? (
-											<External href={p.href}>
-												{p.name} <span aria-hidden="true">↗</span>
-											</External>
-										) : (
-											p.name
-										)}
-									</h4>
-									<p>{p.summary}</p>
-									<ul className="tag-list">
-										{p.tags.map((t) => (
-											<li key={t}>{t}</li>
-										))}
-									</ul>
-								</div>
-							</article>
+								<h4 className={s.tileTitle}>{p.href ? <External href={p.href}>{p.name}</External> : p.name}</h4>
+								<p className={s.tileText}>{p.summary}</p>
+								<Stack items={p.tags} max={4} />
+							</li>
 						))}
-					</div>
+					</ul>
 				</div>
 			</section>
 
 			{/* ---------- writing ---------- */}
 			<section id="writing" className={s.section} aria-labelledby="writing-title">
 				<div className="container">
-					<SectionHead id="writing" rune="ansuz" kicker="Writing" title="Letters, poems and musings" />
-					<p className={s.sectionLede}>
-						Long before agents, I was writing letters to the machine minds I expected to meet. They are still here,
-						unedited.
-					</p>
-					<div className={s.writingGrid}>
+					<SectionHead id="writing" rune="ansuz" title="Letters, poems and musings">
+						<p className={s.sectionLede}>
+							Long before agents, I was writing letters to the machine minds I expected to meet. They are still here,
+							unedited.
+						</p>
+					</SectionHead>
+					<div className={s.library}>
 						{writingSections.map((w) => {
 							const items =
 								w.id === "dear-lambda"
@@ -319,14 +348,14 @@ export default function Home() {
 											? musings.slice(0, 3).map((p) => ({ title: p.title, href: `/writing/musings/${p.slug}` }))
 											: []
 							return (
-								<article key={w.id} className={s.writingCard}>
-									<Rune name={w.rune} size={22} strokeWidth={0.9} className="gold" />
-									<h3>
+								<article key={w.id} className={s.shelfCol}>
+									<Rune name={w.rune} size={22} strokeWidth={0.9} className="rune-incised" />
+									<h3 className={s.libraryTitle}>
 										<Link href={w.id === "art" ? "/writing/art" : `/writing#${w.id}`}>{w.title}</Link>
 									</h3>
-									<p className="muted">{w.blurb}</p>
+									<p className={s.libraryBlurb}>{w.blurb}</p>
 									{items.length ? (
-										<ul>
+										<ul className={s.libraryList}>
 											{items.map((it) => (
 												<li key={it.href}>
 													<Link href={it.href}>{it.title}</Link>
@@ -339,60 +368,52 @@ export default function Home() {
 						})}
 					</div>
 					<p className={s.more}>
-						<Link href="/writing">All writing →</Link>
+						<Link href="/writing">All writing</Link>
 					</p>
 				</div>
 			</section>
 
 			{/* ---------- play ---------- */}
-			<section className={`${s.section} ${s.play}`} aria-labelledby="play-title">
+			<section className={s.play} aria-labelledby="play-title">
 				<div className="container">
-					<RuneRule runes={["fehu", "wunjo", "fehu"]} />
+					<Rune name="wunjo" size={40} strokeWidth={0.8} className={`rune-ignited ${s.playRune}`} />
 					<p className={s.playKicker}>My massive transformative purpose</p>
 					<h2 id="play-title" className={s.playTitle}>
-						To make <span className="gold">play</span> the only task.
+						To make play the only task.
 					</h2>
 					<ul className={s.playMeans}>
 						{play.means.map((m) => (
-							<li key={m}>
-								<span className="gold">Play</span> means you are {m}.
-							</li>
+							<li key={m}>Play means you are {m}.</li>
 						))}
 					</ul>
 					<p className={s.playCoda}>{play.coda[0]}</p>
 				</div>
 			</section>
 
-			{/* ---------- contact ---------- */}
+			{/* ---------- contact + cottage ---------- */}
 			<section id="contact" className={s.section} aria-labelledby="contact-title">
-				<div className={`container ${s.contact}`}>
-					<div className={s.avatar}>
-						<Image src="/images/w0nd3r_headshot-min.png" alt="Lars Crawford" fill sizes="112px" />
+				<div className={`container ${s.thresholdGrid}`}>
+					<div className={s.contact}>
+						<div className={s.avatar}>
+							<Image src="/images/w0nd3r_headshot-min.png" alt="Lars Crawford" fill sizes="112px" />
+						</div>
+						<div>
+							<h2 id="contact-title" className={s.contactTitle}>
+								Let&apos;s build something
+							</h2>
+							<p className={s.contactText}>
+								The fastest way to reach me is email: <a href={links.email.href}>{profile.email}</a>. I&apos;m also on{" "}
+								<External href={links.linkedin.href}>LinkedIn</External> and{" "}
+								<External href={links.github.href}>GitHub</External>.
+							</p>
+						</div>
 					</div>
-					<div>
-						<SectionHead id="contact" rune="ingwaz" kicker="Contact" title="Let's build something" />
-						<p>
-							The fastest way to reach me is email: <a href={links.email.href}>{profile.email}</a>. I'm also on{" "}
-							<External href={links.linkedin.href}>LinkedIn</External> and{" "}
-							<External href={links.github.href}>GitHub</External>.
-						</p>
-					</div>
-				</div>
-			</section>
-
-			{/* ---------- cottage CTA ---------- */}
-			<section className={s.cottage} aria-labelledby="cottage-title">
-				<div className="container">
-					<Link href="/cottage" className={s.cottageLink}>
-						<span className={s.cottageRunes} aria-hidden="true">
-							<Rune name="othala" size={20} strokeWidth={0.9} />
-							<Rune name="dagaz" size={20} strokeWidth={0.9} />
-							<Rune name="othala" size={20} strokeWidth={0.9} />
+					<Link href="/cottage" className={`slab ${s.door}`} aria-labelledby="cottage-title">
+						<Rune name="othala" size={28} strokeWidth={0.9} className={`rune-incised ${s.doorRune}`} />
+						<span id="cottage-title" className={s.doorTitle}>
+							Enter the cottage
 						</span>
-						<span id="cottage-title" className={s.cottageTitle}>
-							Enter the cottage →
-						</span>
-						<span className={s.cottageSub}>An explorable 3D home for all of the above. Under construction.</span>
+						<span className={s.doorSub}>An explorable 3D home for all of the above. Under construction.</span>
 					</Link>
 				</div>
 			</section>
