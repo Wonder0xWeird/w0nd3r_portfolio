@@ -21,7 +21,10 @@ play manifesto.
 
 Phasing: v2.0 fonts + tokens + type + light + chrome cleanup + 3D gating (this seed). v2.1 hero recomposition
 + load sequence + mobile hero order (shipped with the one-menhir handoff, light below the hero and the
-disclosure pass that brought mobile under 9,000 px). v2.2 sigil rail + proof/experience recomposition. v2.3 research band +
+disclosure pass that brought mobile under 9,000 px). v2.2 (shipped on `feat/front-door-v2-2`, the v2.1 critique's top three
+fixes): a composed desktop fold, sections lit by their sigils (ignite on scroll, captioned; bands that read), and
+the stone as neutral slate with real texture and incised runes; plus a craft sweep. Still to come from the
+original v2.2 slot: the sticky sigil rail and the proof/experience recomposition. v2.3 research band +
 projects shelf + writing + play + threshold. v2.4 motion polish + perf/a11y hardening.
 
 ---
@@ -212,7 +215,7 @@ The sticky sigil rail is still to come.
 | Research | ᛞ Dagaz | dawn: breakthrough |
 | Projects | ᚠ Fehu | wealth: things made |
 | Writing | ᚨ Ansuz | the word |
-| Play (the one *ignited* rune below the hero) | ᚹ Wunjo | joy |
+| Play (always ignited: the band's light comes from it) | ᚹ Wunjo | joy |
 | Cottage door | ᛟ Othala | home |
 | /writing: Dear Lambda, Poems, Musings, Art | ᚨ Ansuz, ᛚ Laguz, ᛉ Algiz, ᛟ Othala | word, flow, protection, home |
 
@@ -370,7 +373,10 @@ CHROME_PATH="C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" \
 also gates the primary-CTA bottom (≤ 600 px at 390, ≤ 700 at 1440), the hero's visible words (≤ 40), the page
 height (≤ 9,000 / 8,500), SVG-vs-WebGL face luminance (±12 %), and that every internal link answers 200 with no
 redirect (legacy mixed-case letter URLs: one 308); it saves real viewport frames (`-scroll-NN`) and the handoff
-frames (`-handoff-1-svg/2-mid/3-webgl`). Its
+frames (`-handoff-1-svg/2-mid/3-webgl`). v2.2 adds the critique's acceptance checks as gates: the desktop
+folds (`home-fold-WxH.png`: Proof title in the fold, ≤ 140 px below the email row, never under the stone's
+ground), the sigils (each inlay ignited once in view, normal and reduced motion; captions visible and clear
+of the title; band ≥ 1.12:1) and the stone's material (see "Surfaces and light" 5). Its
 `three=` field shows whether three.js was parsed before any interaction (it must be `false` on the 390
 runs). `ROUTES=/,/writing node scripts/shoot.mjs …` limits the routes (in Git Bash prefix
 `MSYS_NO_PATHCONV=1`, or "/" becomes a Windows path). `scripts/make-grain.mjs` regenerates the grain tile.
