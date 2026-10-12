@@ -139,8 +139,8 @@ function fbm(size: number, octaves: [number, number, number][], rnd: () => numbe
 	return out
 }
 
-/** Height-map weights (0-255 levels per unit of each field): bedding bands, lamination, ledge rise. */
-const HEIGHT = { bands: 3, lamina: 15, step: 24 }
+/** Height-map weights (0-255 levels per unit of each field): bedding bands, lamination, ledge rise, grit. */
+const HEIGHT = { bands: 3, lamina: 14, step: 60, grit: 10 }
 
 /** Bedding angle on the front face (degrees; positive: the beds descend gently to the right, echoing the crown's slope). */
 const BEDDING = 8
@@ -148,11 +148,13 @@ const BEDDING = 8
 /**
  * Slate (v2.3: night-lit slate, not cast concrete). A darker blue-grey albedo (#5f6469, hue ~210) laid
  * down in bedding bands (anisotropic fbm, 256 x 24 and 64 x 10 px) with a faint blue-grey/green-grey
- * drift between them, fine fbm (8/4 px) at half v2.2's amplitude and little per-texel grain; 220 pits
- * on a power law (most tiny), 70 % of them strung along 12 bedding lines; a few thin quartz veins.
- * A data texture of the same surface: red is the height (bumpMap: the bands and pits carry the relief,
- * not white noise), green the roughness (.74-.96, roughnessMap). The bands are generated axis-aligned
- * (so the tile still repeats seamlessly) and turned to BEDDING by the textures' UV rotation.
+ * drift between them, each split layer a shade apart, fine fbm (8/4 px) at half v2.2's amplitude and
+ * little per-texel grain; 220 pits on a power law (most tiny), 70 % of them strung along 12 bedding
+ * lines; a few faint quartz veins. A data texture of the same surface: red is the height (bumpMap), green
+ * the roughness (.74-.96, roughnessMap). The relief is riven slate: cleavage ledges that run along a bed
+ * and die out, hairline lamination in patches (everywhere at once it read as wood grain), short grit
+ * drawn out along the bed, the bands and the pits; white noise only at x2. The bands are generated
+ * axis-aligned (so the tile still repeats seamlessly) and turned to BEDDING by the textures' UV rotation.
  * 512 px each, generated once in a few ms; no image assets.
  */
 function slateTextures(): { albedo: THREE.CanvasTexture; surface: THREE.CanvasTexture } {
@@ -174,7 +176,8 @@ function slateTextures(): { albedo: THREE.CanvasTexture; surface: THREE.CanvasTe
 		],
 		rnd
 	)
-	// fine lamination: the cleavage's hairline beds, long and thin
+	// fine lamination: the cleavage's hairline beds, long and thin, showing in patches (riven slate
+	// splits cleanly in places and not in others; everywhere at once it read as wood grain)
 	const lamina = fbm(
 		S,
 		[
@@ -183,11 +186,14 @@ function slateTextures(): { albedo: THREE.CanvasTexture; surface: THREE.CanvasTe
 		],
 		rnd
 	)
-	// some beds split cleaner than others: the lamination's strength drifts from bed to bed
-	const split = fbm(S, [[512, 40, 1]], rnd)
-	// cleavage steps: a slow field terraced into ledges about a bed apart, each with a 2-3 px edge
+	const patches = fbm(S, [[96, 48, 1]], rnd)
+	// the grain of the rock itself: short flecks drawn out along the bed, a fine sheen rather than lines
+	const grit = fbm(S, [[10, 3, 1]], rnd)
+	// cleavage steps: a slow field terraced into ledges about a bed apart, each with a 2-3 px riser;
+	// a ledge runs for a while along the bed and dies out (`runs`), as split layers do
 	const ledges = fbm(S, [[512, 56, 1]], rnd)
-	const STEPS = 7
+	const runs = fbm(S, [[160, 80, 1]], rnd)
+	const STEPS = 9
 	// slate drifts a few degrees between blue-grey and green-grey from bed to bed
 	const drift = fbm(S, [[512, 64, 1]], rnd)
 	const canvas = () => {
@@ -208,15 +214,19 @@ function slateTextures(): { albedo: THREE.CanvasTexture; surface: THREE.CanvasTe
 		const e = Math.min(1, Math.max(0, (q - k - 0.82) / 0.18))
 		const riser = e * e * (3 - 2 * e)
 		const ledge = k % 2 ? 1 - riser : riser // up one ledge, down the next: bounded, every riser a line
-		const lam = lamina[i] * (0.65 + 0.35 * split[i])
-		const v = bands[i] * 0.6 + fine[i] + lam * 0.8 + grain * 2 // albedo, about +-15 levels
+		const r = Math.min(1, Math.max(0, (runs[i] + 0.1) / 0.45))
+		const run = r * r * (3 - 2 * r)
+		const p = Math.min(1, Math.max(0, (patches[i] + 0.05) / 0.5))
+		const lam = lamina[i] * p * p * (3 - 2 * p)
+		const tier = (((k * 7) % 5) - 2) * 0.8 // each split layer a shade apart
+		const v = bands[i] * 0.6 + fine[i] + lam * 0.35 + tier + grain * 2 // albedo, about +-15 levels
 		const g = drift[i] * 2.2
 		const o = i * 4
 		ai.data[o] = 0x5f + v - g * 0.5
 		ai.data[o + 1] = 0x64 + v + g * 0.6
 		ai.data[o + 2] = 0x69 + v - g * 0.2
 		ai.data[o + 3] = 255
-		bi.data[o] = 128 + bands[i] * HEIGHT.bands + lam * HEIGHT.lamina + (ledge - 0.5) * HEIGHT.step + fine[i] * 4 + grain * 2
+		bi.data[o] = 128 + bands[i] * HEIGHT.bands + lam * HEIGHT.lamina + (ledge - 0.5) * run * HEIGHT.step + grit[i] * HEIGHT.grit + fine[i] * 4 + grain * 2
 		bi.data[o + 1] = 255 * (0.85 + (v / 20) * 0.11)
 		bi.data[o + 3] = 255
 	}

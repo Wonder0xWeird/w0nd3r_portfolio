@@ -11,7 +11,7 @@ const u = RUNE_UNIT
  * turned to the bedding angle and laid over the face in overlay. One pass of bands (the beds) and one of
  * hairline lamination, rendered once by the browser: no image request. Frequencies are per stage unit.
  */
-const BEDDING = { angle: 8, bands: "0.006 0.05", lamina: "0.028 0.8", beds: 0.3, opacity: 0.24 }
+const BEDDING = { angle: 8, bands: "0.006 0.05", lamina: "0.028 0.8", beds: 0.15, opacity: 0.235 }
 
 /**
  * The bedding layer's box: the stone's bounding box (ANCHORS.bbox) grown by 30 units, enough to cover
@@ -63,7 +63,7 @@ export function StoneFallback({ className, label = true }: { className?: string;
 				</linearGradient>
 				{/* rune-fire on the slate, centred a little below the rune column's middle, like the 3D fire light */}
 				<radialGradient id="sf-fire" gradientUnits="userSpaceOnUse" cx={rx} cy={fy} r={STAGE.w * 0.36} gradientTransform={`translate(${rx} ${fy}) scale(0.62 1) translate(${-rx} ${-fy})`}>
-					<stop offset="0" stopColor="#e4b65a" stopOpacity="0.38" />
+					<stop offset="0" stopColor="#e4b65a" stopOpacity="0.35" />
 					<stop offset="0.5" stopColor="#cf9c3f" stopOpacity="0.14" />
 					<stop offset="1" stopColor="#cf9c3f" stopOpacity="0" />
 				</radialGradient>

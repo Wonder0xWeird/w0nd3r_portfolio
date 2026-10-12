@@ -372,6 +372,14 @@
 		.sectionHead::before {
 			animation-name: pool-rise;
 		}
+		/* Proof's Ehwaz sits in the desktop fold, right under "Email me", where a lit gold "M" read as a
+		   drop cap (v2.2 critique). It enters as an ember and lights once the visitor scrolls, so LARS
+		   and the primary button stay the fold's only lit gold. */
+		.sectionProof .sigil,
+		.sectionProof .sigil :global(.sigil__inlay),
+		.sectionProof .sectionHead::before {
+			animation-range: entry 60% cover 45%;
+		}
 	}
 }
 @keyframes sigil-ignite {
