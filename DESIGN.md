@@ -164,7 +164,8 @@ and hang left of the section title. v2.2 enlarges them into the sticky sigil rai
 |---|---|---|
 | Brand, header | ᛚ Laguz | the L of LARS |
 | Hero stone | ᛚᚨᚱᛊ | "LARS" |
-| Proof | ᛋ Sowilo | the sun: success |
+| Hero motes (drifting off the stone) | ᛜ Ingwaz, ᚢ Uruz, ᛒ Berkano | seed, strength, growth |
+| Proof | ᛖ Ehwaz | the horse: partnership and trust (the human-and-agent team in the feature). *v2.1, replacing Sowilo* |
 | Experience | ᚱ Raidho | the journey |
 | Research | ᛞ Dagaz | dawn: breakthrough |
 | Projects | ᚠ Fehu | wealth: things made |
@@ -177,6 +178,10 @@ and hang left of the section title. v2.2 enlarges them into the sticky sigil rai
 sigils:** in v2.0 they read as UI arrows/chevrons/close icons at every size and placement tried (inline,
 large at the row end, faint behind the title, inside a small standing stone). The playbook's suggested map
 (Tiwaz/Kenaz/Gebo) was changed for that reason. They are fine *inside* a word of runes (e.g. on the stone).
+
+**Sowilo (ᛋ) appears only inside LARS** (it is the S), never as a standalone sigil or mote (v2.1): alone it
+reads as a lightning bolt, and for some readers as the "sig" rune. Jera (ᛃ) was considered for Proof and
+rejected untested: its two offset chevrons risk the same "<" reading that failed Kenaz.
 
 ---
 

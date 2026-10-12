@@ -104,7 +104,7 @@ export default function Home() {
 			{/* ---------- proof ---------- */}
 			<section id="work" className={`${s.section} ${s.sectionProof}`} aria-labelledby="work-title">
 				<div className="container">
-					<SectionHead id="work" rune="sowilo" title="What I do now, and what I did before">
+					<SectionHead id="work" rune="ehwaz" title="What I do now, and what I did before">
 						<p className={s.sectionLede}>{profile.aim}</p>
 					</SectionHead>
 					<div className={s.proofGrid}>
