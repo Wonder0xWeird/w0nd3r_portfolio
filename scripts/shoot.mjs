@@ -38,6 +38,10 @@
  * Sigils (/, desktop, normal and reduced motion): each section header scrolled
  * to 30 % of the viewport has an ignited inlay (median luminance >= 170) and a
  * visible caption clear of its h2; the sunken band reads (>= 1.12:1).
+ * Sigil rail (/, every viewport; v2.6): on desktop each rail is sticky, clear of the body, inside its
+ * section and engaged mid-section where the section is taller than the viewport; rail titles <= 0.7x
+ * Play's, sigils >= 1.5x their title; on phones the rail is not sticky and the sigil sits inline with
+ * its title.
  * Desktop folds (/, 1280x720 to 1920x1080 incl. browser-chrome and MacBook sizes, reduced
  * motion): every line of the Proof title is whole in the fold (bottom <= height - 16) or the
  * first is wholly below it (top >= height), never sliced (every line since v2.4; v2.3 gated
@@ -247,12 +251,14 @@ async function imageStats(png, { regions = {}, points = {} } = {}) {
  * clear of its h2, and the sunken band must read against the night beside it (>= 1.12:1).
  */
 async function sigilGate(page, label, vp) {
-	const heads = await page.$$eval("main header", (els) => els.filter((e) => e.querySelector(".sigil__inlay")).map((e) => e.querySelector("h2").id))
+	// Every section with an incised sigil: in its header (Proof) or in the sticky rail beside it (v2.6).
+	const heads = await page.$$eval("main section", (els) => els.filter((e) => e.querySelector(".sigil__inlay")).map((e) => e.querySelector("h2").id))
 	const sigils = []
 	for (const id of heads) {
 		const m = await page.evaluate(async (id) => {
-			const head = document.getElementById(id).closest("header")
-			window.scrollTo({ top: head.getBoundingClientRect().top + scrollY - innerHeight * 0.3, behavior: "instant" })
+			const h2 = document.getElementById(id)
+			const head = h2.closest("section")
+			window.scrollTo({ top: h2.getBoundingClientRect().top + scrollY - innerHeight * 0.3, behavior: "instant" })
 			await new Promise((r) => setTimeout(r, 150))
 			const inlay = head.querySelector(".sigil__inlay")
 			const L = inlay.getTotalLength()
@@ -263,9 +269,9 @@ async function sigilGate(page, label, vp) {
 				const s = new DOMPoint(p.x, p.y).matrixTransform(ctm)
 				pts.push([s.x * devicePixelRatio, s.y * devicePixelRatio])
 			}
-			const cap = head.querySelector("svg + span")
+			const cap = inlay.ownerSVGElement.nextElementSibling
 			const cb = cap?.getBoundingClientRect()
-			const hb = head.querySelector("h2").getBoundingClientRect()
+			const hb = h2.getBoundingClientRect()
 			const capVisible = !!cb && cb.width > 0 && getComputedStyle(cap).display !== "none"
 			const capHit = capVisible && !(cb.right <= hb.left || hb.right <= cb.left || cb.bottom <= hb.top || hb.bottom <= cb.top)
 			return { pts, capVisible, capHit, caption: cap?.textContent ?? null }
@@ -295,6 +301,73 @@ async function sigilGate(page, label, vp) {
 	const bandContrast = bs.regions.band && bs.regions.night ? +contrast(bs.regions.band.rgb, bs.regions.night.rgb).toFixed(3) : null
 	if (!(bandContrast >= 1.12)) fail(`${label}: sunken band vs night ${bandContrast}:1 < 1.12:1`)
 	return { sigils, bandContrast, bandRgb: bs.regions.band?.rgb, nightRgb: bs.regions.night?.rgb }
+}
+
+/**
+ * The sticky sigil rail (v2.6, the type/rhythm system that replaced v2.5's seven identical headers).
+ * Desktop (>= 861 px), for each section with a rail, its grid's middle scrolled to the viewport's middle:
+ * the rail is sticky, >= 16 px clear of the body column and inside its own grid (it never crosses into
+ * the next section); where the grid is taller than the viewport the rail is engaged (its top at the
+ * sticky offset, below the header, the sigil wholly in view). Scale: each rail title is <= 0.7x Play's
+ * and its sigil is >= 1.5x the title's font size. Phones (< 861 px): no rail: it is not sticky and its
+ * sigil shares the title's row, left of it. Saves <label>-rail-<id>.png at that scroll position.
+ */
+async function railGate(page, label, vp) {
+	const ids = await page.$$eval("main section", (els) => els.filter((e) => e.querySelector("[data-rail]")).map((e) => e.id))
+	const out = []
+	for (const id of ids) {
+		const m = await page.evaluate(async (id) => {
+			const sec = document.getElementById(id)
+			const rail = sec.querySelector("[data-rail]")
+			const body = sec.querySelector("[data-rail-body]")
+			const h2 = sec.querySelector("h2")
+			const grid = rail.parentElement
+			const g0 = grid.getBoundingClientRect()
+			window.scrollTo({ top: g0.top + scrollY + g0.height / 2 - innerHeight / 2, behavior: "instant" })
+			await new Promise((r) => setTimeout(r, 200))
+			const r = (el) => {
+				const b = el.getBoundingClientRect()
+				return { x: b.left, y: b.top, r: b.right, b: b.bottom, h: b.height }
+			}
+			const play = document.getElementById("play-title")
+			const header = document.querySelector(".site-header")
+			const cs = getComputedStyle(rail)
+			return {
+				position: cs.position,
+				stickyTop: parseFloat(cs.top),
+				rail: r(rail),
+				sigil: r(rail.querySelector("svg")),
+				body: r(body),
+				grid: r(grid),
+				h2: r(h2),
+				headerBottom: header ? header.getBoundingClientRect().bottom : 0,
+				h2Size: parseFloat(getComputedStyle(h2).fontSize),
+				playSize: play ? parseFloat(getComputedStyle(play).fontSize) : null,
+				vh: innerHeight,
+			}
+		}, id)
+		const o = { id, position: m.position, h2px: m.h2Size, sigilPx: Math.round(m.sigil.h) }
+		if (vp.width >= 861) {
+			o.clearBody = Math.round(m.body.x - m.rail.r)
+			o.engaged = null
+			if (m.position !== "sticky") fail(`${label}: rail ${id} is ${m.position}, not sticky`)
+			if (o.clearBody < 16) fail(`${label}: rail ${id} is ${o.clearBody} px from the body column (< 16)`)
+			if (m.rail.y < m.grid.y - 1 || m.rail.b > m.grid.b + 1) fail(`${label}: rail ${id} leaves its section (${Math.round(m.rail.y)}-${Math.round(m.rail.b)} vs grid ${Math.round(m.grid.y)}-${Math.round(m.grid.b)})`)
+			if (m.grid.h > m.vh) {
+				o.engaged = Math.abs(m.rail.y - m.stickyTop) <= 2 && m.rail.y >= m.headerBottom && m.sigil.b <= m.vh
+				if (!o.engaged) fail(`${label}: rail ${id} is not engaged mid-section (top ${Math.round(m.rail.y)}, sticky ${m.stickyTop}, header ${Math.round(m.headerBottom)}, sigil bottom ${Math.round(m.sigil.b)})`)
+			}
+			if (m.playSize && m.h2Size > 0.7 * m.playSize) fail(`${label}: rail title ${id} is ${m.h2Size} px, > 0.7x Play's ${m.playSize} px`)
+			if (m.sigil.h < 1.5 * m.h2Size) fail(`${label}: rail sigil ${id} is ${Math.round(m.sigil.h)} px, < 1.5x its ${m.h2Size} px title`)
+		} else {
+			o.inline = m.sigil.y < m.h2.b && m.h2.y < m.sigil.b && m.sigil.r <= m.h2.x
+			if (m.position === "sticky") fail(`${label}: rail ${id} is sticky on a phone`)
+			if (!o.inline) fail(`${label}: sigil ${id} is not inline with its title on a phone`)
+		}
+		await page.screenshot({ path: path.join(outDir, `${label}-rail-${id}.png`), scale: "css" })
+		out.push(o)
+	}
+	return out
 }
 
 /**
@@ -538,6 +611,10 @@ for (const route of runs("main") ? ROUTES : []) {
 				console.log(`  sigils ${run.sigils.sigils.map((x) => `${x.id.replace("-title", "")}=${x.inlayLum}`).join(" ")} band=${run.sigils.bandContrast}:1`)
 				run.diagram = await diagramGate(page, label, vp, reduced)
 				console.log(`  diagram ${JSON.stringify(run.diagram)}`)
+			}
+			if (route === "/") {
+				run.rail = await railGate(page, label, vp)
+				console.log(`  rail ${run.rail.map((x) => `${x.id}:${x.position}/${x.h2px}px/sigil ${x.sigilPx}${x.engaged != null ? `/engaged=${x.engaged}` : ""}${x.inline != null ? `/inline=${x.inline}` : ""}`).join(" ")}`)
 			}
 
 			run.consoleErrors = consoleErrors
