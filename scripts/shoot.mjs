@@ -1377,7 +1377,7 @@ if (runs("meta")) {
 			}
 			meta.jsonld = ld ? { jobTitle: ld.jobTitle, alumniOf: ld.alumniOf?.map?.((a) => a.name), sameAs: ld.sameAs } : null
 			if (!ld || ld.name !== "Lars Crawford" || ld.url !== SITE || !ld.jobTitle || !ld.alumniOf || !ld.sameAs?.some((u) => /linkedin\.com/.test(u))) bad.push(`JSON-LD Person incomplete: ${JSON.stringify(meta.jsonld)}`)
-			// The favicon set: each linked icon, the manifest and /favicon.ico answer 200.
+			// The favicon set: each linked icon (and a manifest, if one is linked) and /favicon.ico answer 200.
 			for (const href of new Set([...h.icons, "/favicon.ico"])) {
 				const r = await req.get(base + new URL(href, base + "/").pathname, { maxRedirects: 0 })
 				if (r.status() !== 200) bad.push(`icon ${href} -> ${r.status()}`)

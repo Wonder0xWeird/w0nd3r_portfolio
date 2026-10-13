@@ -8,8 +8,8 @@
  * Writes:
  *   app/favicon.ico      16, 32 and 48 px PNGs in one ICO (browsers and crawlers ask for /favicon.ico)
  *   app/apple-icon.png   180 px, full bleed (iOS rounds the corners itself)
- *   public/icon-192.png, public/icon-512.png   web manifest icons (app/manifest.ts), full bleed with
- *                        the rune inside the 80 % safe zone so they also work as maskable icons
+ * No web manifest (v2.7): Lighthouse fetches a linked manifest before LCP and its simulation charged
+ * ~30 ms of mobile LCP for it (DESIGN.md "Performance budget"); home-screen installs are not worth that.
  * Next.js emits the <link> tags for app/favicon.ico, app/icon.svg and app/apple-icon.png itself.
  * Uses the locally installed Edge (or Chrome) through playwright-core, like scripts/shoot.mjs.
  */
@@ -93,7 +93,5 @@ const write = async (rel, buf) => {
 }
 await write("app/favicon.ico", ico(await Promise.all([16, 32, 48].map(async (size) => ({ size, data: await png(svg, size) })))))
 await write("app/apple-icon.png", await png(bleed(0.9), 180))
-await write("public/icon-192.png", await png(bleed(0.78), 192))
-await write("public/icon-512.png", await png(bleed(0.78), 512))
 await browser.close()
 console.log(out.join("\n"))
