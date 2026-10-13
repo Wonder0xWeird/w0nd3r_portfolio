@@ -569,6 +569,55 @@
 	}
 }
 
+/* Writing flows into Play (v2.6): one band, so the page no longer drops to a 130 px strip of night between
+   two bands. Play's own light, from Wunjo at its top, marks the turn. */
+.bandIntoPlay {
+	border-bottom: 0;
+	padding-bottom: clamp(32px, 4vw, 56px);
+	box-shadow:
+		inset 0 1px 0 rgb(169 189 214 / 0.12),
+		inset 0 24px 48px -32px rgb(0 0 0 / 0.7);
+}
+.bandIntoPlay + .play {
+	margin-top: 0;
+	border-top: 0;
+	box-shadow: none;
+}
+/* Joined, the band has no top edge for the light to start on (centred on it, it read as a lit rectangle):
+   it rises from Wunjo itself and spills up into Writing's last margin. */
+.bandIntoPlay + .play::before {
+	top: -320px;
+	background: radial-gradient(48vmax 30vmax at 50% calc(320px + clamp(56px, 7.5vw, 112px) + 20px), rgb(228 182 90 / 0.12), transparent 70%);
+}
+.subhead {
+	margin: clamp(32px, 6vw, 80px) 0 var(--space-4);
+	font-size: var(--step-3);
+}
+.lead {
+	font-size: var(--step-1);
+	line-height: 1.5;
+	color: var(--text);
+}
+.more {
+	margin: var(--space-6) 0 0;
+}
+.stack {
+	margin: var(--space-3) 0 0;
+	font-size: var(--step--1);
+	line-height: 1.45;
+	color: var(--text-3);
+}
+.bullets {
+	max-width: var(--measure);
+	margin: var(--space-3) 0 0;
+	padding-left: 1.1em;
+	list-style-type: disc;
+	color: var(--text-2);
+}
+.bullets li + li {
+	margin-top: 6px;
+}
+
 /* ---------- proof: one feature slab, standing alone (v2.4: the slims restated Experience and Research) ---------- */
 .proofFeature {
 	display: flex;

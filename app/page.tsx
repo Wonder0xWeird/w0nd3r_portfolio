@@ -463,7 +463,7 @@ export default function Home() {
 			</section>
 
 			{/* ---------- writing: a typographic library; Musings and Art live on /writing below 760 px ---------- */}
-			<section id="writing" className={s.sectionBand} aria-labelledby="writing-title">
+			<section id="writing" className={`${s.sectionBand} ${s.bandIntoPlay}`} aria-labelledby="writing-title">
 				<div className={`container ${s.railGrid}`}>
 					<SigilRail rune="ansuz" />
 					<div className={s.railBody} data-rail-body="">
