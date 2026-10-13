@@ -55,7 +55,15 @@
  * 1.2 s after scrolling in, nothing left running, never armed under reduced motion; from 1200 px,
  * >= 24 px clear of the figure and the slab's edges, and >= 15 % ink in the slab's top-right quadrant.
  * Links: every internal href on / and /writing must answer 200 without a
- * redirect; the legacy mixed-case letter URLs must 308 once to a 200.
+ * redirect. Legacy URLs (v2.7; every URL the old site served, from lib/legacy-urls.json): pages and
+ * assets that kept their path answer 200 with no redirect; moved ones redirect exactly once to their
+ * new path, which answers 200; retired ones 404.
+ * Meta (v2.7, go-live): /resume.pdf is 200 application/pdf, inline as Lars_Crawford_Resume.pdf, and
+ * a real PDF; robots.txt allows / and names the sitemap; sitemap.xml is 200 and every URL in it
+ * answers 200; og:image and twitter:image are the same 1200x630 JPEG/PNG of <= 300 kB (decoded, so
+ * the dimensions are the file's own); summary_large_image; each route has its canonical and og:url
+ * on the production origin; the JSON-LD Person carries the current role; the favicon set answers 200;
+ * an unknown URL is a styled 404.
  * Other routes get fold + full page + the same font/overflow checks.
  * Writes <outDir>/report.json and exits 1 if any gate fails.
  */
@@ -82,14 +90,14 @@ const HEIGHT_MAX = { desktop: 8500, phone: 9000 } // critique change 3: disclose
 const kind = (vp) => (vp.touch ? "phone" : "desktop")
 const PARITY = 0.12
 const PARITY_MAD = 5 // mean |luminance difference| per pixel of the face, SVG vs WebGL (v2.3; 8 in v2.2, which measured 7.0)
-const LEGACY = {
-	"/writing/Dear-Lambda/I-See-You": "/writing/dear-lambda/i-see-you",
-	"/writing/Dear-Lambda/Infinity-Is": "/writing/dear-lambda/infinity-is",
-}
+// Every URL the legacy site served and where it lives now (v2.7; README "Legacy URLs").
+const LEGACY = JSON.parse(await readFile(path.join(path.dirname(fileURLToPath(import.meta.url)), "../lib/legacy-urls.json"), "utf8"))
+const SITE = "https://w0nd3r.rune.love" // the production origin canonical and og: URLs must use
+const OG_MAX_BYTES = 300 * 1024
 const DISPLAY = /Cormorant/i
 const TEXT = /Mona[ _]?Sans/i
-// ONLY=handoff (or a comma list of main,narrow,folds,firstpaint,handoff,links) runs just those blocks
-// (v2.5; for iterating on one gate). The default runs everything.
+// ONLY=handoff (or a comma list of main,narrow,folds,firstpaint,handoff,links,meta) runs just those blocks
+// (v2.5; meta since v2.7; for iterating on one gate). The default runs everything.
 const ONLY = process.env.ONLY ? process.env.ONLY.split(",") : null
 const runs = (block) => !ONLY || ONLY.includes(block)
 // The stone's generated right facet (stage units), for the flank's lamination energy (v2.5); the stage is
@@ -1218,16 +1226,151 @@ if (ROUTES.includes("/") && runs("links")) {
 		const r = await ctx.request.get(base + h, { maxRedirects: 0 })
 		if (r.status() !== 200) bad.push(`${h} -> ${r.status()}`)
 	}
-	for (const [from, to] of Object.entries(LEGACY)) {
-		const r = await ctx.request.get(base + from, { maxRedirects: 0 })
+	// Legacy URLs (v2.7): requests percent-encode the decoded paths in lib/legacy-urls.json the way a
+	// browser does (spaces as %20, the apostrophe left as is).
+	const enc = (p) => p.split("/").map((seg) => encodeURIComponent(seg).replace(/%27/g, "'")).join("/")
+	const legacy = { pages: 0, moved: 0, assets: 0, retired: 0 }
+	const once = async (from, to) => {
+		const r = await ctx.request.get(base + enc(from), { maxRedirects: 0 })
+		if (from === to) {
+			if (r.status() !== 200) bad.push(`legacy ${from} -> ${r.status()}${r.headers()["location"] ? ` ${r.headers()["location"]}` : ""} (expected 200, no redirect)`)
+			return
+		}
 		const loc = r.headers()["location"] || ""
-		if (r.status() !== 308 || !loc.endsWith(to)) bad.push(`${from} -> ${r.status()} ${loc}`)
-		const r2 = await ctx.request.get(base + to, { maxRedirects: 0 })
-		if (r2.status() !== 200) bad.push(`${to} -> ${r2.status()}`)
+		const at = loc ? decodeURIComponent(new URL(loc, base + "/").pathname) : ""
+		if (![301, 302, 307, 308].includes(r.status()) || at !== to) return bad.push(`legacy ${from} -> ${r.status()} ${loc} (expected one redirect to ${to})`)
+		const r2 = await ctx.request.get(new URL(loc, base + "/").href, { maxRedirects: 0 })
+		if (r2.status() !== 200) bad.push(`legacy ${from} -> ${to} -> ${r2.status()} (expected 200 after one redirect)`)
 	}
-	report.runs.push({ label: "links", internal: hrefs.size, legacy: Object.keys(LEGACY).length, bad })
-	console.log(`> links: ${hrefs.size} internal + ${Object.keys(LEGACY).length} legacy, bad=${bad.length}`)
+	for (const [from, to] of Object.entries(LEGACY.pages)) await once(from, to), legacy.pages++
+	for (const [from, to] of Object.entries(LEGACY.moved)) await once(from, to), legacy.moved++
+	for (const a of LEGACY.assets) await once(a, a), legacy.assets++
+	for (const from of Object.keys(LEGACY.retired)) {
+		const r = await ctx.request.get(base + enc(from), { maxRedirects: 0 })
+		if (r.status() !== 404) bad.push(`legacy ${from} (retired) -> ${r.status()}, expected 404`)
+		legacy.retired++
+	}
+	const nLegacy = legacy.pages + legacy.moved + legacy.assets + legacy.retired
+	report.runs.push({ label: "links", internal: hrefs.size, legacy, bad })
+	console.log(`> links: ${hrefs.size} internal + ${nLegacy} legacy (${Object.entries(legacy).map(([k, v]) => `${k} ${v}`).join(", ")}), bad=${bad.length}`)
 	if (bad.length) fail(`links: ${bad.join(" | ")}`)
+	await ctx.close()
+}
+
+// ---------- meta (v2.7, go-live): résumé, robots, sitemap, share card, canonicals, JSON-LD, icons, 404 ----------
+async function imageSize(buf, type) {
+	const page = await browser.newPage()
+	const size = await page.evaluate(
+		async ([b64, type]) => {
+			const img = new Image()
+			img.src = `data:${type};base64,${b64}`
+			await img.decode()
+			return { width: img.naturalWidth, height: img.naturalHeight }
+		},
+		[buf.toString("base64"), type],
+	)
+	await page.close()
+	return size
+}
+if (runs("meta")) {
+	const ctx = await browser.newContext()
+	const req = ctx.request
+	const bad = []
+	const meta = {}
+	// Résumé: a real PDF, opened inline and saved under its own name.
+	const pdf = await req.get(base + "/resume.pdf", { maxRedirects: 0 })
+	const pdfBody = pdf.status() === 200 ? await pdf.body() : Buffer.alloc(0)
+	meta.resume = { status: pdf.status(), type: pdf.headers()["content-type"], disposition: pdf.headers()["content-disposition"], bytes: pdfBody.length }
+	if (pdf.status() !== 200) bad.push(`/resume.pdf -> ${pdf.status()}`)
+	if (!/^application\/pdf/.test(meta.resume.type || "")) bad.push(`/resume.pdf content-type ${meta.resume.type}`)
+	if (!/^inline;\s*filename="Lars_Crawford_Resume\.pdf"$/.test(meta.resume.disposition || "")) bad.push(`/resume.pdf content-disposition ${meta.resume.disposition}`)
+	if (pdfBody.subarray(0, 5).toString() !== "%PDF-") bad.push("/resume.pdf is not a PDF")
+	// robots.txt and the sitemap; every sitemap URL must answer 200 here.
+	const robots = await req.get(base + "/robots.txt", { maxRedirects: 0 })
+	const robotsText = robots.status() === 200 ? await robots.text() : ""
+	meta.robots = { status: robots.status() }
+	if (robots.status() !== 200) bad.push(`/robots.txt -> ${robots.status()}`)
+	if (!/^Allow: \/$/m.test(robotsText) || /^Disallow: \/\s*$/m.test(robotsText)) bad.push("robots.txt does not allow /")
+	if (!robotsText.includes(`Sitemap: ${SITE}/sitemap.xml`)) bad.push("robots.txt does not name the sitemap")
+	const sm = await req.get(base + "/sitemap.xml", { maxRedirects: 0 })
+	const locs = sm.status() === 200 ? [...(await sm.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]) : []
+	meta.sitemap = { status: sm.status(), urls: locs.length }
+	if (sm.status() !== 200 || !/xml/.test(sm.headers()["content-type"] || "")) bad.push(`/sitemap.xml -> ${sm.status()} ${sm.headers()["content-type"]}`)
+	if (locs.length < 5) bad.push(`sitemap lists ${locs.length} URLs`)
+	for (const loc of locs) {
+		if (!loc.startsWith(SITE + "/")) bad.push(`sitemap URL off the production origin: ${loc}`)
+		const r = await req.get(base + new URL(loc).pathname, { maxRedirects: 0 })
+		if (r.status() !== 200) bad.push(`sitemap ${loc} -> ${r.status()}`)
+	}
+	// Per route: canonical and og:url on the production origin at the route's own path, the card, a title.
+	const page = await ctx.newPage()
+	const head = () =>
+		page.evaluate(() => {
+			const m = (sel) => document.querySelector(sel)?.getAttribute("content") ?? null
+			return {
+				title: document.title,
+				canonical: document.querySelector("link[rel=canonical]")?.getAttribute("href") ?? null,
+				ogUrl: m('meta[property="og:url"]'),
+				ogImage: m('meta[property="og:image"]'),
+				ogW: m('meta[property="og:image:width"]'),
+				ogH: m('meta[property="og:image:height"]'),
+				twCard: m('meta[name="twitter:card"]'),
+				twImage: m('meta[name="twitter:image"]'),
+				robots: m('meta[name="robots"]'),
+				icons: [...document.querySelectorAll("link[rel=icon],link[rel=apple-touch-icon],link[rel=manifest]")].map((l) => l.getAttribute("href")),
+				jsonld: [...document.querySelectorAll('script[type="application/ld+json"]')].map((x) => x.textContent),
+			}
+		})
+	meta.routes = {}
+	for (const route of ROUTES) {
+		await page.goto(base + route, { waitUntil: "domcontentloaded" })
+		const h = await head()
+		meta.routes[route] = { title: h.title, canonical: h.canonical }
+		const want = SITE + (route === "/" ? "" : route)
+		if (h.canonical !== want && h.canonical !== want + "/") bad.push(`${route}: canonical ${h.canonical}, expected ${want}`)
+		if (h.ogUrl !== h.canonical) bad.push(`${route}: og:url ${h.ogUrl} != canonical`)
+		if (h.twCard !== "summary_large_image") bad.push(`${route}: twitter:card ${h.twCard}`)
+		if (!h.ogImage || h.twImage !== h.ogImage) bad.push(`${route}: og:image ${h.ogImage} / twitter:image ${h.twImage}`)
+		if (h.ogW !== "1200" || h.ogH !== "630") bad.push(`${route}: og:image:width/height ${h.ogW}x${h.ogH}`)
+		if (h.robots && /noindex/.test(h.robots)) bad.push(`${route}: robots meta ${h.robots}`)
+		if (!h.title || h.title.length > 70) bad.push(`${route}: title "${h.title}"`)
+		if (route === "/") {
+			// The share card itself: fetched from this server, decoded, 1200x630, <= 300 kB.
+			const og = await req.get(base + new URL(h.ogImage || "/missing-og-image", SITE).pathname)
+			const type = og.headers()["content-type"] || ""
+			const body = og.status() === 200 ? await og.body() : Buffer.alloc(0)
+			const dims = body.length ? await imageSize(body, type).catch(() => null) : null
+			meta.og = { url: h.ogImage, status: og.status(), type, kB: Math.round(body.length / 102.4) / 10, ...dims }
+			if (!h.ogImage?.startsWith(SITE + "/")) bad.push(`og:image off the production origin: ${h.ogImage}`)
+			if (og.status() !== 200 || !/^image\/(jpeg|png)/.test(type)) bad.push(`og image -> ${og.status()} ${type}`)
+			if (!dims || dims.width !== 1200 || dims.height !== 630) bad.push(`og image is ${dims?.width}x${dims?.height}, expected 1200x630`)
+			if (body.length > OG_MAX_BYTES) bad.push(`og image is ${meta.og.kB} kB > 300`)
+			// JSON-LD Person: parses, names the current role and LinkedIn.
+			let ld = null
+			try {
+				ld = h.jsonld.map((t) => JSON.parse(t)).find((x) => x["@type"] === "Person")
+			} catch (e) {
+				bad.push(`JSON-LD does not parse: ${e.message}`)
+			}
+			meta.jsonld = ld ? { jobTitle: ld.jobTitle, alumniOf: ld.alumniOf?.map?.((a) => a.name), sameAs: ld.sameAs } : null
+			if (!ld || ld.name !== "Lars Crawford" || ld.url !== SITE || !ld.jobTitle || !ld.alumniOf || !ld.sameAs?.some((u) => /linkedin\.com/.test(u))) bad.push(`JSON-LD Person incomplete: ${JSON.stringify(meta.jsonld)}`)
+			// The favicon set: each linked icon, the manifest and /favicon.ico answer 200.
+			for (const href of new Set([...h.icons, "/favicon.ico"])) {
+				const r = await req.get(base + new URL(href, base + "/").pathname, { maxRedirects: 0 })
+				if (r.status() !== 200) bad.push(`icon ${href} -> ${r.status()}`)
+			}
+			meta.icons = h.icons
+		}
+	}
+	// An unknown URL: a real 404 status and the styled page (the site header, its h1 in the display face).
+	const nf = await page.goto(base + "/no-such-page-v27", { waitUntil: "domcontentloaded" })
+	const nfh = await head()
+	const nfStyled = await page.evaluate(() => !!document.querySelector(".site-header") && /Nothing carved here/.test(document.querySelector("h1")?.textContent || "") && /Cormorant/.test(getComputedStyle(document.querySelector("h1")).fontFamily))
+	meta.notFound = { status: nf?.status(), styled: nfStyled, robots: nfh.robots }
+	if (nf?.status() !== 404 || !nfStyled) bad.push(`404 page: status ${nf?.status()}, styled=${nfStyled}`)
+	report.runs.push({ label: "meta", ...meta, bad })
+	console.log(`> meta: resume ${meta.resume.status} ${meta.resume.type} ${meta.resume.bytes} B; robots ${meta.robots.status}; sitemap ${meta.sitemap.urls} URLs; og ${meta.og?.width}x${meta.og?.height} ${meta.og?.kB} kB; 404 ${meta.notFound.status}; bad=${bad.length}`)
+	if (bad.length) fail(`meta: ${bad.join(" | ")}`)
 	await ctx.close()
 }
 
