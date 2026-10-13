@@ -36,7 +36,10 @@ export const experience: Job[] = [
 				title: "Web3 Engineer, June AI",
 				dates: "From Sep 2025",
 				bullets: [
-					"Core contributor to June AI (askjune.ai), a privacy-first AI assistant: on-device encrypted chat history, open-weights models and a Privacy+ mode; full-stack and smart-contract work.",
+					"Full-stack engineer on June AI (askjune.ai), a privacy-first, multi-model AI platform used by tens of thousands of people daily.",
+					"Built side-by-side multi-model chat by rebuilding SSE stream handling in the client; one model then synthesizes the answers into a cross-checked summary.",
+					"Core contributor to end-to-end-encrypted chat sharing, still live: chats live only on the user’s device, so the browser encrypts, the server stores only ciphertext, and the key travels only in the link.",
+					"Built client-side IndexedDB migrations that run on users’ devices; when rolling deploys sent migrated clients to old instances, proposed blue-green releases with canaries, which SRE built.",
 				],
 			},
 		],
