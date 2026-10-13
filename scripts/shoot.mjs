@@ -397,6 +397,9 @@ for (const route of runs("main") ? ROUTES : []) {
 			page.on("console", (m) => m.type() === "error" && consoleErrors.push(m.text()))
 			page.on("pageerror", (e) => consoleErrors.push(`pageerror: ${e.message}`))
 			page.on("response", (r) => r.status() >= 400 && failedRequests.push(`${r.status()} ${r.url()}`))
+			// The baked stone face (v2.5) is desktop-only: a phone must never request it.
+			const bakedFace = []
+			page.on("request", (r) => /\/stone\/face-\d+\.avif/.test(r.url()) && bakedFace.push(new URL(r.url()).pathname))
 			await page.addInitScript(() => {
 				window.__lcp = []
 				try {
@@ -539,13 +542,16 @@ for (const route of runs("main") ? ROUTES : []) {
 
 			run.consoleErrors = consoleErrors
 			run.failedRequests = failedRequests
+			run.bakedFace = bakedFace
+			if (route === "/" && vp.width < 861 && bakedFace.length) fail(`${label}: a phone requested the baked stone face (${bakedFace.join(", ")})`)
+			if (route === "/" && vp.width >= 861 && bakedFace.length !== 1) fail(`${label}: the baked stone face was requested ${bakedFace.length} times (${bakedFace.join(", ")}), expected once`)
 			if (consoleErrors.length) fail(`${label}: console errors: ${consoleErrors.join(" | ")}`)
 			if (failedRequests.length) fail(`${label}: failed requests: ${failedRequests.join(" | ")}`)
 			report.runs.push(run)
 			console.log(
 				`  fonts h1="${fonts.h1Family.slice(0, 40)}" loaded=${run.fonts.loadedDisplay.length}/${run.fonts.loadedText.length}` +
 					` overflow=${dims.scrollWidth}/${dims.innerWidth} height=${run.pageHeight} three=${dims.three} js=${run.jsEncodedKB}kB` +
-					(route === "/" ? ` primaryBottom=${dims.primaryBottom} heroWords=${dims.heroWords} lcp=${dims.lcp?.tag}#${dims.lcp?.id ?? ""}@${dims.lcp?.t}ms` : "")
+					(route === "/" ? ` primaryBottom=${dims.primaryBottom} heroWords=${dims.heroWords} lcp=${dims.lcp?.tag}#${dims.lcp?.id ?? ""}@${dims.lcp?.t}ms bakedFace=[${bakedFace.join(",")}]` : "")
 			)
 			await ctx.close()
 		}
