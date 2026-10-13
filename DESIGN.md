@@ -33,7 +33,10 @@ the agent-harness diagram with the slim slabs retired. v2.5 (on `feat/front-door
 fix 2): the stone is one material in both renderers (a riven cleavage face, bedding on the edges only, and
 the SVG twin's desktop face baked from the WebGL stone). v2.6 (on `feat/front-door-v2-6`, the v2.3
 critique's §7 #4): the type/rhythm system. The sticky sigil rail breaks the seven identical section
-headers, and Writing flows into Play as one band. Still to come: research specimen band + projects media
+headers, and Writing flows into Play as one band. v2.7 (on `feat/front-door-v2-7`): go-live readiness, not a
+redesign: the résumé ships (the hero's primary becomes the gold "Résumé (PDF)"), GitHub leaves the hero,
+every legacy URL answers, the site gets its metadata and share card (README "Legacy URLs", `lib/meta.ts`),
+and the phone header fits every width (see Layout, "Header"). Still to come: research specimen band + projects media
 + threshold light; motion polish + perf/a11y hardening.
 
 ---
@@ -308,8 +311,11 @@ rejected untested: its two offset chevrons risk the same "<" reading that failed
 12-col grid, 1280 px content, 24–32 px gutters.
 - **Header.** Transparent over the hero, solidifying after 80 px of scroll (v2.4; v2.0 ships the solid
   fallback: `--slate-950` at 80 % + blur + bottom line). Brand = laguz rune + "Lars Crawford" in Cormorant
-  500. The name stays visible at 390 (it hides only below 360 px, where it cannot fit); "Cottage" leaves the
-  nav below 420 px. Nav links separated by spacing
+  500. The name stays visible at 390 (it hides only below 360 px, where it cannot fit); "Cottage" leaves the nav below 468 px. **Phones (v2.7, measured):**
+  brand and links always fit between the gutters and the rune is never squeezed (until v2.7 flex-shrink drew
+  it 0-9 px wide at 360-389 and 420-479 px, and at 420-429 px the nav overflowed the page); at 360-389 px the
+  rune steps out so the name and three links fit, and at 360-371 px the header's gaps are 12 px. `shoot.mjs`
+  gates every width from 320 to 440. Nav links separated by spacing
   only.
 - **Hero, "the stone"** (v2.1). ≤ 40 visible words. Name at `--step-display` on two lines, no suffix (the
   accessible name is "Lars Crawford"). One-sentence lede at `--step-2t`, then place as two meta lines. CTAs:
@@ -419,7 +425,7 @@ budgeted). UI motion < 300 ms; long durations only for the one hero moment.
 | Lazy 3D chunk (gz) | ≤ 260 kB. Loaded only after LCP + idle **and** hero visible **and** not `saveData` **and** not reduced motion **and** WebGL. On coarse pointers / mobile UAs: only on first interaction (pointerdown/touch/key/wheel/scroll). The SVG stone (`StoneFallback`) is the designed first impression and the permanent fallback |
 | Fonts | ≤ 3 preloaded woff2, ≤ 150 kB (Cormorant roman 35 kB + Mona Sans 40 kB preloaded). **Text on / stays inside the latin subset** (v2.1): a single ę/ą/Ṯ on the page pulls a 30 kB latin-ext file into the mobile critical path at VeryHigh priority, so / lists only latin-subset titles (the rest are on /writing). Note: `next build` on Windows emits no font preloads (Next 15.5 matches `/next-font-loader/` with forward slashes only), so local Lighthouse runs are slightly pessimistic; Vercel (Linux) builds preload correctly |
 | Images | AVIF/WebP via `next/image`; no `unoptimized` GIFs (→ MP4/WebM, v2.3); below-fold lazy |
-| LCP / TBT / CLS (Lighthouse mobile) | ≤ 2.0 s / ≤ 150 ms / ≤ 0.05. Local Windows builds measure ~2.65 s (no font preloads, see Fonts); v2.3 is level with v2.2 in an interleaved A/B (2.65 vs 2.66 s). Watch the simulated critical path: when the hero SVG stopped referencing `/textures/grain.png`, its CSS-initiated request cost ~60 ms of simulated LCP, so the layout preloads it. `experimental.inlineCss` was tried in v2.3 and dropped (no local gain: 2.73 s). v2.4 is level with v2.3 locally (interleaved ×3: 2.65 vs 2.65 s, Perf 96 vs 96); first-load JS +0.45 kB gz (the diagram's draw trigger). v2.6 (the rail) adds no JS: first-load JS on / 117 kB, unchanged (the route chunk 5.52 → 5.6 kB); the home CSS grows 27.3 → 30.1 kB raw, 6.47 → 6.91 kB gz. Interleaved with v2.5 ×5 (local): Perf 96 vs 96, LCP 2.63 vs 2.66 s, TBT 8–14 ms, CLS 0 |
+| LCP / TBT / CLS (Lighthouse mobile) | ≤ 2.0 s / ≤ 150 ms / ≤ 0.05. Local Windows builds measure ~2.65 s (no font preloads, see Fonts); v2.3 is level with v2.2 in an interleaved A/B (2.65 vs 2.66 s). Watch the simulated critical path: when the hero SVG stopped referencing `/textures/grain.png`, its CSS-initiated request cost ~60 ms of simulated LCP, so the layout preloads it. `experimental.inlineCss` was tried in v2.3 and dropped (no local gain: 2.73 s). v2.4 is level with v2.3 locally (interleaved ×3: 2.65 vs 2.65 s, Perf 96 vs 96); first-load JS +0.45 kB gz (the diagram's draw trigger). v2.6 (the rail) adds no JS: first-load JS on / 117 kB, unchanged (the route chunk 5.52 → 5.6 kB); the home CSS grows 27.3 → 30.1 kB raw, 6.47 → 6.91 kB gz. Interleaved with v2.5 ×5 (local): Perf 96 vs 96, LCP 2.63 vs 2.66 s, TBT 8–14 ms, CLS 0. v2.7 (go-live) adds no client JS either: first-load JS on / 117 kB (route 5.59 → 5.6 kB); the document grows 0.9 kB gz (metadata, JSON-LD). Interleaved with v2.6 ×7 (local): Perf 96 vs 96, LCP 2.64 vs 2.64 s, TBT 18 vs 13 ms, CLS 0, A11y/BP/SEO 100. **No web manifest:** Lighthouse fetches a linked one before LCP and its simulation charged it ~30 ms of LCP (2.66 vs 2.63 s ×5), so v2.7 dropped it; home-screen installs are not worth that |
 | Lighthouse mobile | Perf ≥ 90, A11y ≥ 95, BP ≥ 95 |
 | Runtime | Animate only transform/opacity/filter on small layers; one rAF-coalesced pointer listener; canvas DPR ≤ 1.5, paused offscreen; never write custom properties on `<html>` at runtime (it restyles the whole document: the torch vars live on `.atmos`); never create a WebGL context before the 3D gate opens (the probe alone cost ~300 ms TBT). `content-visibility: auto` on sections was tried in v2.0 (+1 perf) and dropped: Lighthouse/axe hit-testing then saw the 1400 px placeholders overlap real content (false `target-size` failure, a11y 96) |
 
@@ -514,4 +520,13 @@ to run a subset. v2.6 adds **the sigil rail** (every viewport on /: desktop rail
 the body, inside their section, engaged mid-section where the section is taller than the viewport, titles
 ≤ 0.7× Play's, sigils ≥ 1.5× their title; phones: not sticky, sigil inline with the title; frames in
 `<label>-rail-<id>.png`); the sigil gate finds rail sigils as well as header ones. `scripts/bake-stone.mjs` re-bakes the SVG twin's desktop face (against `next dev`);
-`scripts/make-grain.mjs` regenerates the grain tile; `scripts/crop-science.mjs` regenerates the research plates.
+v2.7 adds the **go-live** gates. `links` now walks every URL the legacy site served
+(`lib/legacy-urls.json`: 8 pages, 9 renamed files, 52 unchanged assets, 1 retired API): same path = 200 with no
+redirect, moved = exactly one redirect to the new path and then 200, retired = 404. A new `meta` block (`ONLY=meta`)
+gates `/resume.pdf` (200, `application/pdf`, inline as `Lars_Crawford_Resume.pdf`, a real PDF), `robots.txt`
+(allows /, names the sitemap), `sitemap.xml` (every URL in it answers 200), the share card (`og:image` =
+`twitter:image`, decoded 1200 x 630, ≤ 300 kB, `summary_large_image`), each route's canonical and og:url on
+the production origin, the JSON-LD Person, the icon set and a styled 404. `narrow` sweeps every 10 px from 320
+to 440 (plus 375, 393, 414, 467, 468; 320 alone before): no overflow, the header nav inside its gutters, the
+brand rune whole or hidden. Point it at production after the
+switch (`ONLY=links,meta node scripts/shoot.mjs https://w0nd3r.rune.love shots/prod`). `scripts/make-grain.mjs` regenerates the grain tile; `scripts/crop-science.mjs` regenerates the research plates. `scripts/make-og.mjs` re-renders the share card from the hero (against a running server); `scripts/make-icons.mjs` the raster icons.
