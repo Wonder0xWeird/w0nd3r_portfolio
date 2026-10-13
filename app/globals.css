@@ -666,11 +666,29 @@ strong {
 	width: 100%;
 	height: 100%;
 }
-/* The SVG twin's bedding is feTurbulence, rasterised before the first paint (~100 ms in headless
-   Edge, software raster). Below 861 px the stone is a half-lit 250-330 px backdrop where the texture
-   cannot be seen, so phones skip it (v2.3). */
-@media (max-width: 860px) {
-	.stone-bedding {
+/* The SVG twin (StoneFallback), three layers: the drawn face, the baked 3D stone, the light and runes.
+   From 861 px up the face is the WebGL stone itself, baked (scripts/bake-stone.mjs, v2.5): the same
+   slate, ripple and bedded edges, so the handoff keeps the pattern (v2.3's feTurbulence bedding read as
+   brushed metal and was replaced at the swap). Over it, the drawn foot, shoulder, flanks and rim give way
+   to the baked ones. Below 861 px the stone is a half-lit 250-330 px backdrop: the image is never
+   requested there (no rule below references it), and the face stays the smooth gradient. */
+.stone__twin > * {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+}
+.stone__baked {
+	display: none;
+}
+@media (min-width: 861px) {
+	.stone__baked {
+		display: block;
+		background: url("/stone/face-740.avif") 0 0 / 100% 100% no-repeat;
+		background-image: -webkit-image-set(url("/stone/face-740.avif") 1x, url("/stone/face-1480.avif") 2x);
+		background-image: image-set(url("/stone/face-740.avif") 1x, url("/stone/face-1480.avif") 2x);
+	}
+	.stone__twin .sf-drawn {
 		display: none;
 	}
 }
