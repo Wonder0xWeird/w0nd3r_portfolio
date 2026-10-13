@@ -2,12 +2,14 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import Image from "next/image"
 import { art } from "@/content/writing"
+import { pageMeta } from "@/lib/meta"
 import s from "../writing.module.css"
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
 	title: "Art",
 	description: "Sigils, logos and pixel experiments by w0nd3r.",
-}
+	path: "/writing/art",
+})
 
 export default function ArtPage() {
 	return (

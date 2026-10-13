@@ -6,6 +6,7 @@ import { readFile } from "node:fs/promises"
 import path from "node:path"
 import { marked } from "marked"
 import { letters } from "@/content/writing"
+import { pageMeta } from "@/lib/meta"
 import s from "../../writing.module.css"
 
 export const dynamicParams = false
@@ -17,7 +18,9 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
 	const { slug } = await params
 	const letter = letters.find((l) => l.slug === slug)
-	return letter ? { title: `Dear Lambda: ${letter.title}`, description: letter.blurb } : {}
+	return letter
+		? pageMeta({ title: `Dear Lambda: ${letter.title}`, description: letter.blurb, path: `/writing/dear-lambda/${letter.slug}`, type: "article" })
+		: {}
 }
 
 /** Reads the legacy markdown verbatim (frontmatter stripped) and renders it at build time. */

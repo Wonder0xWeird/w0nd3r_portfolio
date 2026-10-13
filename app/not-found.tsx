@@ -1,6 +1,9 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { Rune } from "@/components/Rune"
 import s from "./writing/writing.module.css"
+
+export const metadata: Metadata = { title: "Nothing carved here" }
 
 export default function NotFound() {
 	return (

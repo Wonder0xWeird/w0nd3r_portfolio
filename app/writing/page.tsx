@@ -3,12 +3,14 @@ import Link from "next/link"
 import Image from "next/image"
 import { CarvedRune } from "@/components/CarvedRune"
 import { art, letters, musings, poems, writingSections } from "@/content/writing"
+import { pageMeta } from "@/lib/meta"
 import s from "./writing.module.css"
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
 	title: "Writing",
 	description: "Dear Lambda letters, poems, musings and art by Lars Crawford (w0nd3r).",
-}
+	path: "/writing",
+})
 
 const section = (id: string) => writingSections.find((w) => w.id === id)!
 

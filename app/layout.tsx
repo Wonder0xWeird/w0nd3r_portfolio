@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/SiteFooter"
 import { SlabLight } from "@/components/SlabLight"
 import { DuotoneFilter } from "@/components/DuotoneFilter"
 import { profile } from "@/content/profile"
+import { OG_IMAGE, SITE_NAME } from "@/lib/meta"
 import "./globals.css"
 
 // Fonts (DESIGN.md "Type"). next/font defines these CSS variables on <html>.
@@ -54,23 +55,20 @@ const text = Mona_Sans({
 	display: "swap",
 })
 
-const description = `${profile.name}, ${profile.honorific}: ${profile.tagline}. Neural engineer turned production engineer, now leading AI transformation and building agentic systems with Claude.`
-
+// Site-wide defaults (v2.7). Each route sets its own canonical, og:url and card through pageMeta()
+// (lib/meta.ts); these cover anything that does not, e.g. the 404 page (which Next marks noindex).
 export const metadata: Metadata = {
 	metadataBase: new URL(profile.siteUrl),
 	title: {
 		default: `${profile.name}: ${profile.tagline}`,
 		template: `%s | ${profile.name}`,
 	},
-	description,
-	openGraph: {
-		type: "website",
-		url: profile.siteUrl,
-		title: profile.name,
-		description,
-		siteName: "w0nd3r.rune.love",
-	},
-	twitter: { card: "summary", title: profile.name, description },
+	description: profile.lede,
+	applicationName: SITE_NAME,
+	authors: [{ name: profile.name, url: profile.siteUrl }],
+	creator: profile.name,
+	openGraph: { type: "website", siteName: SITE_NAME, locale: "en_US", images: [OG_IMAGE] },
+	twitter: { card: "summary_large_image", images: [OG_IMAGE] },
 }
 
 export const viewport: Viewport = {

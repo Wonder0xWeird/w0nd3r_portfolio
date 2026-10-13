@@ -16,7 +16,11 @@ import { publications, honors } from "@/content/publications"
 import { projects, proofCards } from "@/content/projects"
 import { letters, poems, musings, writingSections } from "@/content/writing"
 import { RUNE_LABEL, SIGIL_MEANING, type RuneName } from "@/lib/runes"
+import { pageMeta, personJsonLd } from "@/lib/meta"
 import s from "./home.module.css"
+
+// The front door keeps the layout's title; it adds its canonical URL and the share card (lib/meta.ts).
+export const metadata = pageMeta({ description: profile.lede, path: "/" })
 
 // The résumé CTA only renders once the final PDF is in public/ (the primary
 // CTA must never 404). Until then, email is the primary action.
@@ -126,6 +130,11 @@ export default function Home() {
 
 	return (
 		<>
+			{/* Who this site is about, for search engines (JSON-LD; "<" escaped so content can never close the tag). */}
+			<script
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd).replace(/</g, "\\u003c") }}
+			/>
 			{/* ---------- hero: the name, one line of who/what-now, the next action; the stone ---------- */}
 			<section className={s.hero} aria-labelledby="hero-title">
 				<div className={`container ${s.heroGrid}`}>

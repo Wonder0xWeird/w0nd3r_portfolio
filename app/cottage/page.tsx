@@ -2,12 +2,14 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { StoneFallback } from "@/components/hero/StoneFallback"
 import { StoneLight, StoneMotes, stoneVars } from "@/components/hero/StoneLight"
+import { pageMeta } from "@/lib/meta"
 import s from "../writing/writing.module.css"
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
 	title: "The cottage",
 	description: "An explorable 3D cottage on a hill: under construction.",
-}
+	path: "/cottage",
+})
 
 export default function Cottage() {
 	return (
