@@ -33,7 +33,7 @@ export const experience: Job[] = [
 				],
 			},
 			{
-				title: "Web3 Engineer, June AI",
+				title: "Software Engineer (Web3 team), June AI",
 				dates: "From Sep 2025",
 				bullets: [
 					"Full-stack engineer on June AI (askjune.ai), a privacy-first, multi-model AI platform used by tens of thousands of people daily.",
