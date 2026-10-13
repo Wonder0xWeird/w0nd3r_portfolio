@@ -12,7 +12,8 @@
  * For / at 1440x900 and 390x844, in normal and reduced motion, it:
  *   - waits for document.fonts.ready and asserts the display (Cormorant) and
  *     text (Mona Sans) faces are the computed families AND actually loaded;
- *   - asserts no horizontal overflow (also at 320x640);
+ *   - asserts no horizontal overflow (also at every 10 px from 320 to 440 since v2.7, with the header
+ *     nav inside its gutters);
  *   - saves the fold and one crop per `main > section` at device scale
  *     factor 2, and the full page at 1x (Chromium breaks taller captures);
  *   - captures hover states for the first slab and the primary button;
@@ -643,23 +644,45 @@ for (const route of runs("main") ? ROUTES : []) {
 	}
 }
 
-// Narrowest supported width: overflow only.
+// Phone widths (v2.7: every 10 px from 320 to 440, plus 375/393/414; 320 alone before): no horizontal
+// overflow, the header's brand + nav stay inside the gutters and its rune is never squeezed (until v2.7, at
+// 420 px "Cottage" re-entered the nav and overflowed the page by 9 px, and flex-shrink drew the rune 0-9 px
+// wide on 360-389 and 420-479 px phones).
+const NARROW = [...Array.from({ length: 13 }, (_, i) => 320 + i * 10), 375, 393, 414, 467, 468].sort((a, b) => a - b)
 for (const route of runs("narrow") ? ROUTES : []) {
 	const ctx = await browser.newContext({ viewport: { width: 320, height: 640 }, hasTouch: true, isMobile: true })
 	const page = await ctx.newPage()
-	await page.goto(base + route, { waitUntil: "load" })
-	await page.waitForTimeout(300)
-	const d = await page.evaluate(() => {
-		const vw = document.documentElement.clientWidth
-		const wide = [...document.querySelectorAll("body *")]
-			.filter((el) => el.getBoundingClientRect().right > 320.5 && getComputedStyle(el).position !== "fixed")
-			.slice(0, 5)
-			.map((el) => `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)} right=${Math.round(el.getBoundingClientRect().right)}`)
-		return { sw: document.documentElement.scrollWidth, iw: window.innerWidth, vw, wide }
-	})
-	report.runs.push({ label: `${slug(route)}-320`, route, viewport: "320", scrollWidth: d.sw, innerWidth: d.iw, widest: d.wide })
-	if (d.sw > 320 || d.iw > 320) fail(`${slug(route)}-320: horizontal overflow ${d.sw} > 320 (${d.wide.join("; ")})`)
-	console.log(`> ${slug(route)}-320 overflow=${d.sw}/${d.iw}`)
+	const worst = []
+	for (const w of NARROW) {
+		await page.setViewportSize({ width: w, height: 640 })
+		await page.goto(base + route, { waitUntil: "load" })
+		await page.evaluate(() => document.fonts.ready)
+		await page.waitForTimeout(150)
+		const d = await page.evaluate((w) => {
+			const wide = [...document.querySelectorAll("body *")]
+				.filter((el) => el.getBoundingClientRect().right > w + 0.5 && getComputedStyle(el).position !== "fixed")
+				.slice(0, 5)
+				.map((el) => `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)} right=${Math.round(el.getBoundingClientRect().right)}`)
+			const inner = document.querySelector(".site-header__inner")
+			const nav = document.querySelector(".site-header nav")
+			let headerOver = 0
+			if (inner && nav) {
+				const limit = inner.getBoundingClientRect().right - parseFloat(getComputedStyle(inner).paddingRight)
+				headerOver = Math.round((nav.getBoundingClientRect().right - limit) * 10) / 10
+			}
+			// The brand rune is either hidden on purpose or drawn whole (18 px), never squeezed by flex-shrink.
+			const rune = document.querySelector(".brand svg")
+			const runeW = rune && getComputedStyle(rune).display !== "none" ? Math.round(rune.getBoundingClientRect().width * 10) / 10 : null
+			return { sw: document.documentElement.scrollWidth, iw: window.innerWidth, wide, headerOver, runeW }
+		}, w)
+		const label = `${slug(route)}-${w}`
+		report.runs.push({ label, route, viewport: String(w), scrollWidth: d.sw, innerWidth: d.iw, headerOver: d.headerOver, runeW: d.runeW, widest: d.wide })
+		if (d.sw > w || d.iw > w) fail(`${label}: horizontal overflow ${d.sw} > ${w} (${d.wide.join("; ")})`)
+		if (d.headerOver > 0.5) fail(`${label}: the header nav runs ${d.headerOver} px into the right gutter`)
+		if (d.runeW != null && d.runeW < 17.5) fail(`${label}: the brand rune is squeezed to ${d.runeW} px`)
+		worst.push(d.sw - w)
+	}
+	console.log(`> ${slug(route)}-${NARROW[0]}..${NARROW.at(-1)} (${NARROW.length} widths) max overflow=${Math.max(...worst)}`)
 	await ctx.close()
 }
 

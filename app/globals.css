@@ -510,6 +510,8 @@ strong {
 	color: var(--text);
 }
 .brand svg {
+	/* never squeezed: until v2.7 flex-shrink drew it 0-9 px wide on 375 and 430 px phones */
+	flex-shrink: 0;
 	color: var(--gold-400);
 	filter: drop-shadow(0 0 6px rgb(228 182 90 / 0.45));
 }
@@ -532,9 +534,28 @@ strong {
 .nav a:hover {
 	color: var(--accent-hot);
 }
-@media (max-width: 419px) {
+/* The header on phones (v2.7, measured with the faces loaded; shoot.mjs gates every width from 320 to 440):
+   the brand (rune, name) and the links must fit between the clamp(16px, 4vw, 32px) gutters. Until v2.7
+   the rune shrank to nothing on 360-389 and 420-479 px phones, the nav ran into the right gutter and at
+   420-429 px it overflowed the page.
+   - "Cottage" needs 468 px (the door slab on / leads there below that).
+   - 360-389 px: the name and three links fit only without the rune, so the rune steps out (rather than
+     being squeezed); 360-371 px also step the header's gaps down to --space-3.
+   - Below 360 the name steps out instead and the rune returns. */
+@media (max-width: 467px) {
 	.nav__cottage {
 		display: none;
+	}
+}
+@media (min-width: 360px) and (max-width: 389px) {
+	.brand svg {
+		display: none;
+	}
+}
+@media (min-width: 360px) and (max-width: 371px) {
+	.site-header__inner,
+	.nav {
+		gap: var(--space-3);
 	}
 }
 @media (max-width: 359px) {
