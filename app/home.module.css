@@ -422,33 +422,151 @@
 	margin: var(--space-4) 0 0;
 	color: var(--text-2);
 }
-.subhead {
-	margin: clamp(32px, 6vw, 80px) 0 var(--space-4);
-	font-size: var(--step-3);
+
+/* ---------- the sticky sigil rail (v2.6): Experience, Research, Projects, Writing ----------
+   v2.5 gave all seven sections one header: a 68 px sigil beside a 77 px title (the critique's "header
+   template x7"). Now only Proof (sigil inline, its one-line title) and Play (centred, --step-5) keep a
+   header of their own; these four hang their sigil in a rail beside the body and drop the title to
+   --step-4 at the top of the body column. The scale moves to the rune: an 86 px incised sigil over a
+   45 px title at 1440. From 861 px the rail is sticky, so the sigil and the pool of light it casts stay
+   beside the reader through a long section and hand over to the next sigil at the section's end; the
+   light moves with its source. Below 861 px there is no rail: the sigil sits inline with the title. */
+.railGrid {
+	--rail-w: clamp(112px, 12vw, 192px);
+	--rail-gap: clamp(24px, 3.5vw, 56px);
+	--rail-sigil: clamp(64px, 7vw, 112px);
+	--rail-top: calc(var(--header-h) + clamp(24px, 5svh, 48px));
+	/* phones: the inline sigil column, as in Proof's header */
+	--sigil-w: clamp(36px, 1.25rem + 2.8vw, 68px);
+	--sigil-gap: clamp(14px, 2vw, 28px);
+	display: grid;
 }
-.lead {
-	font-size: var(--step-1);
-	line-height: 1.5;
-	color: var(--text);
+.rail {
+	position: relative;
+	display: grid;
+	align-content: start;
+	justify-items: start;
+	row-gap: clamp(8px, 1vw, 14px);
+	min-width: 0;
 }
-.more {
-	margin: var(--space-6) 0 0;
+.railSigil {
+	/* the box is cropped to the rune (CarvedRune fit), so its height sets the size and its left edge is the
+	   rune's: the caption under it starts on the same line */
+	width: auto;
+	height: var(--rail-sigil);
+	margin-top: 0;
 }
-.stack {
-	margin: var(--space-3) 0 0;
-	font-size: var(--step--1);
-	line-height: 1.45;
-	color: var(--text-3);
+/* the caption hangs left-aligned under the rune, name over meaning */
+.rail .sigilName {
+	justify-self: start;
+	text-align: left;
 }
-.bullets {
-	max-width: var(--measure);
-	margin: var(--space-3) 0 0;
-	padding-left: 1.1em;
-	list-style-type: disc;
-	color: var(--text-2);
+/* The sigil's light: the same warm pool as Proof's, centred on the rune. It lives on the rail, so on
+   desktop it travels with the sticky sigil and lights the lines beside it as they pass. */
+.rail::before {
+	content: "";
+	position: absolute;
+	z-index: -1;
+	left: calc(var(--rail-sigil) * 0.3);
+	top: calc(var(--rail-sigil) / 2);
+	width: min(1100px, 150vw);
+	height: 600px;
+	translate: -40% -50%;
+	background: radial-gradient(
+		closest-side in oklch,
+		rgb(207 156 63 / 0.17),
+		rgb(207 156 63 / 0.06) 48%,
+		rgb(207 156 63 / 0)
+	);
+	pointer-events: none;
 }
-.bullets li + li {
-	margin-top: 6px;
+.railHead {
+	margin-bottom: clamp(32px, 4.5vw, 64px);
+}
+.railHead h2 {
+	max-width: 15em; /* the long Research title breaks into two balanced lines, not one 1,000 px line */
+	margin: 0;
+	font-size: var(--step-4);
+	font-weight: 400;
+	line-height: 1.05;
+}
+.railBody {
+	min-width: 0;
+}
+@media (min-width: 861px) {
+	.railGrid {
+		grid-template-columns: var(--rail-w) minmax(0, 1fr);
+		column-gap: var(--rail-gap);
+	}
+	/* Sticky within its own grid area (the section's body), so it never crosses into the next section.
+	   z-index -1: a sticky box is a stacking context painted above in-flow content, so its pool would
+	   tint the text beside it; below the content it lights the slate instead (the rail holds no links). */
+	.rail {
+		position: sticky;
+		top: var(--rail-top);
+		z-index: -1;
+		align-self: start;
+		/* the rune's top meets the title's cap height */
+		padding-top: 0.3rem;
+	}
+	.rail .sigilName {
+		font-size: 0.8125rem;
+	}
+	.rail .sigilMeaning {
+		display: block;
+	}
+}
+@media (max-width: 860px) {
+	/* No rail: the body's wrapper dissolves, the sigil and its name take the title's row, and everything
+	   after the title spans both columns. */
+	.railGrid {
+		grid-template-columns: var(--sigil-w) minmax(0, 1fr);
+		column-gap: var(--sigil-gap);
+	}
+	.railBody {
+		display: contents;
+	}
+	.railBody > * {
+		grid-column: 1 / -1;
+	}
+	.rail {
+		grid-column: 1;
+		grid-row: 1;
+	}
+	.railBody > .railHead {
+		grid-column: 2;
+		grid-row: 1;
+		align-self: center;
+	}
+	/* phones: the rune centred in the same square as Proof's inline sigil */
+	.railSigil {
+		width: var(--sigil-w);
+		height: var(--sigil-w);
+	}
+	.rail::before {
+		left: calc(var(--sigil-w) / 2);
+		top: calc(var(--sigil-w) / 2);
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	@supports (animation-timeline: view()) {
+		/* The title's view timeline drives the rail's ignition (the rail is not its descendant, so the
+		   name is hoisted to the grid). Same range as the other sigils. */
+		.railGrid {
+			timeline-scope: --head;
+		}
+		.railHead {
+			view-timeline: --head block;
+		}
+		.rail::before {
+			animation-name: pool-rise;
+			animation-duration: auto;
+			animation-timing-function: linear;
+			animation-fill-mode: both;
+			animation-timeline: --head;
+			animation-range: entry 15% cover 40%;
+		}
+	}
 }
 
 /* ---------- proof: one feature slab, standing alone (v2.4: the slims restated Experience and Research) ---------- */
@@ -681,7 +799,9 @@
 /* ---------- research ---------- */
 .researchGrid {
 	display: grid;
-	grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+	/* 1.5fr/1fr beside the rail (v2.6; 1.75fr at full width): the aside's education and honors wrap less and
+	   the papers more, so the two columns end nearer each other */
+	grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
 	gap: clamp(32px, 4vw, 64px);
 	align-items: start;
 }
@@ -692,7 +812,7 @@
 .researchEdu > .subhead:first-child {
 	margin-top: clamp(32px, 4vw, 48px);
 }
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
 	.researchGrid {
 		grid-template-columns: minmax(0, 1fr);
 		row-gap: var(--space-6);
@@ -728,7 +848,7 @@
 	margin: 0;
 	aspect-ratio: 1;
 }
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
 	.scienceGrid {
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: var(--space-2);
@@ -1087,7 +1207,7 @@
 	padding-left: var(--space-5);
 	border-left: 1px solid var(--line);
 }
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
 	.library {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}

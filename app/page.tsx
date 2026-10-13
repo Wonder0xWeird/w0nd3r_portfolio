@@ -54,6 +54,31 @@ function SectionHead({ id, rune, title, children }: { id: string; rune: RuneName
 	)
 }
 
+/**
+ * The sticky sigil rail (v2.6; DESIGN.md "Layout"). Experience, Research, Projects and Writing hang their
+ * sigil in a rail beside the body instead of beside a 77 px title: from 861 px the rail is sticky, so the
+ * rune and the pool of light it casts travel down the section with the reader; below 861 px it sits inline
+ * with the title. Decorative (the rune and its caption are aria-hidden); the h2 carries the meaning.
+ */
+function SigilRail({ rune }: { rune: RuneName }) {
+	return (
+		<div className={s.rail} data-rail="">
+			<CarvedRune name={rune} className={`${s.sigil} ${s.railSigil}`} fit />
+			<SigilName rune={rune} />
+		</div>
+	)
+}
+
+/** A rail section's title: --step-4 at the top of the body column, beside the rail's sigil. */
+function RailHead({ id, title, children }: { id: string; title: string; children?: React.ReactNode }) {
+	return (
+		<header className={s.railHead}>
+			<h2 id={`${id}-title`}>{title}</h2>
+			{children}
+		</header>
+	)
+}
+
 /** Two quiet meta lines, never joined with "·". */
 function Meta({ lines, className }: { lines: (string | undefined)[]; className?: string }) {
 	return (
@@ -180,223 +205,234 @@ export default function Home() {
 
 			{/* ---------- experience: one impact line per org; the rest is disclosed, never deleted ---------- */}
 			<section id="experience" className={s.section} aria-labelledby="experience-title">
-				<div className="container">
-					<SectionHead id="experience" rune="raidho" title="Shipping systems people rely on" />
-					<ol className={s.timeline}>
-						{experience.filter((job) => !job.earlier).map((job) => {
-							const [lead, ...firstRest] = job.roles[0].bullets
-							const rest = job.roles
-								.map((r, i) => ({ title: r.title, bullets: i === 0 ? firstRest : r.bullets }))
-								.filter((r) => r.bullets.length)
-							const count = rest.reduce((n, r) => n + r.bullets.length, 0)
-							return (
-								<li key={job.org} className={s.job}>
-									<div className={s.jobHead}>
-										<h3 className={s.org}>{job.href ? <External href={job.href} icon={false}>{job.org}</External> : job.org}</h3>
-										<Meta lines={[job.location, job.dates]} />
-									</div>
-									<div className={s.jobBody}>
-										<ul className={s.roleList}>
-											{job.roles.map((r) => (
-												<li key={r.title}>
-													<span className={s.roleTitle}>{r.title}</span>
-													{r.dates !== job.dates ? <span className="meta">{r.dates}</span> : null}
-												</li>
-											))}
-										</ul>
-										{lead ? <p className={s.impact}>{lead}</p> : null}
-										{count || job.stack ? (
-											<More label={`More from ${job.org}`} count={count}>
-												{rest.map((r) => (
-													<div key={r.title}>
-														{job.roles.length > 1 ? <p className={s.moreRole}>{r.title}</p> : null}
-														<ul className={s.bullets}>
-															{r.bullets.map((b) => (
-																<li key={b}>{b}</li>
-															))}
-														</ul>
-													</div>
+				<div className={`container ${s.railGrid}`}>
+					<SigilRail rune="raidho" />
+					<div className={s.railBody} data-rail-body="">
+						<RailHead id="experience" title="Shipping systems people rely on" />
+						<ol className={s.timeline}>
+							{experience.filter((job) => !job.earlier).map((job) => {
+								const [lead, ...firstRest] = job.roles[0].bullets
+								const rest = job.roles
+									.map((r, i) => ({ title: r.title, bullets: i === 0 ? firstRest : r.bullets }))
+									.filter((r) => r.bullets.length)
+								const count = rest.reduce((n, r) => n + r.bullets.length, 0)
+								return (
+									<li key={job.org} className={s.job}>
+										<div className={s.jobHead}>
+											<h3 className={s.org}>{job.href ? <External href={job.href} icon={false}>{job.org}</External> : job.org}</h3>
+											<Meta lines={[job.location, job.dates]} />
+										</div>
+										<div className={s.jobBody}>
+											<ul className={s.roleList}>
+												{job.roles.map((r) => (
+													<li key={r.title}>
+														<span className={s.roleTitle}>{r.title}</span>
+														{r.dates !== job.dates ? <span className="meta">{r.dates}</span> : null}
+													</li>
 												))}
-												{job.stack ? <Stack items={job.stack} /> : null}
-											</More>
-										) : null}
-									</div>
-								</li>
-							)
-						})}
-					</ol>
-					{experience
-						.filter((job) => job.earlier)
-						.map((job) => (
-							<More key={job.org} label={`Before software: ${job.org}, ${job.dates}`} className={s.earlier}>
-								{job.roles.map((r) => (
-									<div key={r.title}>
-										<p className={s.moreRole}>{r.title}</p>
-										<ul className={s.bullets}>
-											{r.bullets.map((b) => (
-												<li key={b}>{b}</li>
-											))}
-										</ul>
-									</div>
-								))}
-								<p className={s.stack}>{job.location}</p>
-							</More>
-						))}
+											</ul>
+											{lead ? <p className={s.impact}>{lead}</p> : null}
+											{count || job.stack ? (
+												<More label={`More from ${job.org}`} count={count}>
+													{rest.map((r) => (
+														<div key={r.title}>
+															{job.roles.length > 1 ? <p className={s.moreRole}>{r.title}</p> : null}
+															<ul className={s.bullets}>
+																{r.bullets.map((b) => (
+																	<li key={b}>{b}</li>
+																))}
+															</ul>
+														</div>
+													))}
+													{job.stack ? <Stack items={job.stack} /> : null}
+												</More>
+											) : null}
+										</div>
+									</li>
+								)
+							})}
+						</ol>
+						{experience
+							.filter((job) => job.earlier)
+							.map((job) => (
+								<More key={job.org} label={`Before software: ${job.org}, ${job.dates}`} className={s.earlier}>
+									{job.roles.map((r) => (
+										<div key={r.title}>
+											<p className={s.moreRole}>{r.title}</p>
+											<ul className={s.bullets}>
+												{r.bullets.map((b) => (
+													<li key={b}>{b}</li>
+												))}
+											</ul>
+										</div>
+									))}
+									<p className={s.stack}>{job.location}</p>
+								</More>
+							))}
+					</div>
 				</div>
 			</section>
 
 			{/* ---------- research ---------- */}
 			<section id="research" className={s.sectionBand} aria-labelledby="research-title">
-				<div className="container">
-					<SectionHead id="research" rune="dagaz" title="Neural engineering, from electrodes to immune cells" />
-					{/* Two independent columns on wide screens (no row alignment, so no voids); on narrow
-					    ones the wrappers dissolve and the blocks reorder: work, images, papers, education. */}
-					<div className={s.researchGrid}>
-						<div className={s.researchMain}>
-							<div className={s.researchWork}>
-								<ol className={s.timeline}>
-									<li className={s.job}>
-										<div className={s.jobHead}>
-											<h3 className={s.org}>{phd.org}</h3>
-											<Meta lines={[`${phd.role}, ${phd.lab}`, `${phd.place}, ${phd.dates}`]} />
-										</div>
-										<div className={s.jobBody}>
-											<p className={s.impact}>Thesis: {thesis.title}.</p>
-											<details className={`slab ${s.thesis}`}>
-												<summary>Materials, studies and the dissertation</summary>
-												<div className={s.thesisBody}>
-													<ul className={s.bullets}>
-														{phd.bullets.map((b) => (
-															<li key={b}>{b}</li>
-														))}
-													</ul>
-													<p className={s.moreRole}>{thesis.title}</p>
-													{thesis.paragraphs.map((p) => (
-														<p key={p}>{p}</p>
-													))}
-												</div>
-											</details>
-										</div>
-									</li>
-								</ol>
-								<More label="Earlier research" count={earlier.length} className={s.earlier}>
+				<div className={`container ${s.railGrid}`}>
+					<SigilRail rune="dagaz" />
+					<div className={s.railBody} data-rail-body="">
+						<RailHead id="research" title="Neural engineering, from electrodes to immune cells" />
+						{/* Two independent columns on wide screens (no row alignment, so no voids); on narrow
+						    ones the wrappers dissolve and the blocks reorder: work, images, papers, education. */}
+						<div className={s.researchGrid}>
+							<div className={s.researchMain}>
+								<div className={s.researchWork}>
 									<ol className={s.timeline}>
-										{earlier.map((r) => (
-											<li key={r.lab} className={s.job}>
-												<div className={s.jobHead}>
-													<h3 className={s.org}>{r.org}</h3>
-													<Meta lines={[`${r.role}, ${r.lab}`, `${r.place}, ${r.dates}`]} />
-												</div>
-												<div className={s.jobBody}>
-													{r.bullets.map((b) => (
-														<p key={b} className={s.impact}>
-															{b}
-														</p>
-													))}
-												</div>
-											</li>
-										))}
-									</ol>
-								</More>
-							</div>
-							<div className={s.researchPubs}>
-								<h3 className={s.subhead}>Publications and patents</h3>
-								<ol className={s.pubs}>
-									{pubs.map((p) => (
-										<li key={p.title}>
-											<span className={s.pubYear}>{p.year}</span>
-											<span>
-												<span className={s.pubTitle}>{p.href ? <External href={p.href}>{p.title}</External> : p.title}</span>
-												<span className={s.pubVenue}>
-													{p.venue}. {p.kind[0].toUpperCase() + p.kind.slice(1)}
-												</span>
-											</span>
+										<li className={s.job}>
+											<div className={s.jobHead}>
+												<h3 className={s.org}>{phd.org}</h3>
+												<Meta lines={[`${phd.role}, ${phd.lab}`, `${phd.place}, ${phd.dates}`]} />
+											</div>
+											<div className={s.jobBody}>
+												<p className={s.impact}>Thesis: {thesis.title}.</p>
+												<details className={`slab ${s.thesis}`}>
+													<summary>Materials, studies and the dissertation</summary>
+													<div className={s.thesisBody}>
+														<ul className={s.bullets}>
+															{phd.bullets.map((b) => (
+																<li key={b}>{b}</li>
+															))}
+														</ul>
+														<p className={s.moreRole}>{thesis.title}</p>
+														{thesis.paragraphs.map((p) => (
+															<p key={p}>{p}</p>
+														))}
+													</div>
+												</details>
+											</div>
 										</li>
-									))}
-								</ol>
-								<More label="Full citations with authors" count={pubs.length}>
-									<ol className={s.citations}>
+									</ol>
+									<More label="Earlier research" count={earlier.length} className={s.earlier}>
+										<ol className={s.timeline}>
+											{earlier.map((r) => (
+												<li key={r.lab} className={s.job}>
+													<div className={s.jobHead}>
+														<h3 className={s.org}>{r.org}</h3>
+														<Meta lines={[`${r.role}, ${r.lab}`, `${r.place}, ${r.dates}`]} />
+													</div>
+													<div className={s.jobBody}>
+														{r.bullets.map((b) => (
+															<p key={b} className={s.impact}>
+																{b}
+															</p>
+														))}
+													</div>
+												</li>
+											))}
+										</ol>
+									</More>
+								</div>
+								<div className={s.researchPubs}>
+									<h3 className={s.subhead}>Publications and patents</h3>
+									<ol className={s.pubs}>
 										{pubs.map((p) => (
 											<li key={p.title}>
-												{p.citation} “{p.title}.” <em>{p.venue}</em>, {p.year}.
+												<span className={s.pubYear}>{p.year}</span>
+												<span>
+													<span className={s.pubTitle}>{p.href ? <External href={p.href}>{p.title}</External> : p.title}</span>
+													<span className={s.pubVenue}>
+														{p.venue}. {p.kind[0].toUpperCase() + p.kind.slice(1)}
+													</span>
+												</span>
 											</li>
 										))}
 									</ol>
-								</More>
+									<More label="Full citations with authors" count={pubs.length}>
+										<ol className={s.citations}>
+											{pubs.map((p) => (
+												<li key={p.title}>
+													{p.citation} “{p.title}.” <em>{p.venue}</em>, {p.year}.
+												</li>
+											))}
+										</ol>
+									</More>
+								</div>
 							</div>
-						</div>
-						<div className={s.researchAside}>
-							{/* A 2 x 2 grid beside the work on wide screens; one row of four on narrow ones. */}
-							<div className={s.scienceGrid}>
-								{thesis.images.map((img) => (
-									<figure key={img.src} className={`frame ${s.scienceFig}`}>
-										<Image className="duotone" src={img.src} alt={img.alt} fill sizes="(max-width: 960px) 25vw, 260px" />
-										{img.scale ? (
-											<span className={s.scaleBar} style={{ "--bar": img.scale.fraction } as React.CSSProperties} aria-hidden="true">
-												{img.scale.label}
-											</span>
-										) : null}
-									</figure>
-								))}
-							</div>
-							<div className={s.researchEdu}>
-								<h3 className={s.subhead}>Education</h3>
-								<ul className={s.plainList}>
-									{education.map((e) => (
-										<li key={e.degree}>
-											<strong>{e.degree}</strong>
-											<Meta lines={[`${e.school}, ${e.year}`, e.note]} />
-										</li>
+							<div className={s.researchAside}>
+								{/* A 2 x 2 grid beside the work on wide screens; one row of four on narrow ones. */}
+								<div className={s.scienceGrid}>
+									{thesis.images.map((img) => (
+										<figure key={img.src} className={`frame ${s.scienceFig}`}>
+											<Image className="duotone" src={img.src} alt={img.alt} fill sizes="(max-width: 1100px) 140px, 200px" />
+											{img.scale ? (
+												<span className={s.scaleBar} style={{ "--bar": img.scale.fraction } as React.CSSProperties} aria-hidden="true">
+													{img.scale.label}
+												</span>
+											) : null}
+										</figure>
 									))}
-								</ul>
-								<h3 className={s.subhead}>Honors</h3>
-								<ul className={s.honors}>
-									{honors.slice(0, 3).map((h) => (
-										<li key={h}>{h}</li>
-									))}
-								</ul>
-								<More label="More honors" count={honors.length - 3}>
+								</div>
+								<div className={s.researchEdu}>
+									<h3 className={s.subhead}>Education</h3>
+									<ul className={s.plainList}>
+										{education.map((e) => (
+											<li key={e.degree}>
+												<strong>{e.degree}</strong>
+												<Meta lines={[`${e.school}, ${e.year}`, e.note]} />
+											</li>
+										))}
+									</ul>
+									<h3 className={s.subhead}>Honors</h3>
 									<ul className={s.honors}>
-										{honors.slice(3).map((h) => (
+										{honors.slice(0, 3).map((h) => (
 											<li key={h}>{h}</li>
 										))}
 									</ul>
-								</More>
+									<More label="More honors" count={honors.length - 3}>
+										<ul className={s.honors}>
+											{honors.slice(3).map((h) => (
+												<li key={h}>{h}</li>
+											))}
+										</ul>
+									</More>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</section>
 
-			{/* ---------- projects ---------- */}
+			{/* ---------- projects: the rail beside the featured pair; the archive shelf breaks out full width ---------- */}
 			<section id="projects" className={s.section} aria-labelledby="projects-title">
 				<div className="container">
-					<SectionHead id="projects" rune="fehu" title="Things I’ve built" />
-					<div className={s.featuredGrid}>
-						{/* One sentence in the open; the build details are one tap away (the proof slab
-						    already tells Immortal Kinematics' harness story). */}
-						{featured.map((p) => (
-							<article key={p.name} className={s.featured}>
-								<p className="meta">{p.when}</p>
-								<h3 className={s.featuredTitle}>{p.name}</h3>
-								<p className={s.lead}>{p.summary}</p>
-								<More label={`More about ${p.name}`} count={p.details?.length}>
-									{p.details?.length ? (
-										<ul className={s.bullets}>
-											{p.details.map((d) => (
-												<li key={d}>{d}</li>
-											))}
-										</ul>
-									) : null}
-									<Stack items={p.tags} />
-								</More>
-								{p.href ? (
-									<External className={s.proofLink} href={p.href}>
-										{p.linkLabel ?? "Visit"}
-									</External>
-								) : null}
-							</article>
-						))}
+					<div className={s.railGrid}>
+						<SigilRail rune="fehu" />
+						<div className={s.railBody} data-rail-body="">
+							<RailHead id="projects" title="Things I’ve built" />
+							<div className={s.featuredGrid}>
+								{/* One sentence in the open; the build details are one tap away (the proof slab
+								    already tells Immortal Kinematics' harness story). */}
+								{featured.map((p) => (
+									<article key={p.name} className={s.featured}>
+										<p className="meta">{p.when}</p>
+										<h3 className={s.featuredTitle}>{p.name}</h3>
+										<p className={s.lead}>{p.summary}</p>
+										<More label={`More about ${p.name}`} count={p.details?.length}>
+											{p.details?.length ? (
+												<ul className={s.bullets}>
+													{p.details.map((d) => (
+														<li key={d}>{d}</li>
+													))}
+												</ul>
+											) : null}
+											<Stack items={p.tags} />
+										</More>
+										{p.href ? (
+											<External className={s.proofLink} href={p.href}>
+												{p.linkLabel ?? "Visit"}
+											</External>
+										) : null}
+									</article>
+								))}
+							</div>
+						</div>
 					</div>
 
 					<h3 className={s.shelfTitle}>Earlier: games, web3 and tools</h3>
@@ -428,49 +464,52 @@ export default function Home() {
 
 			{/* ---------- writing: a typographic library; Musings and Art live on /writing below 760 px ---------- */}
 			<section id="writing" className={s.sectionBand} aria-labelledby="writing-title">
-				<div className="container">
-					<SectionHead id="writing" rune="ansuz" title="Letters, poems and musings">
-						<p className={s.sectionLede}>
-							Long before agents, I was writing letters to the machine minds I expected to meet. They are still here,
-							unedited.
+				<div className={`container ${s.railGrid}`}>
+					<SigilRail rune="ansuz" />
+					<div className={s.railBody} data-rail-body="">
+						<RailHead id="writing" title="Letters, poems and musings">
+							<p className={s.sectionLede}>
+								Long before agents, I was writing letters to the machine minds I expected to meet. They are still here,
+								unedited.
+							</p>
+						</RailHead>
+						<div className={s.library}>
+							{writingSections.map((w) => {
+								const items =
+									w.id === "dear-lambda"
+										? letters.map((l) => ({ title: l.title, href: `/writing/dear-lambda/${l.slug}` }))
+										: w.id === "poems"
+											? poems.slice(0, 3).map((p) => ({ title: p.title, href: `/writing/poems/${p.slug}` }))
+											: w.id === "musings"
+												? musings
+														.filter((p) => LATIN.test(p.title))
+														.slice(0, 3)
+														.map((p) => ({ title: p.title, href: `/writing/musings/${p.slug}` }))
+												: []
+								const wideOnly = w.id === "musings" || w.id === "art"
+								return (
+									<article key={w.id} className={`${s.shelfCol} ${wideOnly ? s.wideOnly : ""}`}>
+										<h3 className={s.libraryTitle}>
+											<Link href={w.id === "art" ? "/writing/art" : `/writing#${w.id}`}>{w.title}</Link>
+										</h3>
+										<p className={s.libraryBlurb}>{w.blurb}</p>
+										{items.length ? (
+											<ul className={s.libraryList}>
+												{items.map((it) => (
+													<li key={it.href}>
+														<Link href={it.href}>{it.title}</Link>
+													</li>
+												))}
+											</ul>
+										) : null}
+									</article>
+								)
+							})}
+						</div>
+						<p className={s.more}>
+							<Link href="/writing">All writing</Link>
 						</p>
-					</SectionHead>
-					<div className={s.library}>
-						{writingSections.map((w) => {
-							const items =
-								w.id === "dear-lambda"
-									? letters.map((l) => ({ title: l.title, href: `/writing/dear-lambda/${l.slug}` }))
-									: w.id === "poems"
-										? poems.slice(0, 3).map((p) => ({ title: p.title, href: `/writing/poems/${p.slug}` }))
-										: w.id === "musings"
-											? musings
-													.filter((p) => LATIN.test(p.title))
-													.slice(0, 3)
-													.map((p) => ({ title: p.title, href: `/writing/musings/${p.slug}` }))
-											: []
-							const wideOnly = w.id === "musings" || w.id === "art"
-							return (
-								<article key={w.id} className={`${s.shelfCol} ${wideOnly ? s.wideOnly : ""}`}>
-									<h3 className={s.libraryTitle}>
-										<Link href={w.id === "art" ? "/writing/art" : `/writing#${w.id}`}>{w.title}</Link>
-									</h3>
-									<p className={s.libraryBlurb}>{w.blurb}</p>
-									{items.length ? (
-										<ul className={s.libraryList}>
-											{items.map((it) => (
-												<li key={it.href}>
-													<Link href={it.href}>{it.title}</Link>
-												</li>
-											))}
-										</ul>
-									) : null}
-								</article>
-							)
-						})}
 					</div>
-					<p className={s.more}>
-						<Link href="/writing">All writing</Link>
-					</p>
 				</div>
 			</section>
 
