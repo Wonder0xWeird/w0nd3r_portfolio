@@ -31,9 +31,10 @@ never slices the Proof title (one line on desktop, gated line by line at 19 size
 brand and Proof title share the name's block face (gated on 5 cold loads), and the Proof feature carries
 the agent-harness diagram with the slim slabs retired. v2.5 (on `feat/front-door-v2-5`, the v2.3 critique's
 fix 2): the stone is one material in both renderers (a riven cleavage face, bedding on the edges only, and
-the SVG twin's desktop face baked from the WebGL stone). Still to come: the sticky sigil rail and
-type/rhythm system; research band + projects shelf
-+ writing + play + threshold; motion polish + perf/a11y hardening.
+the SVG twin's desktop face baked from the WebGL stone). v2.6 (on `feat/front-door-v2-6`, the v2.3
+critique's §7 #4): the type/rhythm system. The sticky sigil rail breaks the seven identical section
+headers, and Writing flows into Play as one band. Still to come: research specimen band + projects media
++ threshold light; motion polish + perf/a11y hardening.
 
 ---
 
@@ -70,9 +71,9 @@ type/rhythm system; research band + projects shelf
 | Token | Size (fluid, 390 → 1440) | Face / weight | Line-height | Use |
 |---|---|---|---|---|
 | `--step-display` | `clamp(3.75rem, min(2rem + 8.5vw, 2rem + 13svh), 11rem)` | Cormorant 300 | 0.9 | Name only. Grows with height too (v2.2): 149 at 1440×900, 172 at 1920×1080, 65 at 390. Desktops ≤ 899 px tall use `11svh` (v2.3): 111 px at 1280×720, 116 at 1366×768, 120 at 1280×800, 127 at 1536×864 |
-| `--step-5` | `clamp(2.5rem, 1.6rem + 3.6vw, 5rem)` | Cormorant 400 | 1.0 | Section titles, play manifesto |
+| `--step-5` | `clamp(2.5rem, 1.6rem + 3.6vw, 5rem)` | Cormorant 400 | 1.0 | Play manifesto, Contact; Proof's title on phones. *Since v2.6 no longer every section title* |
 | `--step-figure` | `clamp(3rem, 1.6rem + 4.2vw, 5.75rem)` | Cormorant 300, old-style figures, `--gold-200` | 0.95 | The one big figure ("2,416 of 2,593"). *Added in v2.0.* |
-| `--step-4` | `clamp(1.9rem, 1.4rem + 1.6vw, 3rem)` | Cormorant 500 | 1.05 | Feature titles, pull quotes |
+| `--step-4` | `clamp(1.9rem, 1.4rem + 1.6vw, 3rem)` | Cormorant 500 (400 for section titles) | 1.05 | Feature titles, pull quotes; Proof's title on desktop (v2.4); the four rail-section titles (v2.6, max 15em) |
 | `--step-3` | `1.75rem` | Cormorant 500 | 1.15 | Org/lab names, project names |
 | `--step-2` | `1.375rem` | Cormorant 500 | 1.2 | List titles (writing, archive shelf). *Added in v2.0.* |
 | `--step-2t` | `clamp(1.25rem, 1.05rem + 0.6vw, 1.5rem)` | Mona Sans 500 | 1.32, ≤ 23em | The hero lede: the middle step of 152 → 24 → 15 px. *Added in v2.1* |
@@ -82,6 +83,13 @@ type/rhythm system; research band + projects shelf
 
 Display-to-body ratio ≈ 9× at 1440 and ≈ 3.5× at 390. `--step--1` is 15 px, not the playbook's 14 px: the
 10-12 specimen found 14 px too faint.
+
+**Section-title ladder (v2.6).** v2.5 set every section title at 77 px beside a 68 px sigil (the critique's
+"header template ×7"). Now, at 1440: the name 149 px → Play and Contact 77 px (`--step-5`) → Proof and the
+four rail sections 45 px (`--step-4`) → org/project names 28 px (`--step-3`) → body 17 px. In the rail
+sections the scale moves to the rune: a 101 px incised sigil over a 45 px title (`shoot.mjs` gates rail
+titles ≤ 0.7× Play's and rail sigils ≥ 1.5× their title). At 390: Proof, Play and Contact 40 px, rail
+titles 30 px.
 
 ---
 
@@ -246,15 +254,29 @@ ladder and motivated light, not from shadows or washes.
 ## Sigils (one rune per section, with meaning)
 
 Section sigils are incised (`components/CarvedRune.tsx`: dark cut, moonlit lower lip, `--gold-700` inlay)
-and hang left of the section title, in a fixed `--sigil-w` column so every title starts on the same line.
+and hang left of the section title, in a fixed `--sigil-w` column (Proof, and every rail section on phones),
+or stand in the sticky rail beside the body (Experience, Research, Projects, Writing from 861 px; v2.6, below).
 **Captioned (v2.2; one line each since v2.3):** the rune's name sits under it, and from 1280 px its meaning
-too (`SIGIL_MEANING` in `lib/runes.ts`; Mona Sans 450, 13 px, 11 px below 861 px, `--text-3`,
+too (in the rail from 861 px) (`SIGIL_MEANING` in `lib/runes.ts`; Mona Sans 450, 13 px, 11 px below 861 px, `--text-3`,
 `aria-hidden` like the rune), so Ehwaz never reads as a Latin "M". Captions never wrap; `justify-self:
 safe center` keeps a wide one inside the container (it overhangs toward the title only, ≥ 13 px short of
 it). Phones left-align the name under the sigil, inside the 16 px margin. Proof's Ehwaz ignites later
 than the others (see Motion), so in the desktop fold it is an ember, not a lit drop cap.
 Play's Wunjo carries the same caption in place of the old "My massive transformative purpose" kicker.
-The sticky sigil rail is still to come.
+
+**The sticky sigil rail (v2.6).** Experience, Research, Projects and Writing no longer hang the sigil beside
+the title: it stands in a rail beside the section's body (`SigilRail` in `app/page.tsx`, `.rail*` in
+`home.module.css`). The rune is drawn from `lib/runes.ts` strokes (`CarvedRune fit`: the box is cropped to
+the rune's width, so the rune and its left-aligned name-and-meaning caption share one left edge), 64–112 px
+tall (`--rail-sigil: clamp(64px, 7vw, 112px)`, 101 px at 1440). From 861 px the rail is `position: sticky`
+(top: header + `clamp(24px, 5svh, 48px)`) inside its own grid area, so it never crosses into the next
+section: through a long section (Experience, Research) the sigil stays beside the reader and hands over to
+the next sigil at the section's end. **Its light travels with it:** the warm pool that v2.2 hung behind the
+title now hangs on the rail, so it lights the lines beside the rune as they pass. The rail sits at
+`z-index: -1` (a sticky box is a stacking context painted above in-flow content, so at `auto` its pool
+tinted the text); it holds no links. Below 861 px there is no rail: the sigil sits inline, left of the
+title, as in Proof's header. Proof keeps its inline sigil (the fold gates fix its title) and Play its
+centred Wunjo.
 
 | Where | Rune | Meaning |
 |---|---|---|
@@ -323,21 +345,41 @@ rejected untested: its two offset chevrons risk the same "<" reading that failed
   with the figure under it (no top rule); 961–1199 px it follows the body in the left column; 600–960 px
   it stacks under the body; < 600 px it is hidden (it would shrink below ~11 px; the sentence above it
   says the same).
+- **Section rhythm (v2.6).** Night: hero, Proof (inline sigil, one feature slab, full container width),
+  Experience (rail). Band: Research (rail). Night: Projects (rail beside the featured pair; the archive
+  shelf breaks out to the full container width, so the section changes width half-way). Band: Writing
+  (rail) flowing into Play (centred, full-bleed, `--step-5`) as one band. Night: Contact. No two neighbours
+  share a header: inline sigil + one-line title, rail + `--step-4`, centred rune + `--step-5`, portrait +
+  `--step-5`.
+- **The rail grid** (≥ 861 px): `--rail-w: clamp(112px, 12vw, 192px)` + `--rail-gap: clamp(24px, 3.5vw,
+  56px)` (173 + 50 px at 1440), then the body (`minmax(0, 1fr)`: 1,057 px at 1440, 1,018 at 1280, 655 at
+  861). The title sits at the top of the body column (x 303 at 1440), the rune's top on its cap height.
+  **< 861 px:** the body's wrapper is `display: contents`; the sigil (36 px at 390, in a square box, name
+  under it) takes column 1 of the title's row, the title column 2, and everything after the title spans
+  both (the Writing lede hangs under its title). Gated: sticky, ≥ 16 px clear of the body, inside its
+  section, engaged mid-section where the section is taller than the viewport; phones: not sticky, inline.
 - **Experience** (ᚱ Raidho). Org in Cormorant `--step-3`, meta in two quiet lines, stack as one `--text-3`
-  comma line. Org/role columns 3fr/9fr (v2.3; 4fr/8fr left a ~260 px dead gutter): roles start at x 463 at
-  1440. Still to come: sticky rail, gold fuse, ≤ 2 bullets + `<details>`.
-- **Research** (ᛞ Dagaz). Duotone micrographs; bibliography with a year column, no pills. The plates (v2.3)
+  comma line. Org/role columns 3fr/9fr (v2.3; 4fr/8fr left a ~260 px dead gutter); beside the rail (v2.6)
+  orgs start at x 344 and roles at x 630 at 1440. Still to come: gold fuse, ≤ 2 bullets + `<details>`.
+- **Research** (ᛞ Dagaz). Duotone micrographs; bibliography with a year column, no pills. Beside the rail
+  (v2.6) the columns are 1.5fr/1fr (1.75fr at full width left the papers ~190 px short of Honors; now
+  ~170 px) and collapse to one column below 1101 px (was 961), where the plates form one row of four. The plates (v2.3)
   are square crops in `public/images/science/plates/` made by `scripts/crop-science.mjs` from the untouched
   originals: no SEM info bars, no "Mins" header or labels, no Blender axes or 3D cursor; the SEM's 1 mm
   bar is redrawn as a clean overlay (`.scaleBar`, shown where the tile is ≥ 150 px). Later: full-bleed
   specimen band, thesis pull quote.
-- **Projects** (ᚠ Fehu). Featured pair as editorial columns, legacy work as a de-boxed archive shelf with
-  duotone tiles. v2.3: alternating rows with video loops.
-- **Writing** (ᚨ Ansuz). A typographic library, no cards, no garnish runes on its columns.
+- **Projects** (ᚠ Fehu). Featured pair as editorial columns beside the rail, legacy work as a de-boxed
+  archive shelf with duotone tiles at the full container width (v2.6). Later: poster or loop media.
+- **Writing** (ᚨ Ansuz). A typographic library beside the rail, no cards, no garnish runes on its columns;
+  four columns from 1101 px, two below (was 961).
 - **Length** (v2.1): ≤ 9,000 px at 390 and ≤ 8,500 at 1440 (`shoot.mjs` gates it). Disclose, never delete:
   the rest of a list goes behind a `<details>` whose summary names what and how many; elements hidden
   below 760 px must exist elsewhere on the page or on /writing.
-- **Play.** Full-bleed band, the one centred section; `--step-5`, all one colour.
+- **Play.** Full-bleed band, the one centred section; `--step-5`, all one colour. **Joined to Writing
+  (v2.6):** Writing's band loses its bottom edge and most of its bottom padding, Play its top margin, edge
+  and inset shadow (v2.5 left a ~130 px strip of night between the two bands). Joined, Play's light is
+  centred on Wunjo and spills up into Writing's last margin (centred on the band's top edge, with no edge
+  to start on, it read as a lit rectangle).
 - **Threshold.** Contact + a quiet door-shaped (arched) cottage slab. The door is an object, so its plaque
   is centred: the one exception to left alignment besides play. Footer: LARS runes, links spaced, © line.
 
@@ -356,7 +398,8 @@ Everything lives inside `@media (prefers-reduced-motion: no-preference)`; scroll
 | Stone ↔ scroll / pointer (later) | Yaw from scroll progress; runes brighten with proximity | rAF-coalesced | Static stone |
 | Header solidify (v2.4) | `animation-timeline: scroll(root)` | 0–80 px | Solid header |
 | Torch dims on scroll (v2.0; pages without the stone) | `animation-timeline: scroll(root)` on `.atmos__torch` opacity | 0–110vh | Static |
-| Section sigils ignite (v2.2, shipped) | Named `view-timeline: --head` on each `.sectionHead`; inlay `stroke` gold-700 → gold-200, sigil `filter` ember → `--ignited`, pool `opacity` .35 → 1; `animation-range: entry 15% cover 40%`, linear. Proof (v2.3): `entry 60% cover 45%`, so its Ehwaz enters the desktop fold as an ember | scroll-linked | **Rendered ignited** (the default rule is the final state) |
+| Section sigils ignite (v2.2, shipped) | Named `view-timeline: --head` on each `.sectionHead`; inlay `stroke` gold-700 → gold-200, sigil `filter` ember → `--ignited`, pool `opacity` .35 → 1; `animation-range: entry 15% cover 40%`, linear. Proof (v2.3): `entry 60% cover 45%`, so its Ehwaz enters the desktop fold as an ember. **Rail sections (v2.6):** the title's header (`.railHead`) declares `--head` and the grid hoists it (`timeline-scope`), so the rail, which is not its descendant, ignites on the same range | scroll-linked | **Rendered ignited** (the default rule is the final state; no `timeline-scope` support also leaves it lit) |
+| Sigil rail (v2.6) | `position: sticky`: the sigil and its pool stay beside a long section and hand over at its end. Layout, not animation, so it is the same under reduced motion | scroll position | Same (sticky) |
 | Experience fuse (v2.2) | `scaleY` on the rail rule | scroll-linked | Static gold-700 rule |
 | Proof diagram (v2.4) | `components/DrawOnView.tsx` arms it after hydration if it is below the fold; when 40 % is in view (IntersectionObserver, once) the edges draw in sequence (`stroke-dashoffset`, `pathLength=1`): lead stem, briefs branching, diffs merging, into the gate; the gate lights gold-700 → gold-200, then the line to Ship | 820 ms, linear per stage | **Fully drawn, gate lit** (server render, no JS, already in view at hydration) |
 | Slab torchlight (v2.0) | `--mx/--my` pointer gradient (fine pointers only) | 150 ms fade | None |
@@ -376,7 +419,7 @@ budgeted). UI motion < 300 ms; long durations only for the one hero moment.
 | Lazy 3D chunk (gz) | ≤ 260 kB. Loaded only after LCP + idle **and** hero visible **and** not `saveData` **and** not reduced motion **and** WebGL. On coarse pointers / mobile UAs: only on first interaction (pointerdown/touch/key/wheel/scroll). The SVG stone (`StoneFallback`) is the designed first impression and the permanent fallback |
 | Fonts | ≤ 3 preloaded woff2, ≤ 150 kB (Cormorant roman 35 kB + Mona Sans 40 kB preloaded). **Text on / stays inside the latin subset** (v2.1): a single ę/ą/Ṯ on the page pulls a 30 kB latin-ext file into the mobile critical path at VeryHigh priority, so / lists only latin-subset titles (the rest are on /writing). Note: `next build` on Windows emits no font preloads (Next 15.5 matches `/next-font-loader/` with forward slashes only), so local Lighthouse runs are slightly pessimistic; Vercel (Linux) builds preload correctly |
 | Images | AVIF/WebP via `next/image`; no `unoptimized` GIFs (→ MP4/WebM, v2.3); below-fold lazy |
-| LCP / TBT / CLS (Lighthouse mobile) | ≤ 2.0 s / ≤ 150 ms / ≤ 0.05. Local Windows builds measure ~2.65 s (no font preloads, see Fonts); v2.3 is level with v2.2 in an interleaved A/B (2.65 vs 2.66 s). Watch the simulated critical path: when the hero SVG stopped referencing `/textures/grain.png`, its CSS-initiated request cost ~60 ms of simulated LCP, so the layout preloads it. `experimental.inlineCss` was tried in v2.3 and dropped (no local gain: 2.73 s). v2.4 is level with v2.3 locally (interleaved ×3: 2.65 vs 2.65 s, Perf 96 vs 96); first-load JS +0.45 kB gz (the diagram's draw trigger) |
+| LCP / TBT / CLS (Lighthouse mobile) | ≤ 2.0 s / ≤ 150 ms / ≤ 0.05. Local Windows builds measure ~2.65 s (no font preloads, see Fonts); v2.3 is level with v2.2 in an interleaved A/B (2.65 vs 2.66 s). Watch the simulated critical path: when the hero SVG stopped referencing `/textures/grain.png`, its CSS-initiated request cost ~60 ms of simulated LCP, so the layout preloads it. `experimental.inlineCss` was tried in v2.3 and dropped (no local gain: 2.73 s). v2.4 is level with v2.3 locally (interleaved ×3: 2.65 vs 2.65 s, Perf 96 vs 96); first-load JS +0.45 kB gz (the diagram's draw trigger). v2.6 (the rail) adds no JS: first-load JS on / 117 kB, unchanged (the route chunk 5.52 → 5.6 kB); the home CSS grows 27.3 → 30.1 kB raw, 6.47 → 6.91 kB gz. Interleaved with v2.5 ×5 (local): Perf 96 vs 96, LCP 2.63 vs 2.66 s, TBT 8–14 ms, CLS 0 |
 | Lighthouse mobile | Perf ≥ 90, A11y ≥ 95, BP ≥ 95 |
 | Runtime | Animate only transform/opacity/filter on small layers; one rAF-coalesced pointer listener; canvas DPR ≤ 1.5, paused offscreen; never write custom properties on `<html>` at runtime (it restyles the whole document: the torch vars live on `.atmos`); never create a WebGL context before the 3D gate opens (the probe alone cost ~300 ms TBT). `content-visibility: auto` on sections was tried in v2.0 (+1 perf) and dropped: Lighthouse/axe hit-testing then saw the 1400 px placeholders overlap real content (false `target-size` failure, a11y 96) |
 
@@ -410,6 +453,8 @@ Added by this repo:
 - "← back" / "next →" arrows in pagers and breadcrumbs: use "Previous" / "Next" labels.
 - Repeating the same small rune as garnish (eyebrows, card corners, rules). One sigil per section, with
   meaning.
+- One section-header template repeated down the page (v2.5: sigil + 77 px title ×7). Neighbouring
+  sections differ in the scale or the position of their header (see Layout, "Section rhythm").
 
 ---
 
@@ -465,5 +510,8 @@ motion; ≥ 1200 px: ≥ 24 px clear of the figure and the slab's edges, ≥ 15 
 quadrant). v2.5 adds **the stone's pattern** to the handoff block (high-pass NCC ≥ 0.6, face lamination
 ≤ 0.6× the flank's, a `-handoff-face-2x-{svg,webgl}.png` crop per desktop size), a gate that phones never
 request `/stone/face-*.avif` (desktop: exactly once), and `ONLY=main,narrow,folds,firstpaint,handoff,links`
-to run a subset. `scripts/bake-stone.mjs` re-bakes the SVG twin's desktop face (against `next dev`);
+to run a subset. v2.6 adds **the sigil rail** (every viewport on /: desktop rails sticky, ≥ 16 px clear of
+the body, inside their section, engaged mid-section where the section is taller than the viewport, titles
+≤ 0.7× Play's, sigils ≥ 1.5× their title; phones: not sticky, sigil inline with the title; frames in
+`<label>-rail-<id>.png`); the sigil gate finds rail sigils as well as header ones. `scripts/bake-stone.mjs` re-bakes the SVG twin's desktop face (against `next dev`);
 `scripts/make-grain.mjs` regenerates the grain tile; `scripts/crop-science.mjs` regenerates the research plates.
