@@ -11,6 +11,13 @@ type NetNavigator = Navigator & { connection?: { saveData?: boolean } }
 /** Canvas crossfade (globals.css .stone__canvas); the SVG leaves and the sway starts after it. */
 const FADE_MS = 350
 
+/**
+ * `/?bake=1` (v2.5): the 3D stone loads at once and holds the handoff pose with its runes and fire light
+ * off, for scripts/bake-stone.mjs to photograph as the SVG twin's desktop face. Development builds only
+ * (or a build with NEXT_PUBLIC_STONE_BAKE=1); production compiles it away.
+ */
+const BAKE_ALLOWED = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_STONE_BAKE === "1"
+
 function webglAvailable(): boolean {
 	try {
 		const c = document.createElement("canvas")
@@ -98,9 +105,15 @@ export function HeroStone({ fallback }: { fallback: React.ReactNode }) {
 	const [ready, setReady] = useState(false)
 	const [live, setLive] = useState(false)
 	const [onscreen, setOnscreen] = useState(false)
+	const [bake, setBake] = useState(false)
 
 	// Decide whether (and when) the 3D scene may load.
 	useEffect(() => {
+		if (BAKE_ALLOWED && new URLSearchParams(window.location.search).has("bake")) {
+			setBake(true)
+			setArmed(true)
+			return
+		}
 		const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
 		const onChange = () => {
 			if (mq.matches) {
@@ -143,12 +156,12 @@ export function HeroStone({ fallback }: { fallback: React.ReactNode }) {
 		if (armed && onscreen) setEnabled(true)
 	}, [armed, onscreen])
 
-	// After the crossfade: retire the SVG and let the stone move.
+	// After the crossfade: retire the SVG and let the stone move (never while baking).
 	useEffect(() => {
-		if (!ready) return
+		if (!ready || bake) return
 		const t = window.setTimeout(() => setLive(true), FADE_MS + 40)
 		return () => window.clearTimeout(t)
-	}, [ready])
+	}, [ready, bake])
 
 	const onReady = useCallback(() => setReady(true), [])
 
@@ -159,13 +172,14 @@ export function HeroStone({ fallback }: { fallback: React.ReactNode }) {
 			style={stoneVars}
 			data-ready={ready ? "" : undefined}
 			data-live={live ? "" : undefined}
+			data-bake={bake ? "" : undefined}
 		>
 			<StoneLight torch />
 			<div className="stone__body">
 				{fallback}
 				{enabled ? (
 					<div className="stone__canvas" aria-hidden="true">
-						<RuneStoneScene active={onscreen} live={live} onReady={onReady} />
+						<RuneStoneScene active={onscreen} live={live} bake={bake} onReady={onReady} />
 					</div>
 				) : null}
 			</div>
