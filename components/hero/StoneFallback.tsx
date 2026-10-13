@@ -1,4 +1,3 @@
-import { preload } from "react-dom"
 import { GROOVE, STAGE } from "@/lib/stone"
 import { ANCHORS, FACETS, RUNE_STROKES, RUNE_UNIT, SILHOUETTE } from "./stone-profile"
 
@@ -11,13 +10,6 @@ const u = RUNE_UNIT
 const FOOT = { from: 0.6, to: 0.9, alpha: 0.28 }
 
 /**
- * The 3D stone baked (v2.5, scripts/bake-stone.mjs): its slate, light, flanks and crown at the handoff
- * pose, without runes or fire, at the stage's 740 px maximum (1x and 2x). From 861 px up it is the
- * twin's face (globals.css .stone__baked); phones never request it.
- */
-export const BAKED = { x1: "/stone/face-740.avif", x2: "/stone/face-1480.avif", media: "(min-width: 861px)" }
-
-/**
  * The menhir as SVG: the server-rendered first paint of the hero and the
  * permanent fallback (reduced motion, Save-Data, no WebGL, touch devices that
  * never interact). Its silhouette, facets and rune positions are generated from
@@ -27,9 +19,11 @@ export const BAKED = { x1: "/stone/face-740.avif", x2: "/stone/face-1480.avif", 
  * shadowed channel up-left of each stroke.
  *
  * Three layers (v2.5): the drawn face (a smooth, night-lit blue-grey gradient);
- * from 861 px up, the 3D stone itself, baked (BAKED: the same slate, ripple,
- * bedded edges and moon as the WebGL stone, so the handoff no longer swaps one
- * pattern for another); then the light and the runes. Over the bake, the drawn
+ * from 861 px up, the 3D stone itself, baked (scripts/bake-stone.mjs writes
+ * public/stone/face-{740,1480}.avif: the same slate, ripple, bedded edges and
+ * moon as the WebGL stone at the handoff pose, without runes or fire, so the
+ * handoff no longer swaps one pattern for another; globals.css .stone__baked,
+ * which phones never request); then the light and the runes. Over the bake, the drawn
  * foot, shoulder, flanks and rim give way to the baked ones (.sf-drawn); below
  * 861 px the stone is a half-lit backdrop and keeps them, and the gradient face.
  *
@@ -39,8 +33,6 @@ export const BAKED = { x1: "/stone/face-740.avif", x2: "/stone/face-1480.avif", 
  * through the swap.
  */
 export function StoneFallback({ className, label = true }: { className?: string; label?: boolean }) {
-	// Desktop only, early and at the image's own priority: the baked face sits under the first paint's runes.
-	preload(BAKED.x2, { as: "image", imageSrcSet: `${BAKED.x1} 1x, ${BAKED.x2} 2x`, media: BAKED.media, fetchPriority: "high" })
 	const viewBox = `0 0 ${STAGE.w} ${STAGE.h}`
 	return (
 		<div

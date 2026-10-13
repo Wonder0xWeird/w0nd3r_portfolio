@@ -671,7 +671,10 @@ strong {
    slate, ripple and bedded edges, so the handoff keeps the pattern (v2.3's feTurbulence bedding read as
    brushed metal and was replaced at the swap). Over it, the drawn foot, shoulder, flanks and rim give way
    to the baked ones. Below 861 px the stone is a half-lit 250-330 px backdrop: the image is never
-   requested there (no rule below references it), and the face stays the smooth gradient. */
+   requested there (no rule below references it), and the face stays the smooth gradient. No preload:
+   a React preload hint rides in the RSC payload Next prefetches for links to /, so every desktop page
+   fetched the face; found by CSS, the bake becomes the desktop LCP element at 150 ms after TTFB (the
+   name was 195 ms, 9 interleaved cold loads; +135 ms throttled to 1.6 Mbps). */
 .stone__twin > * {
 	position: absolute;
 	inset: 0;
