@@ -29,8 +29,10 @@ as night-lit riven slate with a quiet handoff, and craft sweep 2 (no h1 font fla
 one-line sigil captions). v2.4 (on `feat/front-door-v2-4`, the v2.3 critique's fixes 1 and 3): the fold
 never slices the Proof title (one line on desktop, gated line by line at 19 sizes incl. MacBooks), the
 brand and Proof title share the name's block face (gated on 5 cold loads), and the Proof feature carries
-the agent-harness diagram with the slim slabs retired. Still to come: the stone as one material in both
-renderers (critique fix 2), the sticky sigil rail and type/rhythm system; research band + projects shelf
+the agent-harness diagram with the slim slabs retired. v2.5 (on `feat/front-door-v2-5`, the v2.3 critique's
+fix 2): the stone is one material in both renderers (a riven cleavage face, bedding on the edges only, and
+the SVG twin's desktop face baked from the WebGL stone). Still to come: the sticky sigil rail and
+type/rhythm system; research band + projects shelf
 + writing + play + threshold; motion polish + perf/a11y hardening.
 
 ---
@@ -172,35 +174,55 @@ Other tokens (globals.css): radii `--r-btn: 2px`, `--r-slab: 6px`; spacing `--sp
    to `lib/stone.ts`. Lit the same way in both: moonlight key from the upper left, rune-fire from the
    carving, the right flank in shadow. The halo, contact shadow, mist and motes are persistent layers
    outside the swapped body.
-   - **Material (v2.3): night-lit riven slate.** v2.1 read as blue plastic; v2.2's neutral #7b7c7e with 900
-     uniform pits and white-noise relief read as studio-lit cast concrete. Now (all generated on a 512 px
-     canvas in the lazy chunk, no image assets):
+   - **Material (v2.3): night-lit riven slate; v2.5: one material in both renderers.** v2.1 read as blue
+     plastic; v2.2's neutral #7b7c7e with 900 uniform pits and white-noise relief read as studio-lit cast
+     concrete; v2.3's hairlines over the whole face read as laminate or timber at 2x, ringing the crown.
+     Now (all generated on a 512 px canvas in the lazy chunk):
      - albedo #5f6469 (blue-grey, hue ≈ 210) in bedding bands (anisotropic fbm 256×24 + 64×10 px) with a
        faint blue-grey/green-grey drift and each split layer a shade apart; the bands are generated
        axis-aligned and turned 8° (descending right) by the textures' UV rotation, so the tile still repeats;
-     - relief (`bumpMap`, `bumpScale` 1.6): cleavage ledges that run along a bed and die out, hairline
-       lamination **in patches** (everywhere at once it read as wood grain), short grit drawn out along the
-       bed, 220 power-law pits (70 % strung along 12 bedding lines); white noise only ×2;
+     - **the face is the cleavage plane (v2.5):** relief (`bumpMap`, `bumpScale` 2.1) of five cleavage
+       ledges on a slow field, each a sharp riser and a thinning plate that runs ~⅓ of its length and dies
+       out by widening (masking it drew the mask's outline); hairline lamination at a fifth of v2.3's height
+       and only in patches (~18 % of the tile); short grit along the bed; 220 power-law pits; satin roughness
+       .62–.80. A riven ripple along the bed (two swells, 0.17 world units apart, wandering phase) lives in
+       the **normals** of the front face: an 8-bit bump map cannot draw a 120–180 px swell (it tilts the
+       normal by the height step per screen pixel), and displaced vertices made LARS wobble 2 px;
+     - **bedding on the edges only (v2.5):** the sides and crown have a second material with full-strength
+       lamination, drawn into the albedo too, rougher (.74–.96). Every face is mapped by deformed world
+       position (`uv1`): the front's beds run straight at 8° and the crown cuts them; the crown's lines run
+       straight across the top. Phones (< 861 px) get no lamination, no ripple and a third of the relief,
+       so the stone that loads on the first touch is as smooth as the backdrop it replaces;
      - light: hemisphere 0.6 (sky #b9c2cc, warm-dark ground), the moon key at [-2.6, 3.2, 2.4] so the face
        grades top-left → bottom-right, a weak rim (#a2a8b0), the rune-fire point light inside the group;
        vertex colours sink the foot into its shadow below y −0.45 (to 0.62). Linear tone mapping, exposure 1.27.
    - **Runes are cut, not neon (v2.2, both renderers):** a moonlit lower lip offset down-right, a wider dark
      cut offset up-left, then a narrower fire with a softer glow, a thin .55 core and a .62 bloom (`GROOVE`
      in `lib/stone.ts` holds the shared widths and alphas).
-   - **SVG twin palette (v2.3)**, matched to the lit 3D stone: face #6b7076 → #53575d → #3d4147 (more
-     vertical than v2.2's), flank #30353a → #1b1e22, crown #4a4f55 → #33373c, a foot shadow from 60 % of
-     the stage, a shoulder shade where the 3D face curves away, and the fire (.35) centred where the 3D fire
-     light sits. Bedding is `feTurbulence` (beds + short lamination flecks, overlay .25, turned 8°), inside
-     the clipped group so the overlay blends with the face (v2.2's grain overlay blended with nothing), and
-     only in the stone's box. It is rasterised before the first paint (~+100 ms observed FCP in headless
-     Edge), so it is **not drawn below 861 px**, where the stone is a half-lit backdrop.
+   - **SVG twin (v2.5): the 3D stone, baked, from 861 px up.** `scripts/bake-stone.mjs` opens `/?bake=1`
+     (development builds only) at 1920×1080, DPR 2, where the WebGL stone holds the handoff pose with its
+     runes and fire light off, reads the canvas (its alpha is the silhouette) and writes
+     `public/stone/face-1480.avif` (30 kB) and `face-740.avif` (13 kB), q60 4:4:4. Re-run it after any
+     change to the slate or `lib/stone.ts`. `StoneFallback` has three layers: the drawn gradient face; the
+     bake (`.stone__baked`, a CSS `image-set()` background inside `@media (min-width: 861px)`, so phones
+     never request it; no preload, since React's hint rode Next's prefetch of / onto every desktop page);
+     then the fire (.35, where the 3D fire light sits), the incised runes and the ignition. Over the bake
+     the drawn foot, shoulder, flanks and rim (`.sf-drawn`) give way to the baked ones. Below 861 px the
+     twin keeps its v2.3 palette (face #6b7076 → #53575d → #3d4147, flank #30353a → #1b1e22, crown #4a4f55
+     → #33373c, foot shadow from 60 %, shoulder shade) and no texture. v2.3's `feTurbulence` bedding read
+     as brushed metal and is gone. On desktop the bake is the LCP element, 150 ms after TTFB (the name
+     was 195 ms).
    - The crown eases into the flank (`smooth(0.48, 1, h)`, segments 28×56×8): no shoulder seam in the sway.
    **Gates (`shoot.mjs`, desktop handoff frames):** median face luminance SVG vs WebGL within ±12 % and mean
    |difference| ≤ 5 (v2.3: −0.1 %, 4.7–4.9; v2.2 measured 7.0); WebGL face away from the runes hue 200–225,
    saturation .03–.07, L* 36–41 (v2.3: 219, .038, 38.8); hue 25–45° near them; flank saturation ≤ .12;
    face:flank ≥ 1.8:1; face vs page ≥ 2.3:1; key fall-off, upper-left / lower-right face ≥ 1.40 (1.48;
    v2.2 1.30); foot ≥ 28 % darker than mid-face (32 %; v2.2 23 %); high-pass σ 3–6 WebGL (3.9) and
-   SVG/WebGL 0.75–1.3 (0.8); rune glow mean and p90 within ±3 % across the handoff.
+   SVG/WebGL 0.75–1.3 (0.8); rune glow mean and p90 within ±3 % across the handoff. **v2.5 adds the
+   pattern:** high-pass NCC of the SVG and WebGL face bands either side of LARS ≥ 0.6 (v2.4: 0.007; now
+   0.86–0.90 at 1280/1366/1440/1920) and the face's lamination energy (line contrast along the bed over mean
+   luminance) ≤ 0.6× the right flank's (v2.4: 1.25–1.65; now 0.46–0.53); a phone never requests the bake.
+   v2.5 measures: MAD 2.7–3.1, hue 218, sat .038, L* 39.3, fall-off 1.50, foot 34 %, high-pass σ 3.1–3.5.
 6. **Incised vs ignited runes.**
    - **Incised** (resting): `--gold-700` stroke with `filter: drop-shadow(0 1px 0 rgb(255 255 255/.06))
      drop-shadow(0 -1px 0 rgb(0 0 0/.6))`.
@@ -440,5 +462,8 @@ serif; at the name's first frame they match +1.5 s, mean |Δ| ≤ 3; the name la
 `first-paint-1-*.png` keeps load 1's frames; `FIRST_PAINT_LOADS` overrides the count) and **the Proof
 diagram** (accessible name; drawn 1.2 s after scrolling in with nothing running; never armed under reduced
 motion; ≥ 1200 px: ≥ 24 px clear of the figure and the slab's edges, ≥ 15 % ink in the slab's top-right
-quadrant). `scripts/make-grain.mjs` regenerates the grain tile;
-`scripts/crop-science.mjs` regenerates the research plates.
+quadrant). v2.5 adds **the stone's pattern** to the handoff block (high-pass NCC ≥ 0.6, face lamination
+≤ 0.6× the flank's, a `-handoff-face-2x-{svg,webgl}.png` crop per desktop size), a gate that phones never
+request `/stone/face-*.avif` (desktop: exactly once), and `ONLY=main,narrow,folds,firstpaint,handoff,links`
+to run a subset. `scripts/bake-stone.mjs` re-bakes the SVG twin's desktop face (against `next dev`);
+`scripts/make-grain.mjs` regenerates the grain tile; `scripts/crop-science.mjs` regenerates the research plates.
