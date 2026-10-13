@@ -30,10 +30,10 @@ export const projects: Project[] = [
 	{
 		name: "mindmapper",
 		when: "Aug – Sep 2026",
-		summary: "The LLM phylogenetic tree: a 3D React Three Fiber map of 173 language models from 58 providers.",
+		summary: "The LLM phylogenetic tree: a 3D React Three Fiber map of 173 AI models from 58 providers.",
 		details: [
 			"Curated by a Claude research-agent skill whose rules require a primary-source citation for every claim and forbid fabrication; a schema and referential-integrity validator plus CI gates every agent edit.",
-			"An autonomous loop raised source-verified entries from 41 to 88 of 95: the same provenance problem as literature curation.",
+			"An autonomous loop verified 166 of the 173 against primary sources and left the other 7 unverified rather than guess: the same provenance problem as literature curation.",
 		],
 		tags: ["React Three Fiber", "Research agents", "Provenance", "CI"],
 		featured: true,

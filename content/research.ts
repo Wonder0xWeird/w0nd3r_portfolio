@@ -41,7 +41,7 @@ export const research: ResearchItem[] = [
 		],
 	},
 	{
-		org: "UW Center for Integrative Brain Research",
+		org: "Center for Integrative Brain Research",
 		lab: "Welsh Lab",
 		place: "Seattle",
 		dates: "2012 – 2013",

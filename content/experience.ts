@@ -56,7 +56,7 @@ export const experience: Job[] = [
 				bullets: [
 					"Helped launch and grow tribally.games to 175k+ gamers and dozens of partner games.",
 					"Led UX design, data modeling and implementation of the Tribally DevKit Partner Portal with a team of 2 frontend and 4 backend engineers; onboarded game partners onto the platform.",
-					"Built gameplay-data ingestion APIs for 5+ partner games and internal/external APIs across dozens of microservices; onboarded and mentored junior engineers.",
+					"Built gameplay-data ingestion APIs for 5+ partner games and internal/external APIs across dozens of microservices; helped onboard and mentor junior engineers.",
 					"Pioneered services that securely automate onchain transactions across six EVM-compatible chains: 80k+ transactions managed, 30k+ prizes distributed.",
 				],
 			},
