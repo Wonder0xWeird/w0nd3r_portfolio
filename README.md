@@ -25,6 +25,6 @@ Deploys on Vercel from the repo root with zero config (framework preset: Next.js
 
 ## TODO
 
-- **Résumé PDF:** the site links to `/resume.pdf`, which does not exist yet. Drop the final, placeholder-free PDF at `public/resume.pdf`. The current draft still contains [FILL]/[CHECK] slots, so don't use it.
+- **Résumé PDF:** `public/resume.pdf` is a copy of the placeholder-free submission render (`career/resume/submit/Lars_Crawford_Resume.pdf`, v2.7). When a newer render lands, overwrite it **at the same path** (`/resume.pdf` is linked from the hero and from applications); check its text has no "[", "FILL" or "CHECK" first. `next.config.mjs` serves it inline as `Lars_Crawford_Resume.pdf`, and the hero's gold "Résumé (PDF)" button renders only while the file exists.
 - Blockchain.com AI-transformation specifics: add them to `content/experience.ts` and `content/projects.ts` (proof card) once confirmed.
 - `/cottage`: the explorable 3D scene (Track B2).
