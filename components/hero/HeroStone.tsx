@@ -13,10 +13,10 @@ const FADE_MS = 350
 
 /**
  * `/?bake=1` (v2.5): the 3D stone loads at once and holds the handoff pose with its runes and fire light
- * off, for scripts/bake-stone.mjs to photograph as the SVG twin's desktop face. Development builds only
- * (or a build with NEXT_PUBLIC_STONE_BAKE=1); production compiles it away.
+ * off, for scripts/bake-stone.mjs to photograph as the SVG twin's desktop face. Development builds only:
+ * production compiles it away.
  */
-const BAKE_ALLOWED = process.env.NODE_ENV !== "production" || process.env.NEXT_PUBLIC_STONE_BAKE === "1"
+const BAKE_ALLOWED = process.env.NODE_ENV !== "production"
 
 function webglAvailable(): boolean {
 	try {
