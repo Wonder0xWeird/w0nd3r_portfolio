@@ -314,7 +314,7 @@ rejected untested: its two offset chevrons risk the same "<" reading that failed
 - **Hero, "the stone"** (v2.1). ≤ 40 visible words. Name at `--step-display` on two lines, no suffix (the
   accessible name is "Lars Crawford"). One-sentence lede at `--step-2t`, then place as two meta lines. CTAs:
   **Résumé** (gold primary, shown only once `public/resume.pdf` exists; otherwise "Email me" is the primary),
-  LinkedIn and GitHub as text links, and the address itself as visible text with a Copy button.
+  LinkedIn as a text link (GitHub left the hero in v2.7, matching the résumé), and the address itself as visible text with a Copy button.
   **1440:** 6fr/6fr; the stone stage is `min(50vw, 740px)` (~670 px of menhir), bleeds up to 160 px past the
   container and rises toward the header; primary CTA bottom ≤ 700 px. **Composed fold (v2.2, ≥ 861 px):** the
   copy, not the stone or a min-height, sets the hero's height (no bottom padding); the stage's foot overlaps

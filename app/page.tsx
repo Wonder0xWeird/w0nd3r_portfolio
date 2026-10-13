@@ -148,15 +148,11 @@ export default function Home() {
 									Email me
 								</a>
 							)}
+							{/* LinkedIn only (v2.7): the résumé dropped GitHub, so the hero agrees with it. */}
 							<ul className={s.ctaLinks}>
 								<li>
 									<External className="textlink" href={links.linkedin.href}>
 										LinkedIn
-									</External>
-								</li>
-								<li>
-									<External className="textlink" href={links.github.href}>
-										GitHub
 									</External>
 								</li>
 							</ul>
